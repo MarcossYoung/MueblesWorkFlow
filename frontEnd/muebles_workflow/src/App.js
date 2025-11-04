@@ -25,8 +25,6 @@ import OrdersPastDue from './views/ordersPastDue';
 import Sidebar from './components/sidebar';
 import {OrdersProvider} from './OrdersContext';
 
-axios.defaults.baseURL = 'http://localhost:8080';
-
 function App() {
 	const {user, setUser} = useContext(UserContext);
 	const [product, setProduct] = useState(null);
@@ -55,7 +53,7 @@ function App() {
 						<Route index element={<Products />} />
 						<Route
 							path='due-this-week'
-							element={<OrdersDueThisWeek />}
+							element={<OrdersDueThisWeek user={user} />}
 						/>
 						<Route
 							path='not-picked-up'

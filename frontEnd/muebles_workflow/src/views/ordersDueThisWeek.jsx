@@ -42,7 +42,7 @@ export default function OrdersDueThisWeek({user}) {
 		}
 	};
 
-	console.log('Rendering OrdersDueThisWeek with orders:', orders);
+	console.log('User info:', user);
 
 	return (
 		<section className='orders-due-container'>
