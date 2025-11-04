@@ -69,9 +69,9 @@ public class SecurityConfig {
 
                 // Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/registro", "/api/users/login", "/h2-console/**").permitAll()
-                        .requestMatchers("/api/products/**", "/api/users/profile/**","/api/workOrders/**").authenticated()
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/users/registro", "/api/users/login", "/h2-console/*").permitAll()
+                        .requestMatchers("/api/products/*", "/api/users/profile/*","/api/workOrders/*").authenticated()
+                        .requestMatchers("/api/admin/*").hasAuthority("ADMIN")
                         .requestMatchers("/", "/index.html").permitAll()
                         .anyRequest().permitAll()
                 )
@@ -102,7 +102,7 @@ public class SecurityConfig {
         config.setMaxAge(3600L); // cache preflight for 1h
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/*", config);
         return source;
     }
 
