@@ -57,16 +57,12 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		});
 
 		try {
-			const response = await axios.post(
-				'/api/products/create',
-				formData,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-						'Content-Type': 'multipart/form-data',
-					},
-				}
-			);
+			await axios.post('/api/products/create', formData, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'multipart/form-data',
+				},
+			});
 			setSuccess(true);
 
 			// If it’s in a modal, just close after success

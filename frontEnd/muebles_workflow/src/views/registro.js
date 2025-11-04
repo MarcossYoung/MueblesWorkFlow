@@ -25,7 +25,7 @@ const Register = () => {
 		}
 
 		try {
-			const response = await axios.post('/api/users/registro', {
+			await axios.post('/api/users/registro', {
 				username: userData.username,
 				password: userData.password,
 				appUserRole: userData.appUserRole,
