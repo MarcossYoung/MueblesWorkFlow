@@ -1,12 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
-import {
-	FaUser,
-	FaClipboardList,
-	FaClock,
-	FaCheckCircle,
-	FaPlus,
-} from 'react-icons/fa';
+import {FaUser, FaClipboardList, FaClock, FaCheckCircle} from 'react-icons/fa';
 import {
 	BarChart,
 	Bar,

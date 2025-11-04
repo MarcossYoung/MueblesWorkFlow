@@ -1,12 +1,11 @@
 import {useContext} from 'react';
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
 	BrowserRouter as Router,
 	Route,
 	Routes,
 	Navigate,
 } from 'react-router-dom';
-import axios from 'axios';
 import {UserContext} from './UserProvider';
 import Register from './views/registro';
 import Login from './views/login';
