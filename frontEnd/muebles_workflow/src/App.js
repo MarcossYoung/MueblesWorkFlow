@@ -112,16 +112,7 @@ function App() {
 						}
 					/>
 
-					<Route
-						path='/registro'
-						element={
-							<ProtectedRoute user={user}>
-								<AdminRoute user={user}>
-									<Register />
-								</AdminRoute>
-							</ProtectedRoute>
-						}
-					/>
+					<Route path='/registro' element={<Register />} />
 
 					{/* Catch-all redirect */}
 					<Route

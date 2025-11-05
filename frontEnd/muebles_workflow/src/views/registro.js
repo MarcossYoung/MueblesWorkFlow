@@ -7,7 +7,7 @@ const Register = () => {
 	const [userData, setUserData] = useState({
 		username: '',
 		password: '',
-		rePassword: '',
+		appUserRole: '',
 	});
 	const [responseMessage, setResponseMessage] = useState('');
 
@@ -18,11 +18,6 @@ const Register = () => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-
-		if (userData.password !== userData.rePassword) {
-			setResponseMessage('Passwords do not match!');
-			return;
-		}
 
 		try {
 			await axios.post('/api/users/registro', {
