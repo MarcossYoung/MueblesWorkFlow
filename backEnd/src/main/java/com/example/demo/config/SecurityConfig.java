@@ -59,6 +59,7 @@ public class SecurityConfig {
                 // Disable CSRF and enable stateless sessions
                 .csrf(csrf -> csrf.disable()
                         .securityMatcher("/**") )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // Disable all default authentication mechanisms
@@ -85,11 +86,10 @@ public class SecurityConfig {
 
         return http.build();
     }
-   /* @Bean
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // IMPORTANT: exact origin(s) you use in the browser
         config.setAllowedOrigins(List.of("http://localhost:3000","https://mueblesworkflow.netlify.app"));
         // If you sometimes use another port (e.g., Vite 5173), add it here too:
         // config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
@@ -103,6 +103,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/*", config);
         return source;
-    }*/
+    }
 
 }
