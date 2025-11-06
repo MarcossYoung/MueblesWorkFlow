@@ -59,7 +59,6 @@ public class SecurityConfig {
                 // Disable CSRF and enable stateless sessions
                 .csrf(csrf -> csrf.disable()
                         .securityMatcher("/**") )
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // Disable all default authentication mechanisms
@@ -86,7 +85,7 @@ public class SecurityConfig {
 
         return http.build();
     }
-    @Bean
+   /* @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
@@ -104,6 +103,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/*", config);
         return source;
-    }
+    }*/
 
 }
