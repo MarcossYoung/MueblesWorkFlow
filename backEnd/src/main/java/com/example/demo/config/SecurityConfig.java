@@ -91,7 +91,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // IMPORTANT: exact origin(s) you use in the browser
-        config.setAllowedOrigins(List.of("http://localhost:3000","mueblesworkflow.netlify.app"));
+        config.setAllowedOrigins(List.of("http://localhost:3000","https://mueblesworkflow.netlify.app"));
         // If you sometimes use another port (e.g., Vite 5173), add it here too:
         // config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
 
