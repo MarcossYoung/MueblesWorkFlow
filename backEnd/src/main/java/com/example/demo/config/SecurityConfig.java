@@ -57,9 +57,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // Disable CSRF and enable stateless sessions
-                .csrf(csrf -> csrf.disable()
-                        .securityMatcher("/**") )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // Disable all default authentication mechanisms
@@ -91,8 +90,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of("http://localhost:3000","https://mueblesworkflow.netlify.app"));
-        // If you sometimes use another port (e.g., Vite 5173), add it here too:
-        // config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
@@ -101,7 +99,7 @@ public class SecurityConfig {
         config.setMaxAge(3600L); // cache preflight for 1h
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/*", config);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 
