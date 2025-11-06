@@ -3,6 +3,7 @@ import axios from 'axios';
 import {FaBoxOpen, FaTrashAlt} from 'react-icons/fa';
 import {UserContext} from '../UserProvider';
 import {useOrders} from '../OrdersContext';
+import {BASE_URL} from '../api/config';
 
 function OrdersTable({data}) {
 	const {user} = useContext(UserContext);
@@ -14,7 +15,7 @@ function OrdersTable({data}) {
 	const handleDelete = async (id) => {
 		if (!window.confirm('¿Eliminar este pedido?')) return;
 		try {
-			await axios.delete(`/api/products/${id}`, {
+			await axios.delete(`${BASE_URL}/api/products/${id}`, {
 				headers: {Authorization: `Bearer ${token}`},
 			});
 			setOrders((prev) => prev.filter((o) => o.id !== id));

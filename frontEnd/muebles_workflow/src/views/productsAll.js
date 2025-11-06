@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import OrdersTable from '../components/ordersTable';
+import {BASE_URL} from '../api/config';
 
 export default function OrdersAll() {
 	const [orders, setOrders] = useState([]);
@@ -10,7 +11,7 @@ export default function OrdersAll() {
 	useEffect(() => {
 		setLoading(true);
 		axios
-			.get('/api/products')
+			.get(`${BASE_URL}/api/products`)
 			.then((res) => setOrders(res.data.content || res.data))
 			.catch((err) => setError(err))
 			.finally(() => setLoading(false));

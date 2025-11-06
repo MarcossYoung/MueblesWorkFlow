@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import axios from 'axios';
 import {useParams} from 'react-router-dom';
+import {BASE_URL} from '../api/config';
 
 const EditProduct = () => {
 	const {productId} = useParams();
@@ -26,7 +27,7 @@ const EditProduct = () => {
 
 	useEffect(() => {
 		axios
-			.get(`/api/products/${productId}`)
+			.get(`${BASE_URL}/api/products/${productId}`)
 			.then((res) => setProduct(res.data))
 			.catch((err) => console.error('Error fetching product:', err));
 	}, [productId]);
@@ -35,7 +36,7 @@ const EditProduct = () => {
 		const fetchData = async () => {
 			try {
 				const [typesRes] = await Promise.all([
-					axios.get('/api/products/types'),
+					axios.get(`${BASE_URL}/api/products/types`),
 				]);
 				setTypes(typesRes.data);
 			} catch (error) {
@@ -60,7 +61,7 @@ const EditProduct = () => {
 		});
 
 		try {
-			await axios.put(`/api/products/${productId}`, formData);
+			await axios.put(`${BASE_URL}/api/products/${productId}`, formData);
 			setSuccess(true);
 		} catch (err) {
 			setError('Error updating product');

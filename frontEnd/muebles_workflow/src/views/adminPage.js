@@ -10,6 +10,7 @@ import {
 	ResponsiveContainer,
 } from 'recharts';
 import ProductFormModal from '../components/productCreationModular';
+import {BASE_URL} from '../api/config';
 
 function AdminPage() {
 	const [summary, setSummary] = useState({
@@ -33,7 +34,7 @@ function AdminPage() {
 		const fetchSummary = async () => {
 			try {
 				const token = localStorage.getItem('token');
-				const res = await axios.get('/api/admin/summary', {
+				const res = await axios.get(`${BASE_URL}/api/admin/summary`, {
 					headers: {Authorization: `Bearer ${token}`},
 				});
 				setSummary(res.data);
@@ -54,7 +55,7 @@ function AdminPage() {
 		try {
 			const token = localStorage.getItem('token');
 			await axios.post(
-				'/api/users/registro',
+				`${BASE_URL}/api/users/registro`,
 				{
 					username: newUser.username,
 					password: newUser.password,

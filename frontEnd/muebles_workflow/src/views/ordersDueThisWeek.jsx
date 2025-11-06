@@ -3,6 +3,7 @@ import axios from 'axios';
 import {useOrders} from '../OrdersContext';
 import OrdersTable from '../components/ordersTable';
 import {FaCalendarWeek, FaPlus} from 'react-icons/fa';
+import {BASE_URL} from '../api/config';
 
 export default function OrdersDueThisWeek({user}) {
 	const {fetchOrdersByRange} = useOrders();
@@ -26,7 +27,7 @@ export default function OrdersDueThisWeek({user}) {
 
 		try {
 			const res = await axios.post(
-				'http://localhost:8080/api/products/add-existing',
+				`${BASE_URL}/api/products/add-existing`,
 				{
 					titulo: searchTerm,
 				}

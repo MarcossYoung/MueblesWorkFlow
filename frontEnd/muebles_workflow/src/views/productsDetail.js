@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useParams} from 'react-router-dom';
 import axios from 'axios';
+import {BASE_URL} from '../api/config';
 
 const ProductDetail = () => {
 	const {productId} = useParams();
@@ -26,9 +27,12 @@ const ProductDetail = () => {
 		const fetchProduct = async () => {
 			try {
 				const token = localStorage.getItem('token');
-				const res = await axios.get(`/api/products/${productId}`, {
-					headers: {Authorization: `Bearer ${token}`},
-				});
+				const res = await axios.get(
+					`${BASE_URL}/api/products/${productId}`,
+					{
+						headers: {Authorization: `Bearer ${token}`},
+					}
+				);
 				setProduct(res.data);
 			} catch (err) {
 				console.error('Error fetching product:', err);

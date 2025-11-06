@@ -3,6 +3,7 @@ import {useNavigate, useParams} from 'react-router-dom';
 import axios from 'axios';
 import {UserContext} from '../UserProvider';
 import {FaUserCircle, FaSignOutAlt, FaTrashAlt} from 'react-icons/fa';
+import {BASE_URL} from '../api/config';
 
 const UserProfile = () => {
 	const {id} = useParams();
@@ -17,7 +18,7 @@ const UserProfile = () => {
 			setUser(storedUser);
 		} else if (userId) {
 			axios
-				.get(`/api/users/${userId}`)
+				.get(`${BASE_URL}/api/users/${userId}`)
 				.then((response) => setUser(response.data))
 				.catch((error) => console.error('Error fetching user:', error));
 		}
@@ -31,7 +32,7 @@ const UserProfile = () => {
 
 	const handleDeleteUser = async () => {
 		try {
-			await axios.delete(`/api/users/${user.id}`);
+			await axios.delete(`${BASE_URL}/api/users/${user.id}`);
 			localStorage.removeItem('user');
 			navigate('/login');
 		} catch (error) {

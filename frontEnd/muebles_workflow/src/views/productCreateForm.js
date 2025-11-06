@@ -2,6 +2,7 @@ import {useState, useContext, useEffect} from 'react';
 import axios from 'axios';
 import {UserContext} from '../UserProvider';
 import {useNavigate} from 'react-router-dom';
+import {BASE_URL} from '../api/config';
 
 const ProductCreation = ({isModal = false, onClose}) => {
 	const navigate = useNavigate();
@@ -28,7 +29,7 @@ const ProductCreation = ({isModal = false, onClose}) => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const res = await axios.get('/api/products/types');
+				const res = await axios.get(`${BASE_URL}/api/products/types`);
 				setTypes(res.data);
 			} catch (error) {
 				console.error('Error fetching data', error);
@@ -57,7 +58,7 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		});
 
 		try {
-			await axios.post('/api/products/create', formData, {
+			await axios.post(`${BASE_URL}/api/products/create`, formData, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 					'Content-Type': 'multipart/form-data',

@@ -2,6 +2,7 @@ import React, {useState, useContext} from 'react';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import {UserContext} from '../UserProvider';
+import {BASE_URL} from '../api/config';
 
 const Login = () => {
 	const navigate = useNavigate();
@@ -17,7 +18,10 @@ const Login = () => {
 		e.preventDefault();
 		setError(null);
 		try {
-			const response = await axios.post('/api/users/login', formData);
+			const response = await axios.post(
+				`${BASE_URL}/api/users/login`,
+				formData
+			);
 			if (response.status === 200) {
 				const userData = response.data;
 				localStorage.setItem('user', JSON.stringify(userData));
