@@ -9,6 +9,7 @@ import React, {
 	useMemo,
 } from 'react';
 import axios from 'axios';
+import {BASE_URL} from './api/config';
 
 const OrdersContext = createContext();
 export const useOrders = () => useContext(OrdersContext);
@@ -35,7 +36,7 @@ export const OrdersProvider = ({children}) => {
 		setLoading(true);
 		setError(null);
 		try {
-			const res = await axios.get('/api/products', {
+			const res = await axios.get(`${BASE_URL}/api/products`, {
 				headers: getAuthHeaders(),
 			});
 			const data = Array.isArray(res.data)
@@ -54,7 +55,7 @@ export const OrdersProvider = ({children}) => {
 	// Fetch a subset (does NOT touch global orders)
 	const fetchOrdersByRange = useCallback(async (endpoint) => {
 		try {
-			const res = await axios.get(`/api/products${endpoint}`, {
+			const res = await axios.get(`${BASE_URL}/api/products${endpoint}`, {
 				headers: getAuthHeaders(),
 			});
 			const data = Array.isArray(res.data)

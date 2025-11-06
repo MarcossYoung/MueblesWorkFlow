@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
+import {BASE_URL} from '../api/config';
 
 const Filters = ({onFilterChange}) => {
 	const [productTypes, setProductTypes] = useState([]);
@@ -8,7 +9,7 @@ const Filters = ({onFilterChange}) => {
 	useEffect(() => {
 		// Fetch product types
 		axios
-			.get('/api/products/types')
+			.get(`${BASE_URL}/api/products/types`)
 			.then((response) => setProductTypes(response.data))
 			.catch((error) =>
 				console.error('Error fetching product types:', error)
