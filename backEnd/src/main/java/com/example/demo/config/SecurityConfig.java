@@ -68,9 +68,9 @@ public class SecurityConfig {
 
                 // Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/registro", "/api/users/login", "/h2-console/*").permitAll()
-                        .requestMatchers("/api/products/*", "/api/users/profile/*","/api/workOrders/*").authenticated()
-                        .requestMatchers("/api/admin/*").hasAuthority("ADMIN")
+                        .requestMatchers("/api/users/registro", "/api/users/login", "/h2-console/**").permitAll()
+                        .requestMatchers("/api/products/**", "/api/users/profile/**","/api/workOrders/**").authenticated()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/", "/index.html").permitAll()
                         .anyRequest().permitAll()
                 )
