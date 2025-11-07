@@ -641,6 +641,7 @@ main {
 .modal-content label {
 	margin-top: 0.8rem;
 	display: block;
+	color: white;
 }
 
 .modal-content input,

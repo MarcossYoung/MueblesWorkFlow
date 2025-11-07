@@ -51,7 +51,7 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		setError(null);
 		setSuccess(false);
 
-		const token = user?.token || '';
+		const token = localStorage.token || '';
 		const formData = new FormData();
 		Object.entries(productData).forEach(([key, value]) => {
 			formData.append(key, value);
