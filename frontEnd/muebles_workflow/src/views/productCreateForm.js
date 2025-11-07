@@ -24,6 +24,7 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		foto: '',
 		terminado: false,
 		notas: '',
+		id: user.id,
 	});
 
 	useEffect(() => {
