@@ -25,7 +25,7 @@ function AdminPage() {
 	const [newUser, setNewUser] = useState({
 		username: '',
 		password: '',
-		role: 'USER',
+		role: '',
 	});
 	const [createMsg, setCreateMsg] = useState('');
 	const [createError, setCreateError] = useState('');
