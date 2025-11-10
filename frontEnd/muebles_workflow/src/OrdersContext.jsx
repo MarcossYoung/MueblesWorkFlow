@@ -23,11 +23,8 @@ export const OrdersProvider = ({children}) => {
 	const didInitRef = useRef(false);
 	const inFlightRef = useRef(false);
 
-	// Read token once per call (don’t add token to deps to avoid refiring)
-	const getAuthHeaders = () => {
-		const token = localStorage.getItem('token');
-		return token ? {Authorization: `Bearer ${token}`} : {};
-	};
+	// Read token once per call (don’t add token to deps to avoid refiring
+	const token = localStorage.getItem('token');
 
 	// Fetch ALL orders (updates global state)
 	const fetchAllOrders = useCallback(async () => {
@@ -37,9 +34,8 @@ export const OrdersProvider = ({children}) => {
 		setError(null);
 		try {
 			const res = await axios.get(`${BASE_URL}/api/products`, {
-				headers: getAuthHeaders(),
+				headers: {Authorization: `Bearer ${token}`},
 			});
-			console.log('fetchAllOrders response:', res.data);
 			const data = Array.isArray(res.data)
 				? res.data
 				: res.data?.content || [];
