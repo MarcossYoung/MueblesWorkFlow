@@ -68,12 +68,13 @@ public class SecurityConfig {
 
                 // Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/registro", "/api/users/login", "/h2-console/**").permitAll()
-                        .requestMatchers("/api/products/**", "/api/users/profile/**","/api/workOrders/**").authenticated()
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/", "/index.html").permitAll()
-                        .anyRequest().permitAll()
-                )
+
+                                .requestMatchers("/api/users/registro", "/api/users/login").permitAll()
+                                .requestMatchers("/api/products", "/api/products/**").permitAll()   // ✅ FIX
+                                .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
+                                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                                .anyRequest().permitAll()
+                        )
 
                 // Register JWT filter
                 .authenticationProvider(daoAuthenticationProvider())
