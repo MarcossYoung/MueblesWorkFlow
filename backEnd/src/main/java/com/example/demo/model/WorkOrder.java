@@ -30,7 +30,7 @@ public class WorkOrder {
 
     private LocalDateTime updateAt;
 
-    private String notes;
+
 
 
 }

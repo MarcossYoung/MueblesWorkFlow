@@ -46,13 +46,13 @@ import java.time.LocalDate;
     @Column(name = "precio")
     private Double precio;
 
-    @Column(name = "startDate")
+    @Column(name = "startdate")
     private LocalDate startDate;
 
-    @Column(name = "fechaEntrega")
+    @Column(name = "fechaentrega")
     private LocalDate fechaEntrega;
 
-    @Column(name = "fechaEstimada")
+    @Column(name = "fechaestimada")
     private LocalDate fechaEstimada;
 
     @Column(name = "foto")
@@ -66,7 +66,7 @@ import java.time.LocalDate;
     private WorkOrder workOrder;
 
     @ManyToOne( fetch = FetchType.LAZY)
-    @JoinColumn(name = "ownerId")
+    @JoinColumn(name = "ownerid")
     private AppUser owner;
 
 
