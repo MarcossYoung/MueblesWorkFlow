@@ -3,7 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
-import com.example.demo.model.WorkOrder;
 import com.example.demo.service.AppUserService;
 import com.example.demo.service.FileStorageService;
 import com.example.demo.service.ProductService;
