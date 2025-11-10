@@ -39,6 +39,7 @@ export const OrdersProvider = ({children}) => {
 			const res = await axios.get(`${BASE_URL}/api/products`, {
 				headers: getAuthHeaders(),
 			});
+			console.log('fetchAllOrders response:', res.data);
 			const data = Array.isArray(res.data)
 				? res.data
 				: res.data?.content || [];
