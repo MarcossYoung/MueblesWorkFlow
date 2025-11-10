@@ -8,7 +8,10 @@ import {BASE_URL} from '../api/config';
 function OrdersTable({data}) {
 	const {user} = useContext(UserContext);
 	const {setOrders} = useOrders();
-	const [searchTerm] = useState('');
+
+	// ✅ FIX: add setSearchTerm
+	const [searchTerm, setSearchTerm] = useState('');
+	const [showMySales, setShowMySales] = useState(false);
 
 	const token = localStorage.getItem('token');
 
@@ -24,6 +27,7 @@ function OrdersTable({data}) {
 			alert('Error al eliminar el pedido');
 		}
 	};
+
 	const handleDetail = (id) => {
 		window.location.href = `/products/${id}`;
 	};
@@ -35,7 +39,8 @@ function OrdersTable({data}) {
 		return 'row-inprogress';
 	};
 
-	const filteredData = data.filter((order) => {
+	// ✅ FIXED FILTERING
+	let filtered = data.filter((order) => {
 		const search = searchTerm.toLowerCase();
 		return (
 			order.titulo.toLowerCase().includes(search) ||
@@ -45,9 +50,10 @@ function OrdersTable({data}) {
 		);
 	});
 
-	const mySales = () => {
-		return filteredData.filter((order) => order.ownerId === user.id);
-	};
+	// ✅ APPLY "My Sales" toggle
+	if (showMySales) {
+		filtered = filtered.filter((order) => order.owner.id === user.id);
+	}
 
 	return (
 		<div className='orders-container'>
@@ -61,11 +67,14 @@ function OrdersTable({data}) {
 						type='text'
 						placeholder='Buscar pedidos...'
 						value={searchTerm}
-						onChange={(e) => filteredData(e.target.value)}
+						onChange={(e) => setSearchTerm(e.target.value)} // ✅ FIXED
 					/>
 
-					<button onClick={mySales} className='button_2 margin-top-8'>
-						Ver mis ventas
+					<button
+						onClick={() => setShowMySales(!showMySales)} // ✅ FIXED
+						className='button_2 margin-top-8'
+					>
+						{showMySales ? 'Mostrar todo' : 'Ver mis ventas'}
 					</button>
 				</div>
 			)}
@@ -90,8 +99,8 @@ function OrdersTable({data}) {
 						</tr>
 					</thead>
 					<tbody>
-						{data.length > 0 ? (
-							data.map((o) => (
+						{filtered.length > 0 ? (
+							filtered.map((o) => (
 								<tr
 									key={o.id}
 									className={getRowClass(o.workOrder.status)}
@@ -115,9 +124,10 @@ function OrdersTable({data}) {
 										<td>
 											<button
 												className='button-red'
-												onClick={() =>
-													handleDelete(o.id)
-												}
+												onClick={(e) => {
+													e.stopPropagation(); // ✅ Prevent detail click
+													handleDelete(o.id);
+												}}
 											>
 												<FaTrashAlt /> Eliminar
 											</button>
