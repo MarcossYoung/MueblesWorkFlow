@@ -70,7 +70,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                                 .requestMatchers("/api/users/registro", "/api/users/login").permitAll()
-                                .requestMatchers("/api/products", "/api/products/**").permitAll() 
+                                .requestMatchers("/api/products", "/api/products/**").permitAll()
                                 .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
                                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                                 .anyRequest().permitAll()

@@ -60,8 +60,7 @@ public class ProductController {
                                                  @RequestParam("cantidad") long cantidad,
                                                  @RequestParam("precio") double precio,
                                                  @RequestParam("foto") String foto,
-                                                 @RequestParam("notas") String notas,
-                                                 @RequestParam("id") long id
+                                                 @RequestParam("notas") String notas
                                                  ) {
 
         try {
@@ -78,7 +77,6 @@ public class ProductController {
             product.setFoto(foto);
             product.setNotas(notas);
             product.setStartDate(LocalDate.now());
-            product.setOwner(userService.getUserById(id));
             product.setFechaEstimada(LocalDate.now().plusDays(35));
             product.setOwner(userService.getCurrentUser());
 
