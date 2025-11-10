@@ -52,7 +52,7 @@ function OrdersTable({data}) {
 
 	// ✅ APPLY "My Sales" toggle
 	if (showMySales) {
-		filtered = filtered.filter((order) => order.owner.id === user.id);
+		filtered = filtered.filter((order) => order.ownerid === user.id);
 	}
 
 	return (
