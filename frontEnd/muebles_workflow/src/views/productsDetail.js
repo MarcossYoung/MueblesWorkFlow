@@ -50,7 +50,7 @@ const ProductDetail = () => {
 					precio: res.data.precio || '',
 					fechaEstimada: res.data.fechaEstimada || '',
 					notas: res.data.notas || '',
-					status: res.data.status || '',
+					status: res.data.workOrder.status || '',
 				});
 			} catch (err) {
 				console.error('Error:', err);
