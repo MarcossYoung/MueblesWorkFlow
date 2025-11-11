@@ -7,7 +7,6 @@ const ProductDetail = () => {
 	const {productId} = useParams();
 
 	const [product, setProduct] = useState(null);
-	const [workOrder, setWorkOrder] = useState(null);
 	const [statuses, setStatuses] = useState([]);
 
 	const [loading, setLoading] = useState(true);
@@ -80,7 +79,7 @@ const ProductDetail = () => {
 	useEffect(() => {
 		fetchStatuses();
 		fetchProduct();
-	}, [productId]);
+	});
 
 	// ----------------------
 	// Handle Input Changes
