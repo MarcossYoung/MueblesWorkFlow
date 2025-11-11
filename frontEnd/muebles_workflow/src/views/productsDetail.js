@@ -43,7 +43,6 @@ const ProductDetail = () => {
 			);
 
 			setProduct(res.data);
-			setWorkOrder(res.data.workOrder);
 
 			// Fill editable form
 			setForm({
@@ -57,7 +56,7 @@ const ProductDetail = () => {
 				precio: res.data.precio || '',
 				fechaEstimada: res.data.fechaEstimada || '',
 				notas: res.data.notas || '',
-				status: res.data.workOrder?.status || '',
+				status: res.data.status || '',
 			});
 		} catch (error) {
 			console.error('Error fetching product:', error);
