@@ -61,7 +61,7 @@ const ProductDetail = () => {
 		const loadStatuses = async () => {
 			try {
 				const res = await axios.get(
-					`${BASE_URL}/api/workOrders/statuses`
+					`${BASE_URL}/api/workorders/statuses`
 				);
 				setStatuses(res.data);
 			} catch (err) {
@@ -194,17 +194,6 @@ const ProductDetail = () => {
 							</td>
 
 							<td>
-								<strong>Precio:</strong>
-								<input
-									className='editable no-spin'
-									type='number'
-									name='precio'
-									value={form.precio}
-									onChange={handleChange}
-								/>
-							</td>
-
-							<td>
 								<strong>Fecha Estimada:</strong>
 								<input
 									className='editable'
@@ -229,16 +218,6 @@ const ProductDetail = () => {
 										<option key={s}>{s}</option>
 									))}
 								</select>
-							</td>
-
-							<td colSpan='2'>
-								<strong>Notas de Producción:</strong>
-								<textarea
-									className='editable'
-									name='workOrderNotes'
-									value={form.workOrderNotes}
-									onChange={handleChange}
-								/>
 							</td>
 						</tr>
 					</tbody>
