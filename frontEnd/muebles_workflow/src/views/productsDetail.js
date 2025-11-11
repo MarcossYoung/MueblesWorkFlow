@@ -26,8 +26,6 @@ const ProductDetail = () => {
 		status: '',
 	});
 
-	const token = localStorage.getItem('token');
-
 	const handleChange = (e) => {
 		setForm({...form, [e.target.name]: e.target.value});
 	};
@@ -36,10 +34,7 @@ const ProductDetail = () => {
 		const loadData = async () => {
 			try {
 				const res = await axios.get(
-					`${BASE_URL}/api/products/${productId}`,
-					{
-						headers: {Authorization: `Bearer ${token}`},
-					}
+					`${BASE_URL}/api/products/${productId}`
 				);
 
 				setProduct(res.data);
@@ -81,9 +76,7 @@ const ProductDetail = () => {
 	const saveChanges = async () => {
 		setSaving(true);
 		try {
-			await axios.put(`${BASE_URL}/api/products/${productId}`, form, {
-				headers: {Authorization: `Bearer ${token}`},
-			});
+			await axios.put(`${BASE_URL}/api/products/${productId}`, form);
 			alert('✅ Cambios guardados');
 		} catch (err) {
 			console.error(err);
