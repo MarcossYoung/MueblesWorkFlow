@@ -1,8 +1,9 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ProductUpdateDto;
+import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
-import com.example.demo.model.Status;
 import com.example.demo.model.WorkOrder;
 import com.example.demo.repository.ProductRepo;
 import com.example.demo.repository.WorkOrderRepo;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,23 +43,37 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with ID: " + id));
     }
 
-    public void editar(Long id, Product product) {
-        Product existingProduct = productRepo.findById(id).orElse(null);
-        if (existingProduct != null) {
-            existingProduct.setTitulo(product.getTitulo());
-            existingProduct.setMedidas(product.getMedidas());
-            existingProduct.setMaterial(product.getMaterial());
-            existingProduct.setPintura(product.getPintura());
-            existingProduct.setColor(product.getColor());
-            existingProduct.setLaqueado(product.getLaqueado());
-            existingProduct.setCantidad(product.getCantidad());
-            existingProduct.setFoto(product.getFoto());
-            existingProduct.setNotas(product.getNotas());
-            productRepo.save(existingProduct); // Save the updated product
-        } else {
-            throw new RuntimeException("No se pudo editar");
+    public Product editar(Long id, ProductUpdateDto dto) throws ResourceNotFoundException {
+            Product product = productRepo.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+            // --- Update product fields ---
+            if (dto.getTitulo() != null) product.setTitulo(dto.getTitulo());
+            if (dto.getProductType() != null) product.setProductType(dto.getProductType());
+            if (dto.getMedidas() != null) product.setMedidas(dto.getMedidas());
+            if (dto.getMaterial() != null) product.setMaterial(dto.getMaterial());
+            if (dto.getPintura() != null) product.setPintura(dto.getPintura());
+            if (dto.getColor() != null) product.setColor(dto.getColor());
+            if (dto.getLaqueado() != null) product.setLaqueado(dto.getLaqueado());
+            if (dto.getCantidad() != null) product.setCantidad(dto.getCantidad());
+            if (dto.getPrecio() != null) product.setPrecio(dto.getPrecio());
+            if (dto.getNotas() != null) product.setNotas(dto.getNotas());
+            if (dto.getFoto() != null) product.setFoto(dto.getFoto());
+
+            if (dto.getFechaEstimada() != null)
+                product.setFechaEstimada(LocalDate.parse(dto.getFechaEstimada()));
+
+            // --- Update work order ---
+            WorkOrder wo = product.getWorkOrder();
+            if (wo != null) {
+                if (dto.getStatus() != null) wo.setStatus(dto.getStatus());
+                wo.setUpdateAt(LocalDateTime.now());
+            }
+
+            productRepo.save(product);
+            return product;
         }
-    }
+
 
     public boolean borrar(Long id) {
         Optional<Product> productOpt = productRepo.findById(id);
@@ -101,5 +117,6 @@ public class ProductService {
     public Page<Product> getAll(Pageable pageable) {
         return productRepo.findAll(pageable);
     }
+
 
 }

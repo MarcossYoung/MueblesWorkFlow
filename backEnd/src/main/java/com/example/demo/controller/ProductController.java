@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ProductUpdateDto;
 import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
@@ -98,14 +99,18 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @PostMapping("/edit/{id}")
-    public ResponseEntity<Void> editProduct(@PathVariable Long id, @RequestBody Product product) {
-        Product prodToEdit = productService.buscar(id);
-        if (prodToEdit != null) {
-            productService.editar(id, product);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.badRequest().build();
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable Long id,
+            @RequestBody ProductUpdateDto dto
+    ) {
+        try {
+            Product updated = productService.editar(id, dto);
+            return ResponseEntity.ok(updated);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
