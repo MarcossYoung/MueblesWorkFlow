@@ -24,7 +24,6 @@ const ProductDetail = () => {
 		fechaEstimada: '',
 		notas: '',
 		status: '',
-		workOrderNotes: '',
 	});
 
 	const token = localStorage.getItem('token');
@@ -56,8 +55,7 @@ const ProductDetail = () => {
 					precio: res.data.precio || '',
 					fechaEstimada: res.data.fechaEstimada || '',
 					notas: res.data.notas || '',
-					status: res.data.workOrder?.status || '',
-					workOrderNotes: res.data.workOrder?.notes || '',
+					status: res.data.status || '',
 				});
 			} catch (err) {
 				console.error('Error:', err);
