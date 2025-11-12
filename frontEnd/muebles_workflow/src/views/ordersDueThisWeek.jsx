@@ -42,9 +42,6 @@ export default function OrdersDueThisWeek({user}) {
 			setTimeout(() => setSuccessMessage(''), 2500);
 		}
 	};
-
-	console.log('User info:', user);
-
 	return (
 		<section className='orders-due-container'>
 			<div className='orders-header'>

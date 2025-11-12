@@ -64,7 +64,7 @@ function AdminPage() {
 				{headers: {Authorization: `Bearer ${token}`}}
 			);
 			setCreateMsg('✅ Usuario creado correctamente');
-			setNewUser({username: '', password: '', role: 'USER'});
+			setNewUser({username: '', password: '', role: ''});
 			setTimeout(() => setCreateMsg(''), 3000);
 			setShowModal(false);
 		} catch (error) {
