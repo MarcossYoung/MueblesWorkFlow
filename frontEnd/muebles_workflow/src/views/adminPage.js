@@ -53,16 +53,11 @@ function AdminPage() {
 	const handleCreateUser = async (e) => {
 		e.preventDefault();
 		try {
-			const token = localStorage.getItem('token');
-			await axios.post(
-				`${BASE_URL}/api/users/registro`,
-				{
-					username: newUser.username,
-					password: newUser.password,
-					appUserRole: newUser.role,
-				},
-				{headers: {Authorization: `Bearer ${token}`}}
-			);
+			await axios.post(`${BASE_URL}/api/users/registro`, {
+				username: newUser.username,
+				password: newUser.password,
+				appUserRole: newUser.role,
+			});
 			setCreateMsg('✅ Usuario creado correctamente');
 			setNewUser({username: '', password: '', role: ''});
 			setTimeout(() => setCreateMsg(''), 3000);
