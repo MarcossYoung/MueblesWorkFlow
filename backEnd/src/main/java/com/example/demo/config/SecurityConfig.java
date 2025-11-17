@@ -4,6 +4,7 @@ import com.example.demo.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -69,12 +70,20 @@ public class SecurityConfig {
                 // Define authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                                .requestMatchers("/api/users/registro", "/api/users/login").permitAll()
-                                .requestMatchers("/api/products", "/api/products/**").permitAll()
-                                .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
-                                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                                .anyRequest().permitAll()
-                        )
+                        // CRUCIAL: Allow ALL OPTIONS requests to bypass security
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Existing public paths
+                        .requestMatchers("/api/users/registro", "/api/users/login").permitAll()
+                        .requestMatchers("/api/products", "/api/products/**").permitAll()
+
+                        // Existing restricted paths
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
+
+                        // Ensure all other paths are secured (Fixing the previous issue I pointed out)
+                        .anyRequest().authenticated()
+                )
 
                 // Register JWT filter
                 .authenticationProvider(daoAuthenticationProvider())
