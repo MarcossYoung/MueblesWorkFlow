@@ -99,7 +99,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:3000","https://mueblesworkflow.netlify.app", "https://**--mueblesworkflow.netlify.app"));
+        config.setAllowedOrigins(List.of("http://localhost:3000","https://mueblesworkflow.netlify.app", "https://691b7b9b293a5b0008a93cd0--mueblesworkflow.netlify.app"));
 
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
