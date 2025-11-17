@@ -23,6 +23,7 @@ import OrdersNotPickedUp from './views/ordersNotPickedUp';
 import OrdersPastDue from './views/ordersPastDue';
 import Sidebar from './components/sidebar';
 import {OrdersProvider} from './OrdersContext';
+import RoleRoute from './RoleRoute';
 
 function App() {
 	const {user, setUser} = useContext(UserContext);
@@ -49,16 +50,53 @@ function App() {
 							</ProtectedRoute>
 						}
 					>
-						<Route index element={<Products />} />
+						{/* USER (basic) — only due-this-week */}
 						<Route
 							path='due-this-week'
-							element={<OrdersDueThisWeek user={user} />}
+							element={
+								<RoleRoute
+									user={user}
+									allowedRoles={['USER', 'SELLER', 'ADMIN']}
+								>
+									<OrdersDueThisWeek user={user} />
+								</RoleRoute>
+							}
+						/>
+
+						{/* SELLER + ADMIN can see everything */}
+						<Route
+							index
+							element={
+								<RoleRoute
+									user={user}
+									allowedRoles={['SELLER', 'ADMIN']}
+								>
+									<Products />
+								</RoleRoute>
+							}
 						/>
 						<Route
 							path='not-picked-up'
-							element={<OrdersNotPickedUp />}
+							element={
+								<RoleRoute
+									user={user}
+									allowedRoles={['SELLER', 'ADMIN']}
+								>
+									<OrdersNotPickedUp />
+								</RoleRoute>
+							}
 						/>
-						<Route path='late' element={<OrdersPastDue />} />
+						<Route
+							path='late'
+							element={
+								<RoleRoute
+									user={user}
+									allowedRoles={['SELLER', 'ADMIN']}
+								>
+									<OrdersPastDue />
+								</RoleRoute>
+							}
+						/>
 					</Route>
 					<Route
 						path='/products/create'

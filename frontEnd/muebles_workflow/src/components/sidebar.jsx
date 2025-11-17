@@ -8,6 +8,7 @@ export default function Sidebar() {
 		`block p-2 rounded ${isActive ? 'bg-amber-200 font-bold' : ''}`;
 
 	const {user} = useContext(UserContext);
+	const isAdminSeller = user?.role === 'ADMIN' || user?.role === 'SELLER';
 	const isAdmin = user?.role === 'ADMIN';
 
 	return (
@@ -20,14 +21,17 @@ export default function Sidebar() {
 				<NavLink to='due-this-week' className={linkClass}>
 					Entregas esta semana
 				</NavLink>
+				{isAdminSeller && (
+					<div>
+						<NavLink to='late' className={linkClass}>
+							Atrasados
+						</NavLink>
 
-				<NavLink to='late' className={linkClass}>
-					Atrasados
-				</NavLink>
-
-				<NavLink to='not-picked-up' className={linkClass}>
-					No retirados
-				</NavLink>
+						<NavLink to='not-picked-up' className={linkClass}>
+							No retirados
+						</NavLink>
+					</div>
+				)}
 			</div>
 
 			{isAdmin && (

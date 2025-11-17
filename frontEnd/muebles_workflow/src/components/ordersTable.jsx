@@ -95,7 +95,8 @@ function OrdersTable({data}) {
 							<th>Cantidad</th>
 							<th>Fecha Inicio</th>
 							<th>Fecha Entrega</th>
-							{user?.role === 'ADMIN' && <th>Acciones</th>}
+							{(user?.role === 'ADMIN' ||
+								user?.role === 'SELLER') && <th>Acciones</th>}
 						</tr>
 					</thead>
 					<tbody>

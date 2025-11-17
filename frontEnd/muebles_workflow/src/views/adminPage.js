@@ -56,10 +56,10 @@ function AdminPage() {
 			await axios.post(`${BASE_URL}/api/users/registro`, {
 				username: newUser.username,
 				password: newUser.password,
-				appUserRole: newUser.role,
+				appUserRole: newUser.appUserRole,
 			});
 			setCreateMsg('✅ Usuario creado correctamente');
-			setNewUser({username: '', password: '', role: ''});
+			setNewUser({username: '', password: '', appUserRole: ''});
 			setTimeout(() => setCreateMsg(''), 3000);
 			setShowModal(false);
 		} catch (error) {
@@ -210,6 +210,7 @@ function AdminPage() {
 										<option value='ADMIN'>
 											Administrador
 										</option>
+										<option value='SELLER'>Vendedor</option>
 									</select>
 									<button
 										type='submit'
