@@ -14,10 +14,11 @@ import java.time.LocalDate;
 
     @Table(name = "products")
     public class Product {
+
     @Id
-    @SequenceGenerator(name = "id",sequenceName = "prodSequence",allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "prodSequence")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     @Column(name = "titulo")
     private String titulo;
 

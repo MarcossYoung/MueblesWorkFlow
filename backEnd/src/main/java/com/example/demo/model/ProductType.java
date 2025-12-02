@@ -6,7 +6,7 @@ public enum ProductType {
     COMODA,
     BANCOS,
     RATONA,
-    CRYSTALERO,
+    CRISTALERO,
     SILLONES,
     RACKTV,
     OTROS,
