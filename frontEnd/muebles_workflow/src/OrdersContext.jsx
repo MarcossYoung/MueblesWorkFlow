@@ -35,17 +35,17 @@ export const OrdersProvider = ({children}) => {
 		inFlightRef.current = true;
 		setLoading(true);
 		setError(null);
-		const res = await axios.get(`${BASE_URL}/api/products`, {
-			headers: getAuthHeaders(),
-		});
 		try {
+			const res = await axios.get(`${BASE_URL}/api/products`, {
+				headers: getAuthHeaders(),
+			});
 			const data = Array.isArray(res.data)``
 				? res.data
 				: res.data?.content || [];
 			setOrders(data);
 		} catch (err) {
 			setError(err);
-			console.error('fetchAllOrders error:', err, res);
+			console.error('fetchAllOrders error:', err);
 		} finally {
 			setLoading(false);
 			inFlightRef.current = false;
