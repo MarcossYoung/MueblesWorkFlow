@@ -35,13 +35,13 @@ export const OrdersProvider = ({children}) => {
 		inFlightRef.current = true;
 		setLoading(true);
 		setError(null);
-		try {
+		//try {
 			const res = await axios.get(`${BASE_URL}/api/products`, {
 				headers: getAuthHeaders(),
 			});
 			console.log('fetchAllOrders response:', res);
 
-			const data = Array.isArray(res.data)
+		/*	const data = Array.isArray(res.data)
 				? res.data
 				: res.data?.content || [];
 			setOrders(data);
@@ -52,7 +52,7 @@ export const OrdersProvider = ({children}) => {
 			setLoading(false);
 			inFlightRef.current = false;
 		}
-	}, []);
+	}, []);*/
 
 	// Fetch a subset (does NOT touch global orders)
 	const fetchOrdersByRange = useCallback(async (endpoint) => {
