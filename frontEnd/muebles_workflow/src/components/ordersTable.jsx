@@ -104,7 +104,9 @@ function OrdersTable({data}) {
 							filtered.map((o) => (
 								<tr
 									key={o.id}
-									className={getRowClass(o.workOrder.status)}
+									className={getRowClass(
+										o.work_orders.status
+									)}
 									onClick={() => handleDetail(o.id)}
 								>
 									<td>{o.id}</td>
