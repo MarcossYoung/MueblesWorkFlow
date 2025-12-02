@@ -115,7 +115,7 @@ public class ProductService {
 
 
     public Page<Product> getAll(Pageable pageable) {
-        return productRepo.findAll(pageable);
+        return productRepo.findAllWithWorkOrder(pageable);
     }
 
 

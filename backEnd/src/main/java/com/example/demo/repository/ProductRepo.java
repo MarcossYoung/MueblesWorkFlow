@@ -19,6 +19,10 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     // Find products by type
     Page<Product> findByProductType(ProductType type, Pageable pageable);
 
+    @Query(value = "SELECT p FROM Product p LEFT JOIN FETCH p.workOrder",
+            countQuery = "SELECT COUNT(p) FROM Product p")
+    Page<Product> findAllWithWorkOrder(Pageable pageable);
+
 
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     Optional<Product> findById(@Param("id") Long id);
