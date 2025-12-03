@@ -66,9 +66,9 @@ import java.time.LocalDate;
     @JsonManagedReference
     private WorkOrder workOrder;
 
-    @ManyToOne( fetch = FetchType.EAGER)
-    @JoinColumn(name = "ownerid")
-    private AppUser ownerid;
+    @ManyToOne( fetch = FetchType.LAZY)
+    @JoinColumn(name = "ownerid",referencedColumnName = "id")
+    private AppUser owner;
 
 
 }

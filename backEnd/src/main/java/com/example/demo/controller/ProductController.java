@@ -78,7 +78,7 @@ public class ProductController {
             product.setNotas(notas);
             product.setStartDate(LocalDate.now());
             product.setFechaEstimada(LocalDate.now().plusDays(35));
-            product.setOwnerid(userService.getCurrentUser());
+            product.setOwner(userService.getCurrentUser());
 
 
             Product savedProduct = productService.guardar(product);
