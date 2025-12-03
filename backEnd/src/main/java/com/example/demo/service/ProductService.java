@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.ProductCreateRequest;
+import com.example.demo.dto.ProductResponse;
 import com.example.demo.dto.ProductUpdateDto;
 import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.Product;
@@ -141,9 +142,8 @@ public class ProductService {
     }
 
 
-    @Transactional(readOnly = true)
-    public Page<Product> getAll(Pageable pageable) {
-        return productRepo.findAll(pageable);
+    public Page<ProductResponse> getAll(Pageable pageable) {
+        return productRepo.findAll(pageable).map(ProductResponse::from);
     }
 
 

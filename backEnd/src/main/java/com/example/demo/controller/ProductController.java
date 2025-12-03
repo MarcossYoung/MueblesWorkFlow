@@ -40,16 +40,15 @@ public class ProductController {
     private WorkOrderService workOrderService;
 
 
-    @GetMapping()
-    public ResponseEntity<Page<Product>> getAllProducts(
+    @GetMapping
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
-    ) throws ResourceNotFoundException {
+    ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Product> products = productService.getAll(pageable);
+        Page<ProductResponse> products = productService.getAll(pageable);
         return ResponseEntity.ok(products);
     }
-
 
     @PostMapping("/create")
     public ResponseEntity<ProductResponse> createProduct(
