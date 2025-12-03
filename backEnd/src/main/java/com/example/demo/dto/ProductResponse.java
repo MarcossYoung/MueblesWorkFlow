@@ -2,6 +2,7 @@ package com.example.demo.dto;
 
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
+import com.example.demo.model.WorkOrder;
 
 import java.time.LocalDate;
 
@@ -22,7 +23,7 @@ public record ProductResponse(
         String foto,
         String notas,
         Long ownerId,        // user id only, avoids lazy serialization
-        Long workOrderId      // we expose the ID only (optional)
+        WorkOrder workOrder// we expose the ID only (optional)
 ) {
 
     public static ProductResponse from(Product p) {
@@ -43,7 +44,7 @@ public record ProductResponse(
                 p.getFoto(),
                 p.getNotas(),
                 p.getOwner() != null ? p.getOwner().getId() : null,
-                p.getWorkOrder() != null ? p.getWorkOrder().getId() : null
+                p.getWorkOrder() != null ? p.getWorkOrder() : null
         );
     }
 }
