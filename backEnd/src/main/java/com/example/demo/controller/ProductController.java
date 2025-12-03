@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ProductCreateRequest;
+import com.example.demo.dto.ProductResponse;
 import com.example.demo.dto.ProductUpdateDto;
 import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.Product;
@@ -50,44 +52,11 @@ public class ProductController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<Product> createProduct(@RequestParam("titulo") String titulo,
-                                                 @RequestParam("tipo") ProductType type,
-                                                 @RequestParam("medida") String medida,
-                                                 @RequestParam("material") String material,
-                                                 @RequestParam("pintura") String pintura,
-                                                 @RequestParam("color") String color,
-                                                 @RequestParam("laqueado") String laqueado,
-                                                 @RequestParam("cantidad") long cantidad,
-                                                 @RequestParam("precio") double precio,
-                                                 @RequestParam("foto") String foto,
-                                                 @RequestParam("notas") String notas
-                                                 ) {
-
-        try {
-            Product product = new Product();
-            product.setTitulo(titulo);
-            product.setProductType(type);
-            product.setMedidas(medida);
-            product.setMaterial(material);
-            product.setPintura(pintura);
-            product.setColor(color);
-            product.setLaqueado(laqueado);
-            product.setCantidad(cantidad);
-            product.setPrecio(precio);
-            product.setFoto(foto);
-            product.setNotas(notas);
-            product.setStartDate(LocalDate.now());
-            product.setFechaEstimada(LocalDate.now().plusDays(35));
-            product.setOwner(userService.getCurrentUser());
-
-
-            Product savedProduct = productService.guardar(product);
-            workOrderService.createForProduct(savedProduct);
-            return ResponseEntity.ok(savedProduct);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+    public ResponseEntity<ProductResponse> createProduct(
+            @RequestBody ProductCreateRequest req
+    ) {
+        Product p = productService.createProduct(req);
+        return ResponseEntity.ok(ProductResponse.from(p));
     }
 
     @GetMapping("/{id}")

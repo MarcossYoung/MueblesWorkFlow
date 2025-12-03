@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ProductCreateRequest;
 import com.example.demo.dto.ProductUpdateDto;
 import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.Product;
@@ -27,16 +28,42 @@ public class ProductService {
     private final WorkOrderRepo workOrderRepo;
 
     @Autowired
-    public ProductService(ProductRepo productRepo, WorkOrderRepo workOrderRepo) {
+    private final AppUserService userService;
+
+
+    @Autowired
+    public ProductService(ProductRepo productRepo, WorkOrderRepo workOrderRepo, AppUserService userService) {
         this.productRepo = productRepo;
         this.workOrderRepo = workOrderRepo;
+        this.userService = userService;
     }
 
     private final String UPLOAD_DIR = "uploads/";
 
-    public Product guardar(Product p) {
+    public Product createProduct(ProductCreateRequest req) {
+
+
+        Product p = new Product();
+        p.setTitulo(req.titulo());
+        p.setProductType(req.productType());
+        p.setMedidas(req.medidas());
+        p.setMaterial(req.material());
+        p.setPintura(req.pintura());
+        p.setColor(req.color());
+        p.setLaqueado(req.laqueado());
+        p.setCantidad(req.cantidad());
+        p.setPrecio(req.precio());
+        p.setStartDate(req.startDate());
+        p.setFechaEntrega(req.fechaEntrega());
+        p.setFechaEstimada(req.fechaEstimada());
+        p.setFoto(req.foto());
+        p.setNotas(req.notas());
+        p.setOwner(userService.getCurrentUser());
+
         return productRepo.save(p);
     }
+
+    public Product guardar(Product p) {return productRepo.save(p);}
 
 
     public Product buscar(long id) throws RuntimeException {
