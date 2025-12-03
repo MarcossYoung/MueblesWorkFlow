@@ -68,7 +68,7 @@ import java.time.LocalDate;
 
     @ManyToOne( fetch = FetchType.LAZY)
     @JoinColumn(name = "ownerid")
-    private AppUser owner;
+    private AppUser ownerid;
 
 
 }

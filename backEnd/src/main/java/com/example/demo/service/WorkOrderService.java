@@ -22,7 +22,6 @@ public class WorkOrderService {
     public WorkOrder createForProduct(Product product) {
         WorkOrder order = new WorkOrder();
         order.setProduct(product);
-        order.setStatus(Status.CREADO);
         return workOrderRepository.save(order);
     }
 
