@@ -32,12 +32,12 @@ function OrdersTable({data}) {
 		window.location.href = `/products/${id}`;
 	};
 
-	const getRowClass = (status) => {
+	/*const getRowClass = (status) => {
 		if (status === 'TERMINADO') return 'row-done';
 		if (status === 'ATRASADO') return 'row-late';
 		if (status === 'ENTRGADO') return 'row-delivered';
 		return 'row-inprogress';
-	};
+	};*/
 
 	// ✅ FIXED FILTERING
 	let filtered = data.filter((order) => {
