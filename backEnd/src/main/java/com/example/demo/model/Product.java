@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -68,6 +69,7 @@ import java.time.LocalDate;
 
     @ManyToOne( fetch = FetchType.LAZY)
     @JoinColumn(name = "ownerid",referencedColumnName = "id")
+    @JsonIgnore
     private AppUser owner;
 
 
