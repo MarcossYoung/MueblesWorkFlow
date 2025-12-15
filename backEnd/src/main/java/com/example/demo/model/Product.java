@@ -65,6 +65,7 @@ import java.time.LocalDate;
 
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @JsonIgnore
     private WorkOrder workOrder;
 
     @ManyToOne( fetch = FetchType.LAZY)

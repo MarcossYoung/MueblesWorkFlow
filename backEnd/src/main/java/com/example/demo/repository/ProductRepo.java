@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.dto.ProductResponse;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
 import org.springframework.data.domain.Page;
@@ -40,6 +41,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
                JOIN WorkOrder w ON w.product = p
                GROUP BY w.status""")
    List<Object[]> findTopOrders();
+
+
 
 }
 

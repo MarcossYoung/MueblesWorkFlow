@@ -23,7 +23,7 @@ public record ProductResponse(
         String foto,
         String notas,
         Long ownerId,        // user id only, avoids lazy serialization
-        WorkOrder workOrder// we expose the ID only (optional)
+        WorkOrder workOrder
 ) {
 
     public static ProductResponse from(Product p) {
