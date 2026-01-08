@@ -11,7 +11,7 @@ export default function Dashboard() {
 	const {user} = useContext(UserContext);
 
 	const linkClass = ({isActive}) =>
-		`block p-2 rounded ${isActive ? 'bg-amber-200 font-bold' : ''}`;
+		isActive ? 'nav-pill active' : 'nav-pill';
 
 	const isAdmin = user?.role === 'ADMIN';
 
@@ -37,24 +37,34 @@ export default function Dashboard() {
 	return (
 		<div className='dashboard-layout flex'>
 			<main className='dashboard-content w-100 p-3'>
-				<NavLink to='/dashboard' end className={linkClass}>
-					Pedidos
-				</NavLink>
-				<NavLink to='due-this-week' className={linkClass}>
-					Entregas esta semana
-				</NavLink>
-				{isAdmin && (
-					<div>
-						<NavLink to='late' className={linkClass}>
-							Atrasados
-						</NavLink>
+				<nav style={{display: 'flex', gap: '10px'}}>
+					{' '}
+					{/* Horizontal layout for links */}
+					<NavLink to='/dashboard' end className={linkClass}>
+						Pedidos
+					</NavLink>
+					<NavLink to='due-this-week' className={linkClass}>
+						Entregas esta semana
+					</NavLink>
+					{isAdmin && (
+						<>
+							<NavLink to='late' className={linkClass}>
+								Atrasados
+							</NavLink>
+							<NavLink to='not-picked-up' className={linkClass}>
+								No retirados
+							</NavLink>
+							{/* NEW: Add link for the Costs Manager we created */}
+							<NavLink to='costs' className={linkClass}>
+								Gestión de Gastos
+							</NavLink>
+						</>
+					)}
+				</nav>
 
-						<NavLink to='not-picked-up' className={linkClass}>
-							No retirados
-						</NavLink>
-					</div>
-				)}
-				<Outlet data={orders} />
+				<div className='tab-content'>
+					<Outlet context={orders} />
+				</div>
 			</main>
 		</div>
 	);

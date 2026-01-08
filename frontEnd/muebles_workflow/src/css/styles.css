@@ -978,3 +978,49 @@ textarea.editable {
 	background-color: #e0f2fe;
 	color: #075985;
 } /* Blue */
+/* Container for the tabs */
+.dashboard-content nav {
+	display: flex;
+	gap: 1rem;
+	margin-bottom: 2rem;
+	border-bottom: 2px solid #e5e7eb;
+	padding-bottom: 0.5rem;
+}
+
+/* Base style for the NavLink */
+.nav-pill {
+	text-decoration: none;
+	padding: 0.6rem 1.2rem;
+	border-radius: 8px;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: #636e72; /* Subtle grey */
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	background: transparent;
+	border: 1px solid transparent;
+}
+
+/* Hover state */
+.nav-pill:hover {
+	background-color: #f1f2f6;
+	color: #2d3436;
+}
+
+/* ACTIVE state (When on that page) */
+.nav-pill.active {
+	background-color: #00b894; /* Your theme green */
+	color: #ffffff;
+	box-shadow: 0 4px 12px rgba(0, 184, 148, 0.25);
+	transform: translateY(-1px);
+}
+
+/* Optional: Add a small dot or bar for the active state instead of full color */
+.nav-pill.active::after {
+	content: '';
+	display: block;
+	width: 20%;
+	height: 2px;
+	background: white;
+	margin: 4px auto 0;
+	border-radius: 2px;
+}
