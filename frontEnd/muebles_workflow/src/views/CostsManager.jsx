@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect, useContext, useCallback} from 'react';
 import axios from 'axios';
 import {UserContext} from '../UserProvider';
 import {BASE_URL} from '../api/config';
@@ -16,8 +16,9 @@ export default function CostsManager() {
 		frequency: 'ONE_TIME',
 	});
 
-	const fetchCosts = async () => {
+	const fetchCosts = useCallback(async () => {
 		try {
+			setLoading(true);
 			const res = await axios.get(`${BASE_URL}/api/costs`, {
 				headers: {Authorization: `Bearer ${user.token}`},
 			});
@@ -27,11 +28,11 @@ export default function CostsManager() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [user.token]);
 
 	useEffect(() => {
 		fetchCosts();
-	}, []);
+	}, [fetchCosts]);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -53,6 +54,10 @@ export default function CostsManager() {
 		});
 		fetchCosts();
 	};
+
+	if (loading && costs.length === 0) {
+		return <div className='admin-dashboard'>Cargando costos...</div>;
+	}
 
 	return (
 		<div className='admin-dashboard'>
