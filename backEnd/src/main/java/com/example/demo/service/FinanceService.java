@@ -6,14 +6,17 @@ import com.example.demo.dto.FinanceKpis;
 import com.example.demo.dto.FinanceSeries;
 import com.example.demo.dto.MonthlyAmountRow;
 
+import com.example.demo.model.Costs;
 import com.example.demo.repository.CostRepo;
 import com.example.demo.repository.PaymentRepo;
 import com.example.demo.repository.ProductRepo;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FinanceService {
@@ -125,5 +128,14 @@ public class FinanceService {
             cur = cur.plusMonths(1);
         }
         return out;
+    }
+
+    public Map<String, BigDecimal> getExpensesByType(LocalDate from, LocalDate to) {
+
+        List<Costs> costs = costsRepository.findByDateBetween(from, to);
+        return costs.stream().collect(Collectors.groupingBy(
+                c -> c.getCostType().name(),
+                Collectors.mapping(Costs::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
+        ));
     }
 }
