@@ -24,6 +24,7 @@ import Sidebar from './components/sidebar';
 import {OrdersProvider} from './OrdersContext';
 import RoleRoute from './RoleRoute';
 import Finances from './views/finances';
+import CostsManager from './views/CostsManager';
 
 function App() {
 	const {user, setUser} = useContext(UserContext);
@@ -110,6 +111,20 @@ function App() {
 								<Sidebar />
 								<div className='main-content'>
 									<Finances />
+								</div>
+							</RoleRoute>
+						}
+					/>
+					<Route
+						path='/costs'
+						element={
+							<RoleRoute
+								user={user}
+								allowedRoles={['SELLER', 'ADMIN']}
+							>
+								<Sidebar />
+								<div className='main-content'>
+									<CostsManager />
 								</div>
 							</RoleRoute>
 						}

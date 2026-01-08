@@ -938,3 +938,43 @@ textarea.editable {
 .finance-grid .chart-container > div > div > div {
 	background: #00b894;
 }
+
+/* Badge Base Styles */
+.badge {
+	padding: 4px 12px;
+	border-radius: 12px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	display: inline-block;
+}
+
+/* Category Specific Colors */
+.badge.RENT {
+	background-color: #dfe6e9;
+	color: #2d3436;
+} /* Grey */
+.badge.SALARY {
+	background-color: #d1fae5;
+	color: #065f46;
+} /* Green */
+.badge.TAX {
+	background-color: #fee2e2;
+	color: #991b1b;
+} /* Red */
+.badge.ADS {
+	background-color: #e0e7ff;
+	color: #3730a3;
+} /* Indigo */
+.badge.MATERIAL {
+	background-color: #fef3c7;
+	color: #92400e;
+} /* Amber */
+.badge.OTRO {
+	background-color: #f3f4f6;
+	color: #374151;
+} /* Light Grey */
+.badge.SERVICES {
+	background-color: #e0f2fe;
+	color: #075985;
+} /* Blue */
