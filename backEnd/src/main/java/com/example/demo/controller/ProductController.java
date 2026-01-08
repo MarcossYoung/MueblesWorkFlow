@@ -54,13 +54,13 @@ public class ProductController {
     public ResponseEntity<ProductResponse> createProduct(
             @RequestBody ProductCreateRequest req
     ) {
-        Product p = productService.createProduct(req);
-        return ResponseEntity.ok(ProductResponse.from(p));
+        ProductResponse p = productService.createProduct(req);
+        return ResponseEntity.ok(p);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProduct(@PathVariable Long id) {
-        Product product = productService.buscar(id);
+    public ResponseEntity<ProductResponse> getProduct(@PathVariable Long id) throws ResourceNotFoundException {
+        ProductResponse product = productService.getById(id);
         if (product == null) {
             return ResponseEntity.notFound().build();
         }
@@ -68,15 +68,13 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
             @RequestBody ProductUpdateDto dto
     ) {
         try {
-            Product updated = productService.editar(id, dto);
+            ProductResponse updated = productService.update(id, dto);
             return ResponseEntity.ok(updated);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -84,8 +82,8 @@ public class ProductController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        if (productService.borrar(id)) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) throws ResourceNotFoundException {
+        if (productService.delete(id)) {
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();

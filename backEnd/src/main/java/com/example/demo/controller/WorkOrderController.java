@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ProductResponse;
 import com.example.demo.model.Product;
 import com.example.demo.model.Status;
 import com.example.demo.model.WorkOrder;
@@ -22,12 +23,6 @@ public class WorkOrderController {
     @Autowired
     private ProductService productService;
 
-    @PostMapping("/create/{productId}")
-    public ResponseEntity<WorkOrder> createWorkOrder(@PathVariable Long productId) {
-        Product product = productService.buscar(productId);
-        WorkOrder workOrder = workOrderService.createForProduct(product);
-        return ResponseEntity.ok(workOrder);
-    }
 
     @PutMapping("/{id}/status")
     public ResponseEntity<WorkOrder> updateStatus(

@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.dto.MonthlyAmountRow;
 import com.example.demo.dto.ProductResponse;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
@@ -20,8 +21,16 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     // Find products by type
     Page<Product> findByProductType(ProductType type, Pageable pageable);
 
-    @Query("SELECT p FROM Product p WHERE p.id = :id")
-    Optional<Product> findById(@Param("id") Long id);
+    @Query(value = """
+        SELECT to_char(date_trunc('month', p.startDate), 'YYYY-MM') AS month,
+               COALESCE(SUM(p.precio), 0) AS total
+        FROM products p
+        WHERE p.startDate BETWEEN :from AND :to 
+        GROUP BY 1
+        ORDER BY 1
+        """, nativeQuery = true)
+    List<MonthlyAmountRow> incomeByMonth(@Param("from") LocalDate from,
+                                         @Param("to") LocalDate to);
 
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.titulo) LIKE LOWER(CONCAT('%', :query)) ")

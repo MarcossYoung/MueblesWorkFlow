@@ -23,7 +23,7 @@ const ProductDetail = () => {
 		precio: '',
 		fechaEstimada: '',
 		notas: '',
-		status: '',
+		//	status: '',
 	});
 
 	const handleChange = (e) => {
@@ -50,7 +50,7 @@ const ProductDetail = () => {
 					precio: res.data.precio || '',
 					fechaEstimada: res.data.fechaEstimada || '',
 					notas: res.data.notas || '',
-					status: res.data.workOrder.status || '',
+					status: res.data.workOrderStatus || '',
 				});
 			} catch (err) {
 				console.error('Error:', err);

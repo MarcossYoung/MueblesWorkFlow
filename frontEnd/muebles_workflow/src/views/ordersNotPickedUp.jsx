@@ -11,7 +11,7 @@ export default function OrdersNotPickedUp() {
 			setOrders(
 				data.filter(
 					(order) =>
-						order.workOrder.status === 'TERMINADO' &&
+						order.workOrderStatus === 'TERMINADO' &&
 						order.fechaDeEntrega > Date.now()
 				)
 			);

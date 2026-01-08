@@ -9,7 +9,6 @@ import {
 import {UserContext} from './UserProvider';
 import Register from './views/registro';
 import Login from './views/login';
-import ProductCreation from './views/productCreateForm';
 import Profile from './views/profile';
 import Products from './views/productsAll';
 import ProductDetail from './views/productsDetail';
@@ -24,10 +23,11 @@ import OrdersPastDue from './views/ordersPastDue';
 import Sidebar from './components/sidebar';
 import {OrdersProvider} from './OrdersContext';
 import RoleRoute from './RoleRoute';
+import Finances from './views/finances';
 
 function App() {
 	const {user, setUser} = useContext(UserContext);
-	const [product, setProduct] = useState(null);
+	const [product] = useState(null);
 
 	return (
 		<OrdersProvider>
@@ -75,6 +75,7 @@ function App() {
 								</RoleRoute>
 							}
 						/>
+
 						<Route
 							path='not-picked-up'
 							element={
@@ -98,17 +99,22 @@ function App() {
 							}
 						/>
 					</Route>
+
 					<Route
-						path='/products/create'
+						path='/finance'
 						element={
-							<ProtectedRoute>
-								<ProductCreation
-									product={product}
-									setProduct={setProduct}
-								/>
-							</ProtectedRoute>
+							<RoleRoute
+								user={user}
+								allowedRoles={['SELLER', 'ADMIN']}
+							>
+								<Sidebar />
+								<div className='main-content'>
+									<Finances />
+								</div>
+							</RoleRoute>
 						}
 					/>
+
 					<Route
 						path='/profile/:id'
 						element={

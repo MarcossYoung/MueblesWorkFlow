@@ -1,9 +1,8 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.Product;
-import com.example.demo.model.ProductType;
-import com.example.demo.model.WorkOrder;
+import com.example.demo.model.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record ProductResponse(
@@ -16,17 +15,37 @@ public record ProductResponse(
         String color,
         String laqueado,
         Long cantidad,
-        Double precio,
         LocalDate startDate,
         LocalDate fechaEntrega,
         LocalDate fechaEstimada,
         String foto,
         String notas,
-        Long ownerId,        // user id only, avoids lazy serialization
-        WorkOrder workOrder
+        Long ownerId,
+        Long workOrderId,
+        Status workOrderStatus,
+        BigDecimal totalPaid,
+        BigDecimal depositPaid
 ) {
 
     public static ProductResponse from(Product p) {
+        WorkOrder wo = p.getWorkOrder();
+        OrderPayments op = (OrderPayments) p.getOrderPayments();
+
+        BigDecimal totalPaid = BigDecimal.ZERO;
+        BigDecimal depositPaid = BigDecimal.ZERO;
+
+        if (p.getOrderPayments() != null) {
+            for (OrderPayments pay : p.getOrderPayments()) {
+                if (pay.getAmount() != null) {
+                    totalPaid = totalPaid.add(pay.getAmount());
+                }
+                if (pay.getPaymentType() == PaymentType.DEPOSIT && pay.getAmount() != null) {
+                    depositPaid = depositPaid.add(pay.getAmount());
+                }
+            }
+        }
+
+
         return new ProductResponse(
                 p.getId(),
                 p.getTitulo(),
@@ -37,14 +56,19 @@ public record ProductResponse(
                 p.getColor(),
                 p.getLaqueado(),
                 p.getCantidad(),
-                p.getPrecio(),
                 p.getStartDate(),
                 p.getFechaEntrega(),
                 p.getFechaEstimada(),
                 p.getFoto(),
                 p.getNotas(),
                 p.getOwner() != null ? p.getOwner().getId() : null,
-                p.getWorkOrder() != null ? p.getWorkOrder() : null
+                wo != null ? wo.getId() : null,
+                wo != null ? wo.getStatus() : null,
+                totalPaid,
+                depositPaid
+
+
+
         );
     }
 }

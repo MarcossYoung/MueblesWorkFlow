@@ -10,7 +10,7 @@ export default function PastDue() {
 			const data = await fetchOrdersByRange('');
 
 			setOrders(
-				data.filter((order) => order.workOrder.status === 'ATRASADO')
+				data.filter((order) => order.workOrderStatus === 'ATRASADO')
 			);
 		};
 		load();

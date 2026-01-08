@@ -1,3 +1,7 @@
+.app-layout {
+	display: flex;
+}
+
 .admin-dashboard {
 	padding: 2rem;
 	background-color: #f7f9fc;
@@ -425,7 +429,7 @@
 	justify-content: space-between;
 	top: 0;
 	left: 0;
-	width: 230px;
+	width: 180px;
 	height: 90%;
 	background-color: #000;
 	color: #fff;
@@ -435,6 +439,8 @@
 	font-size: larger;
 	flex-direction: column;
 }
+
+/* Sidebar links spacing */
 
 /* Sidebar nav list */
 .sidebar ul {
@@ -488,8 +494,11 @@ main {
 
 /* Shift content right to make space for sidebar */
 .main-content {
-	margin-left: 230px; /* same width as sidebar */
-	padding: 2rem;
+	margin-left: 200px; /* 👈 must match sidebar width */
+	padding: 1.5rem;
+	width: calc(100% - 200px);
+	min-height: 100vh;
+	background-color: #fafafa;
 }
 
 /* For pages without sidebar (e.g. login/register) */
@@ -901,4 +910,31 @@ textarea.editable {
 	background: #fafafa;
 	border-radius: 4px;
 	padding: 8px;
+}
+
+/* === FINANCE PAGE GRID === */
+.finance-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(320px, 1fr));
+	gap: 1.5rem;
+}
+
+/* Make it 1 column on smaller screens */
+@media (max-width: 900px) {
+	.finance-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* SVG bars default fill (matches your green theme) */
+.finance-grid svg rect {
+	fill: #00b894;
+}
+.finance-grid svg rect:hover {
+	opacity: 0.9;
+}
+
+/* Progress bar fill */
+.finance-grid .chart-container > div > div > div {
+	background: #00b894;
 }

@@ -1,6 +1,8 @@
 package com.example.demo.dto;
 
 import com.example.demo.model.ProductType;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record ProductCreateRequest(
@@ -12,11 +14,14 @@ public record ProductCreateRequest(
         String color,
         String laqueado,
         Long cantidad,
-        Double precio,
+        BigDecimal precio,
         LocalDate startDate,
         LocalDate fechaEntrega,
         LocalDate fechaEstimada,
         String foto,
         String notas,
+
+        Long deposit,
+
         Long ownerId
 ) {}

@@ -8,31 +8,24 @@ export default function Sidebar() {
 		`block p-2 rounded ${isActive ? 'bg-amber-200 font-bold' : ''}`;
 
 	const {user} = useContext(UserContext);
-	const isAdminSeller = user?.role === 'ADMIN' || user?.role === 'SELLER';
 	const isAdmin = user?.role === 'ADMIN';
 
 	return (
 		<aside className='sidebar bg-gray-100 p-4 justifyContent'>
 			<div>
-				<NavLink to='/dashboard' end className={linkClass}>
-					Todos los pedidos
+				<NavLink to='/dashboard' className={linkClass}>
+					Pedidos
 				</NavLink>
-
-				<NavLink to='due-this-week' className={linkClass}>
-					Entregas esta semana
-				</NavLink>
-				{isAdminSeller && (
-					<div>
-						<NavLink to='late' className={linkClass}>
-							Atrasados
-						</NavLink>
-
-						<NavLink to='not-picked-up' className={linkClass}>
-							No retirados
-						</NavLink>
-					</div>
-				)}
 			</div>
+			<div>
+				<NavLink to='/finance' className={linkClass}>
+					Finanzas
+				</NavLink>
+			</div>
+
+			{/*<NavLink to='/inventory' className={linkClass}>
+				Inventario
+				</NavLink>*/}
 
 			{isAdmin && (
 				<NavLink className={linkClass} to='/admin'>

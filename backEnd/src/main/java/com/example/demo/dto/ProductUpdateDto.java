@@ -20,7 +20,8 @@ public class ProductUpdateDto {
     private Double precio;
     private String notas;
     private String foto;
-    private String fechaEstimada; // "2025-01-15"
+    private String fechaEstimada;// "2025-01-15"
+    private Long deposit;
 
     // WORK ORDER fields
     private Status status;

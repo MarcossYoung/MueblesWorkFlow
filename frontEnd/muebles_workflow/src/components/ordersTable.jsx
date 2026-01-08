@@ -1,6 +1,6 @@
 import React, {useState, useContext} from 'react';
 import axios from 'axios';
-import {FaBoxOpen, FaTrashAlt} from 'react-icons/fa';
+import {FaTrashAlt} from 'react-icons/fa';
 import {UserContext} from '../UserProvider';
 import {useOrders} from '../OrdersContext';
 import {BASE_URL} from '../api/config';
@@ -57,10 +57,6 @@ function OrdersTable({data}) {
 
 	return (
 		<div className='orders-container'>
-			<h1 className='main-title'>
-				<FaBoxOpen /> Órdenes
-			</h1>
-
 			{user?.role === 'ADMIN' && (
 				<div className='admin-tools'>
 					<input
@@ -104,7 +100,7 @@ function OrdersTable({data}) {
 							filtered.map((o) => (
 								<tr
 									key={o.id}
-									className={getRowClass(o.workOrder.status)}
+									className={getRowClass(o.workOrderStatus)}
 									onClick={() => handleDetail(o.id)}
 								>
 									<td>{o.id}</td>

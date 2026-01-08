@@ -2,12 +2,13 @@ package com.example.demo.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Setter
 @Getter
@@ -45,9 +46,6 @@ import java.time.LocalDate;
     @Column(name = "cantidad")
     private long cantidad;
 
-    @Column(name = "precio")
-    private Double precio;
-
     @Column(name = "startdate")
     private LocalDate startDate;
 
@@ -63,10 +61,17 @@ import java.time.LocalDate;
     @Column(name = "notas")
     private String notas;
 
+    @Column(name = "precio", nullable = false, precision = 12, scale = 2)
+    private BigDecimal precio;
+
+
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
     @JsonIgnore
     private WorkOrder workOrder;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<OrderPayments> orderPayments;
 
     @ManyToOne( fetch = FetchType.LAZY)
     @JoinColumn(name = "ownerid",referencedColumnName = "id")
