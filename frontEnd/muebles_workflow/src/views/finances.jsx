@@ -2,7 +2,7 @@ import React, {useState, useEffect, useContext} from 'react';
 import axios from 'axios';
 import {UserContext} from '../UserProvider';
 import {BASE_URL} from '../api/config';
-import TripleBarChart from '../components/charts/TripleBarChart';
+import TripleBarChart from '../components/charts/tripleBarChart';
 import StatCard from '../components/statCard';
 
 export default function Finance() {
