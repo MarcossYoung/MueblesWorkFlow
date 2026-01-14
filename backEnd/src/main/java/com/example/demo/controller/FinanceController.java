@@ -51,5 +51,12 @@ public class FinanceController {
         return new DateRange(current.atDay(1), current.atEndOfMonth());
     }
 
+    @GetMapping("/yearly")
+    public FinanceDashboardResponse getYearlyFinance(@RequestParam int year) {
+        LocalDate from = LocalDate.of(year, 1, 1);
+        LocalDate to = LocalDate.of(year, 12, 31);
+        return financeService.dashboard(from, to);
+    }
+
     private record DateRange(LocalDate from, LocalDate to) {}
 }
