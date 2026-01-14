@@ -3,7 +3,7 @@ import axios from 'axios';
 import {UserContext} from '../UserProvider';
 import {BASE_URL} from '../api/config';
 import TripleBarChart from '../components/charts/TripleBarChart';
-import StatCard from '../components/StatCard';
+import StatCard from '../components/statCard';
 
 export default function Finance() {
 	const {user} = useContext(UserContext);
