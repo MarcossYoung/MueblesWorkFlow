@@ -1,5 +1,5 @@
 // Add this helper component to your Finance.jsx file
-export default function StatCard({title, value, icon, borderColor, money}) {
+export default function StatCard({title, value, icon, borderColor}) {
 	return (
 		<div
 			className='card'
@@ -34,7 +34,7 @@ export default function StatCard({title, value, icon, borderColor, money}) {
 						fontWeight: 'bold',
 					}}
 				>
-					{money(value)}
+					{value}
 				</p>
 			</div>
 		</div>
