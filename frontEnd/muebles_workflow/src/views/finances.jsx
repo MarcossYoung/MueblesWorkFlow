@@ -119,19 +119,16 @@ export default function Finance() {
 				<StatCard
 					title='Total Ventas'
 					value={financeData?.totalIncome}
-					icon='💰'
 					borderColor='#0984e3'
 				/>
 				<StatCard
 					title='Total Señas'
 					value={financeData?.currentDeposits}
-					icon='📥'
 					borderColor='#00b894'
 				/>
 				<StatCard
 					title='Resultado'
 					value={financeData?.totalProfit}
-					icon='📈'
 					borderColor='#6c5ce7'
 				/>
 			</div>
