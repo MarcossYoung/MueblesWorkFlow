@@ -4,7 +4,7 @@ import {UserContext} from '../UserProvider';
 import {BASE_URL} from '../api/config';
 import StatCard from '../components/statCard';
 import ComparisonBarChart from '../components/comaprisonBarChart';
-import ExpensePieChart from '../components/expensePieChart';
+import ExpensePieChart from '../components/expensesPieChart';
 
 // Add the StatCard and money helpers here...
 

@@ -12,7 +12,7 @@ export default function OrdersNotPickedUp() {
 				data.filter(
 					(order) =>
 						order.workOrderStatus === 'TERMINADO' &&
-						order.fechaDeEntrega > Date.now()
+						order.fechaDeEntrega < Date.now()
 				)
 			);
 		};
