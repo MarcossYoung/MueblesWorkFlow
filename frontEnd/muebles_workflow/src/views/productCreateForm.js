@@ -13,37 +13,39 @@ const ProductCreation = ({isModal = false, onClose}) => {
 
 	const [productData, setProductData] = useState({
 		titulo: '',
-		tipo: '',
-		medida: '',
+		type: '', // Matches backend ENUM/Column
+		medidas: '', // Matches DB Column
 		material: '',
 		pintura: '',
 		laqueado: '',
 		color: '',
 		precio: 0,
-		cantidad: '',
-		foto: '',
-		terminado: false,
+		cantidad: 1,
 		notas: '',
-		id: user.id,
+		ownerid: user?.id, // Link to the user creating the order
 	});
 
 	useEffect(() => {
-		const fetchData = async () => {
+		const fetchTypes = async () => {
 			try {
 				const res = await axios.get(`${BASE_URL}/api/products/types`);
 				setTypes(res.data);
 			} catch (error) {
-				console.error('Error fetching data', error);
+				console.error('Error fetching types', error);
 			}
 		};
-		fetchData();
+		fetchTypes();
 	}, []);
 
 	const handleInputChange = (e) => {
 		const {name, value} = e.target;
 		setProductData((prevData) => ({
 			...prevData,
-			[name]: value,
+			// Ensure numbers stay numbers for the database
+			[name]:
+				name === 'precio' || name === 'cantidad'
+					? Number(value)
+					: value,
 		}));
 	};
 
@@ -52,181 +54,171 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		setError(null);
 		setSuccess(false);
 
-		const token = localStorage.token || '';
-		const formData = new FormData();
-		Object.entries(productData).forEach(([key, value]) => {
-			formData.append(key, value);
-		});
+		const token = user?.token || localStorage.token;
 
 		try {
-			await axios.post(`${BASE_URL}/api/products/create`, formData, {
+			// Standard JSON post
+			await axios.post(`${BASE_URL}/api/products/create`, productData, {
 				headers: {
 					Authorization: `Bearer ${token}`,
-					'Content-Type': 'multipart/form-data',
+					'Content-Type': 'application/json',
 				},
 			});
+
 			setSuccess(true);
 
-			// If it’s in a modal, just close after success
-			if (isModal && onClose) {
-				setTimeout(onClose, 1200);
-			} else {
-				navigate('/');
-			}
+			// UI feedback before closing/navigating
+			setTimeout(() => {
+				if (isModal && onClose) {
+					onClose();
+				} else {
+					navigate('/');
+				}
+			}, 1500);
 		} catch (error) {
-			setError('Failed to create the product. Please try again.');
+			console.error(error);
+			setError(
+				error.response?.data?.message ||
+					'Error al crear el producto. Intente nuevamente.'
+			);
 		}
 	};
 
 	return (
-		<div className={`product-wrapper ${isModal ? 'modal-style' : ''}`}>
-			{!isModal && <h1>Crear Nuevo Producto</h1>}
-			{isModal && (
-				<div className='modal-header'>
-					<h2> Agregar Pedido</h2>
-					<button className='close-btn' onClick={onClose}>
-						×
+		<div
+			className={`product-creation-container ${
+				isModal ? 'is-modal' : ''
+			}`}
+		>
+			<div className='form-header'>
+				<h2>{isModal ? 'Nuevo Pedido' : 'Crear Producto'}</h2>
+				{isModal && (
+					<button className='close-x' onClick={onClose}>
+						&times;
 					</button>
-				</div>
-			)}
+				)}
+			</div>
 
-			<form onSubmit={handleSubmit} className='form-grid'>
-				<div className='form-input'>
-					<label>Title</label>
-					<input
-						type='text'
-						name='titulo'
-						value={productData.titulo}
-						onChange={handleInputChange}
-						required
-					/>
-				</div>
-
-				<div className='form-input'>
-					<label>Tipo Mueble</label>
-					<select
-						name='tipo'
-						value={productData.tipo}
-						onChange={handleInputChange}
-						required
-					>
-						<option value=''>Select Type</option>
-						{types.map((Type) => (
-							<option key={Type} value={Type}>
-								{Type}
-							</option>
-						))}
-					</select>
-				</div>
-
-				<div className='form-input'>
-					<label>Material</label>
-					<input
-						type='text'
-						name='material'
-						value={productData.material}
-						onChange={handleInputChange}
-						required
-					/>
+			<form onSubmit={handleSubmit} className='creation-form'>
+				<div className='input-row'>
+					<div className='input-group'>
+						<label>Título</label>
+						<input
+							type='text'
+							name='titulo'
+							value={productData.titulo}
+							onChange={handleInputChange}
+							required
+						/>
+					</div>
+					<div className='input-group'>
+						<label>Tipo de Mueble</label>
+						<select
+							name='type'
+							value={productData.type}
+							onChange={handleInputChange}
+							required
+						>
+							<option value=''>Seleccionar...</option>
+							{types.map((t) => (
+								<option key={t} value={t}>
+									{t}
+								</option>
+							))}
+						</select>
+					</div>
 				</div>
 
-				<div className='form-input'>
-					<label>Medidas</label>
-					<input
-						type='text'
-						name='medida'
-						value={productData.medida}
-						onChange={handleInputChange}
-						required
-					/>
+				<div className='input-row'>
+					<div className='input-group'>
+						<label>Material</label>
+						<input
+							type='text'
+							name='material'
+							value={productData.material}
+							onChange={handleInputChange}
+							required
+						/>
+					</div>
+					<div className='input-group'>
+						<label>Medidas</label>
+						<input
+							type='text'
+							name='medidas'
+							value={productData.medidas}
+							onChange={handleInputChange}
+							required
+						/>
+					</div>
 				</div>
 
-				<div className='form-input'>
-					<label>Pintura</label>
-					<input
-						type='text'
-						name='pintura'
-						value={productData.pintura}
-						onChange={handleInputChange}
-						required
-					/>
+				<div className='input-row'>
+					<div className='input-group'>
+						<label>Pintura</label>
+						<input
+							type='text'
+							name='pintura'
+							value={productData.pintura}
+							onChange={handleInputChange}
+							required
+						/>
+					</div>
+					<div className='input-group'>
+						<label>Color</label>
+						<input
+							type='text'
+							name='color'
+							value={productData.color}
+							onChange={handleInputChange}
+							required
+						/>
+					</div>
 				</div>
 
-				<div className='form-input'>
-					<label>Laqueado</label>
-					<input
-						type='text'
-						name='laqueado'
-						value={productData.laqueado}
-						onChange={handleInputChange}
-						required
-					/>
+				<div className='input-row'>
+					<div className='input-group'>
+						<label>Precio Total</label>
+						<input
+							type='number'
+							name='precio'
+							value={productData.precio}
+							onChange={handleInputChange}
+							required
+						/>
+					</div>
+					<div className='input-group'>
+						<label>Cantidad</label>
+						<input
+							type='number'
+							name='cantidad'
+							value={productData.cantidad}
+							onChange={handleInputChange}
+							required
+						/>
+					</div>
 				</div>
 
-				<div className='form-input'>
-					<label>Color</label>
-					<input
-						type='text'
-						name='color'
-						value={productData.color}
-						onChange={handleInputChange}
-						required
-					/>
-				</div>
-
-				<div className='form-input'>
-					<label>Precio</label>
-					<input
-						type='number'
-						name='precio'
-						value={productData.precio}
-						onChange={handleInputChange}
-						required
-					/>
-				</div>
-
-				<div className='form-input'>
-					<label>Cantidad</label>
-					<input
-						type='number'
-						name='cantidad'
-						value={productData.cantidad}
-						onChange={handleInputChange}
-						required
-					/>
-				</div>
-				{/*<div className='form-input'>
-					<label>Foto</label>
-					<input
-						type='file'
-						name='foto'
-						onChange={handleFileChange}
-						accept='image/*'
-						required
-					/>
-				</div>*/}
-				<div className='form-input'>
+				<div className='input-group full-width'>
 					<label>Notas</label>
 					<textarea
 						name='notas'
 						value={productData.notas}
 						onChange={handleInputChange}
+						rows='3'
 					></textarea>
 				</div>
 
-				<div className='form-input full-width text-center'>
-					<button
-						type='submit'
-						className='button_1 margin-5'
-						disabled={!productData.titulo || !productData.precio}
-					>
-						Create Product
-					</button>
-				</div>
+				<button
+					type='submit'
+					className='submit-button'
+					disabled={!productData.titulo || productData.precio <= 0}
+				>
+					Guardar Pedido
+				</button>
 
-				{error && <p className='error red'>{error}</p>}
+				{error && <p className='error-text'>{error}</p>}
 				{success && (
-					<p className='green'>Pedido creado correctamente!</p>
+					<p className='success-text'>¡Registrado correctamente!</p>
 				)}
 			</form>
 		</div>

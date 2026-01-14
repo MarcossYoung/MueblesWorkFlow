@@ -54,10 +54,6 @@ export default function Dashboard() {
 							<NavLink to='not-picked-up' className={linkClass}>
 								No retirados
 							</NavLink>
-							{/* NEW: Add link for the Costs Manager we created */}
-							<NavLink to='costs' className={linkClass}>
-								Gestión de Gastos
-							</NavLink>
 						</>
 					)}
 				</nav>
