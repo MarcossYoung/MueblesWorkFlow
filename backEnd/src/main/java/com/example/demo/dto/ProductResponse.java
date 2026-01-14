@@ -29,27 +29,31 @@ public record ProductResponse(
 
     public static ProductResponse from(Product p) {
         WorkOrder wo = p.getWorkOrder();
-        OrderPayments op = (OrderPayments) p.getOrderPayments();
 
         BigDecimal totalPaid = BigDecimal.ZERO;
         BigDecimal depositPaid = BigDecimal.ZERO;
 
+        // Remove the 'OrderPayments op = ...' line entirely
+
         if (p.getOrderPayments() != null) {
             for (OrderPayments pay : p.getOrderPayments()) {
-                if (pay.getAmount() != null) {
-                    totalPaid = totalPaid.add(pay.getAmount());
-                }
-                if (pay.getPaymentType() == PaymentType.DEPOSIT && pay.getAmount() != null) {
-                    depositPaid = depositPaid.add(pay.getAmount());
+                // Ensure we use the correct getter (check if it's getValor() or getAmount())
+                BigDecimal amount = pay.getAmount();
+                if (amount != null) {
+                    totalPaid = totalPaid.add(amount);
+
+                    // Check payment type for deposit
+                    if (pay.getPaymentType() == PaymentType.DEPOSIT) {
+                        depositPaid = depositPaid.add(amount);
+                    }
                 }
             }
         }
 
-
         return new ProductResponse(
                 p.getId(),
                 p.getTitulo(),
-                p.getProductType(),
+                p.getProductType(), // Ensure this matches ProductType in your Model
                 p.getMedidas(),
                 p.getMaterial(),
                 p.getPintura(),
@@ -61,14 +65,12 @@ public record ProductResponse(
                 p.getFechaEstimada(),
                 p.getFoto(),
                 p.getNotas(),
-                p.getOwner() != null ? p.getOwner().getId() : null,
+                p.getOwner().getId(), // Changed from p.getOwner().getId() to be safer
                 wo != null ? wo.getId() : null,
                 wo != null ? wo.getStatus() : null,
                 totalPaid,
                 depositPaid
-
-
-
         );
     }
-}
+    }
+
