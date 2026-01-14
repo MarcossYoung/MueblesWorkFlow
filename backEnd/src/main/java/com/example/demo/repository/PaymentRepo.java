@@ -22,13 +22,14 @@ public interface PaymentRepo extends JpaRepository<OrderPayments, Long> {
 
     // Sum of cashflow by month (Postgres / Neon)
     @Query(value = """
-        SELECT to_char(date_trunc('month', p.paymentDate), 'YYYY-MM') AS month,
-               COALESCE(SUM(p.valor), 0) AS total
-        FROM payments p
-        WHERE p.date BETWEEN :from AND :to AND p.PaymentType == "DEPOSIT"
-        GROUP BY 1
-        ORDER BY 1
-        """, nativeQuery = true)
+    SELECT to_char(date_trunc('month', p.fecha), 'YYYY-MM') AS month,
+           COALESCE(SUM(p.valor), 0) AS total
+    FROM pagos p
+    WHERE p.fecha BETWEEN :from AND :to 
+      AND p.type = 'DEPOSIT'
+    GROUP BY 1
+    ORDER BY 1
+    """, nativeQuery = true)
     List<MonthlyAmountRow> cashflowByMonth(@Param("from") LocalDate from,
                                            @Param("to") LocalDate to);
 

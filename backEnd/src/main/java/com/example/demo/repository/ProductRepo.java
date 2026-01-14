@@ -22,13 +22,13 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     Page<Product> findByProductType(ProductType type, Pageable pageable);
 
     @Query(value = """
-        SELECT to_char(date_trunc('month', p.startDate), 'YYYY-MM') AS month,
-               COALESCE(SUM(p.precio), 0) AS total
-        FROM products p
-        WHERE p.startDate BETWEEN :from AND :to 
-        GROUP BY 1
-        ORDER BY 1
-        """, nativeQuery = true)
+    SELECT to_char(date_trunc('month', p.startdate), 'YYYY-MM') AS month,
+           COALESCE(SUM(p.precio), 0) AS total
+    FROM products p
+    WHERE p.startdate BETWEEN :from AND :to 
+    GROUP BY 1
+    ORDER BY 1
+    """, nativeQuery = true)
     List<MonthlyAmountRow> incomeByMonth(@Param("from") LocalDate from,
                                          @Param("to") LocalDate to);
 
