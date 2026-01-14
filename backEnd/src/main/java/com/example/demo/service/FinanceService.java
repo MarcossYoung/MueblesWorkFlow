@@ -78,7 +78,7 @@ public class FinanceService {
     private Map<String, BigDecimal> toMap(List<MonthlyAmountRow> rows) {
         Map<String, BigDecimal> map = new HashMap<>();
         for (MonthlyAmountRow r : rows) {
-            if (r != null && r.month() != null) map.put(r.month(), nz(r.total()));
+            if (r != null && r.getMonth() != null) map.put(r.getMonth(), nz(r.getTotal()));
         }
         return map;
     }
