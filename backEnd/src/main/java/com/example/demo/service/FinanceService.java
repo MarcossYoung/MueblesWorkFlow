@@ -28,51 +28,62 @@ public class FinanceService {
     }
 
     public FinanceDashboardResponse dashboard(LocalDate from, LocalDate to) {
-        // 1) Fetch data from DB
+        // 1) Fetch base data
         List<MonthlyAmountRow> incomeRows = safe(productRepository.incomeByMonth(from, to));
         List<MonthlyAmountRow> cashflowRows = safe(paymentRepository.cashflowByMonth(from, to));
         List<MonthlyAmountRow> expenseRows = safe(costsRepository.expensesByDate(from, to));
 
-        // 2) Generate complete month list for the range
+        // 2) Fetch Expense Breakdown (Pie Chart Data)
+        List<Costs> allCosts = costsRepository.findByDateBetween(from, to);
+
+        // Group by Enum name and sum the 'amount' field
+        Map<String, BigDecimal> breakdownMap = allCosts.stream()
+                .filter(c -> c.getCostType() != null)
+                .collect(Collectors.groupingBy(
+                        c -> c.getCostType().name(),
+                        Collectors.mapping(Costs::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
+                ));
+
+        // Convert Map to List of Maps safely
+        List<Map<String, Object>> expenseBreakdown = new ArrayList<>();
+        breakdownMap.forEach((name, value) -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("name", name);
+            item.put("value", nz(value)); // Ensure no nulls reach the Pie Chart
+            expenseBreakdown.add(item);
+        });
+
+        // 3) Build Comparison Series (Bar Chart)
         SortedSet<String> months = new TreeSet<>(allMonthsBetween(from, to));
+        Map<String, BigDecimal> incMap = toMap(incomeRows);
+        Map<String, BigDecimal> expMap = toMap(expenseRows);
 
-        Map<String, BigDecimal> incomeMap = toMap(incomeRows);
-        Map<String, BigDecimal> cashflowMap = toMap(cashflowRows);
-        Map<String, BigDecimal> expensesMap = toMap(expenseRows);
-
-        // 3) Build flat series for the Frontend
-        List<Map<String, Object>> incomeSeries = new ArrayList<>();
-        List<Map<String, Object>> depositSeries = new ArrayList<>();
-        List<Map<String, Object>> profitSeries = new ArrayList<>();
-
-        BigDecimal totalInc = BigDecimal.ZERO;
-        BigDecimal totalDep = BigDecimal.ZERO;
-        BigDecimal totalExp = BigDecimal.ZERO;
-
+        List<Map<String, Object>> comparisonSeries = new ArrayList<>();
         for (String m : months) {
-            BigDecimal inc = nz(incomeMap.get(m));
-            BigDecimal dep = nz(cashflowMap.get(m));
-            BigDecimal exp = nz(expensesMap.get(m));
-            BigDecimal diff = inc.subtract(exp);
+            BigDecimal inc = nz(incMap.get(m));
+            BigDecimal exp = nz(expMap.get(m));
 
-            // Keys MUST match BarChart valueKey in finances.jsx
-            incomeSeries.add(Map.of("label", m, "income", inc));
-            depositSeries.add(Map.of("label", m, "deposits", dep));
-            profitSeries.add(Map.of("label", m, "diff", diff));
-
-            totalInc = totalInc.add(inc);
-            totalDep = totalDep.add(dep);
-            totalExp = totalExp.add(exp);
+            Map<String, Object> row = new HashMap<>();
+            row.put("label", m);
+            row.put("income", inc);
+            row.put("expenses", exp);
+            comparisonSeries.add(row);
         }
 
+        // KPIs
+        BigDecimal tInc = sumValues(incomeRows);
+        BigDecimal tExp = sumValues(expenseRows);
+        BigDecimal tDep = nz(paymentRepository.cashflowTotal(from, to));
+
         return new FinanceDashboardResponse(
-                from, to,
-                totalInc, totalDep, totalExp, totalInc.subtract(totalExp),
-                incomeSeries, depositSeries, profitSeries
+                from, to, tInc, tDep, tExp, tInc.subtract(tExp),
+                comparisonSeries, expenseBreakdown
         );
     }
 
-    private BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
+
+
+    private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
     private List<MonthlyAmountRow> safe(List<MonthlyAmountRow> rows) { return rows == null ? List.of() : rows; }
 
     private Map<String, BigDecimal> toMap(List<MonthlyAmountRow> rows) {
@@ -92,5 +103,19 @@ public class FinanceService {
             start = start.plusMonths(1);
         }
         return out;
+    }
+
+    // Ensure these are inside your FinanceService class but outside your dashboard method
+
+
+
+
+    private static BigDecimal sumValues(List<MonthlyAmountRow> rows) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (MonthlyAmountRow r : rows) {
+            // Change from r.total() to r.getTotal() to match the Interface
+            total = total.add(nz(r.getTotal()));
+        }
+        return total;
     }
 }

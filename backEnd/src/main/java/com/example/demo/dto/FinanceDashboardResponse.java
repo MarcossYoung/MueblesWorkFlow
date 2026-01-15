@@ -5,16 +5,14 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+// FinanceDashboardResponse.java
 public record FinanceDashboardResponse(
         LocalDate from,
         LocalDate to,
-        // KPI Fields (Matches Frontend destructuring)
         BigDecimal totalIncome,
         BigDecimal currentDeposits,
         BigDecimal monthlySpend,
         BigDecimal totalProfit,
-        // Series Fields (Matches Frontend BarChart valueKeys)
-        List<Map<String, Object>> incomeSeries,
-        List<Map<String, Object>> depositSeries,
-        List<Map<String, Object>> profitSeries
+        List<Map<String, Object>> comparisonSeries, // For the Bar Chart
+        List<Map<String, Object>> expenseBreakdown   // For the Pie Chart
 ) {}
