@@ -4,11 +4,14 @@ package com.example.demo.controller;
 import com.example.demo.dto.FinanceDashboardResponse;
 import com.example.demo.service.FinanceService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/finance")
@@ -49,6 +52,11 @@ public class FinanceController {
         // Default: current month in Argentina TZ
         YearMonth current = YearMonth.from(LocalDate.now(AR));
         return new DateRange(current.atDay(1), current.atEndOfMonth());
+    }
+
+    @GetMapping("/user-performance")
+    public ResponseEntity<List<Map<String, Object>>> getUserPerformance() {
+        return ResponseEntity.ok(FinanceService.getMonthlyUserStats());
     }
 
 

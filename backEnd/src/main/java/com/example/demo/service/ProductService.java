@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductService {
@@ -173,6 +174,8 @@ public class ProductService {
     public long countOrders() {
         return productRepo.count();
     }
+
+
 
     public List<Object[]> findTopProducts() {
         return productRepo.findTopOrders();

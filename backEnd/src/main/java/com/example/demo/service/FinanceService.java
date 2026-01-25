@@ -21,6 +21,7 @@ public class FinanceService {
     private final PaymentRepo paymentRepository;
     private final CostRepo costsRepository;
 
+
     public FinanceService(ProductRepo productRepository, PaymentRepo paymentRepository, CostRepo costsRepository) {
         this.productRepository = productRepository;
         this.paymentRepository = paymentRepository;
@@ -117,5 +118,11 @@ public class FinanceService {
             total = total.add(nz(r.getTotal()));
         }
         return total;
+    }
+
+    public static List<Map<String, Object>> getMonthlyUserStats() {
+        LocalDate start = LocalDate.now().withDayOfMonth(1);
+        LocalDate end = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
+        return productRepository.getUserPerformanceData(start, end);
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -40,6 +41,16 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     Optional<Product> findByTitulo(@Param("titulo") String titulo);
 
 
+    @Query(value = """
+    SELECT u.name as userName, 
+           SUM(p.cantidad) as unitsSold, 
+           SUM(p.precio) as income
+    FROM products p
+    JOIN users u ON p.ownerid = u.id
+    WHERE p.startdate >= :from AND p.startdate <= :to
+    GROUP BY u.name
+    """, nativeQuery = true)
+    List<Map<String, Object>> getUserPerformanceData(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
     List<Product> findByFechaEstimadaBetween(LocalDate today, LocalDate endOfWeek);
 
