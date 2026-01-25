@@ -11,6 +11,8 @@ import ExpensePieChart from '../components/expensesPieChart';
 export default function Finance() {
 	const {user} = useContext(UserContext);
 	const [financeData, setFinanceData] = useState(null);
+	const [chartData, setChartData] = useState([]);
+
 	const [selectedMonth, setSelectedMonth] = useState(() => {
 		const now = new Date();
 		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -18,6 +20,12 @@ export default function Finance() {
 			'0'
 		)}`;
 	});
+
+	useEffect(() => {
+		fetch('/api/finance/user-performance')
+			.then((res) => res.json())
+			.then((data) => setChartData(data)); // Ensure keys: userName, unitsSold, income
+	}, []);
 
 	useEffect(() => {
 		const load = async () => {
@@ -107,7 +115,7 @@ export default function Finance() {
 					}}
 				>
 					<h3 style={{marginTop: 0}}>Ingresos vs Gastos</h3>
-					<ComparisonBarChart data={financeData.comparisonSeries} />
+					<ComparisonBarChart data={chartData} />
 				</div>
 
 				{/* Right: Expense Pie Chart */}

@@ -153,7 +153,7 @@ function App() {
 						element={
 							<ProtectedRoute>
 								<Sidebar />
-								<ProductEdit />
+								<ProductEdit product={product} />
 							</ProtectedRoute>
 						}
 					/>
