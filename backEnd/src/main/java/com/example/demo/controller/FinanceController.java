@@ -56,7 +56,7 @@ public class FinanceController {
 
     @GetMapping("/user-performance")
     public ResponseEntity<List<Map<String, Object>>> getUserPerformance() {
-        return ResponseEntity.ok(FinanceService.getMonthlyUserStats());
+        return ResponseEntity.ok(financeService.getMonthlyUserStats());
     }
 
 

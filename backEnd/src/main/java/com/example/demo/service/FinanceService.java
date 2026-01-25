@@ -6,6 +6,7 @@ import com.example.demo.model.Costs;
 import com.example.demo.repository.CostRepo;
 import com.example.demo.repository.PaymentRepo;
 import com.example.demo.repository.ProductRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class FinanceService {
-
+    @Autowired
     private final ProductRepo productRepository;
     private final PaymentRepo paymentRepository;
     private final CostRepo costsRepository;
@@ -120,9 +121,9 @@ public class FinanceService {
         return total;
     }
 
-    public static List<Map<String, Object>> getMonthlyUserStats() {
+    public List<Map<String, Object>> getMonthlyUserStats() {
         LocalDate start = LocalDate.now().withDayOfMonth(1);
         LocalDate end = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
-        return productRepository.getUserPerformanceData(start, end);
+        return productRepository.getUserPerformanceData(start,end);
     }
 }
