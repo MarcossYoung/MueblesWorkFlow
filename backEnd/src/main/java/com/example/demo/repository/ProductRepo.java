@@ -48,7 +48,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     FROM products p
     JOIN users u ON p.ownerid = u.id
     WHERE p.startdate >= :from AND p.startdate <= :to
-    GROUP BY u.name
+    GROUP BY u.username
     """, nativeQuery = true)
     List<Map<String, Object>> getUserPerformanceData(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
