@@ -31,7 +31,7 @@ const EditProduct = () => {
 	const [newPayment, setNewPayment] = useState({
 		valor: '',
 		type: 'DEPOSIT',
-		pagostatus: 'PAGO_SEÑA',
+		pagostatus: 'SEÑA',
 	});
 
 	useEffect(() => {
@@ -40,7 +40,7 @@ const EditProduct = () => {
 				const [prodRes, typesRes, paymentsRes] = await Promise.all([
 					axios.get(`${BASE_URL}/api/products/${productId}`),
 					axios.get(`${BASE_URL}/api/products/types`),
-					axios.get(`${BASE_URL}/api/pagos/product/${productId}`),
+					axios.get(`${BASE_URL}/api/pagos/${productId}`),
 				]);
 				setProduct(prodRes.data);
 				setTypes(typesRes.data);

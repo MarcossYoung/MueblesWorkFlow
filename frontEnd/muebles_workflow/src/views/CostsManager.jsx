@@ -14,6 +14,7 @@ export default function CostsManager() {
 		amount: '',
 		costType: 'OTHERS',
 		frequency: 'ONE_TIME',
+		reason: '',
 	});
 
 	const fetchCosts = useCallback(async () => {
@@ -40,7 +41,7 @@ export default function CostsManager() {
 			await axios.post(`${BASE_URL}/api/costs`, formData, {
 				headers: {Authorization: `Bearer ${user.token}`},
 			});
-			setFormData({...formData, amount: ''}); // Reset amount
+			setFormData({...formData, amount: '', reason: ''}); // Reset amount and reason
 			fetchCosts(); // Refresh list
 		} catch (err) {
 			alert('Error saving cost');
@@ -60,22 +61,18 @@ export default function CostsManager() {
 	}
 
 	return (
-		<div className='admin-dashboard'>
+		<section className='admin-dashboard'>
 			<h1 className='main-title'>Gestión de Costos</h1>
 
-			{/* ADD COST FORM */}
-			<div className='chart-container' style={{marginBottom: '2rem'}}>
-				<h3>Registrar Nuevo Gasto</h3>
-				<form
-					onSubmit={handleSubmit}
-					style={{
-						display: 'grid',
-						gridTemplateColumns: '1fr 1fr 1fr 1fr auto',
-						gap: '10px',
-						alignItems: 'end',
-					}}
-				>
-					<div>
+			{/* MAIN WHITE CARD WRAPPER */}
+			<div className='costs-wrapper'>
+				{/* --- 1. FORM SECTION --- */}
+				<div className='costs-header'>
+					<h2>Registrar Nuevo Gasto</h2>
+				</div>
+
+				<form onSubmit={handleSubmit} className='costs-form'>
+					<div className='form-group'>
 						<label>Fecha</label>
 						<input
 							type='date'
@@ -86,10 +83,28 @@ export default function CostsManager() {
 							required
 						/>
 					</div>
-					<div>
+
+					<div className='form-group'>
+						<label>Asunto</label>
+						<input
+							type='text'
+							placeholder='Ej: Compra de insumos'
+							value={formData.reason}
+							onChange={(e) =>
+								setFormData({
+									...formData,
+									reason: e.target.value,
+								})
+							}
+							required
+						/>
+					</div>
+
+					<div className='form-group'>
 						<label>Monto ($)</label>
 						<input
 							type='number'
+							placeholder='0.00'
 							value={formData.amount}
 							onChange={(e) =>
 								setFormData({
@@ -100,7 +115,8 @@ export default function CostsManager() {
 							required
 						/>
 					</div>
-					<div>
+
+					<div className='form-group'>
 						<label>Tipo</label>
 						<select
 							value={formData.costType}
@@ -120,7 +136,8 @@ export default function CostsManager() {
 							<option value='OTHERS'>Otros</option>
 						</select>
 					</div>
-					<div>
+
+					<div className='form-group'>
 						<label>Frecuencia</label>
 						<select
 							value={formData.frequency}
@@ -137,66 +154,68 @@ export default function CostsManager() {
 							<option value='YEARLY'>Anual</option>
 						</select>
 					</div>
-					<button
-						type='submit'
-						className='btn-primary'
-						style={{padding: '10px 20px'}}
-					>
+
+					<button type='submit' className='button-green'>
 						Agregar
 					</button>
 				</form>
-			</div>
 
-			{/* COSTS TABLE */}
-			<div className='chart-container'>
-				<h3>Gastos Recientes</h3>
-				<table style={{width: '100%', borderCollapse: 'collapse'}}>
-					<thead>
-						<tr
-							style={{
-								borderBottom: '2px solid #eee',
-								textAlign: 'left',
-							}}
-						>
-							<th style={{padding: '10px'}}>Fecha</th>
-							<th>Tipo</th>
-							<th>Monto</th>
-							<th>Frecuencia</th>
-							<th>Acciones</th>
-						</tr>
-					</thead>
-					<tbody>
-						{costs.map((c) => (
-							<tr
-								key={c.id}
-								style={{borderBottom: '1px solid #f9f9f9'}}
-							>
-								<td style={{padding: '10px'}}>{c.date}</td>
-								<td>
-									<span className={`badge ${c.costType}`}>
-										{c.costType}
-									</span>
-								</td>
-								<td>${c.amount.toLocaleString()}</td>
-								<td>{c.frequency}</td>
-								<td>
-									<button
-										onClick={() => handleDelete(c.id)}
-										style={{
-											color: 'red',
-											background: 'none',
-											border: 'none',
-											cursor: 'pointer',
-										}}
-									>
-										Eliminar
-									</button>
-								</td>
+				{/* --- 2. TABLE SECTION --- */}
+				<div className='costs-header' style={{marginTop: '2rem'}}>
+					<h2>Gastos Recientes</h2>
+				</div>
+
+				<div className='table-wrapper'>
+					<table className='orders-table'>
+						<thead>
+							<tr>
+								<th>Fecha</th>
+								<th>Asunto</th>
+								<th>Tipo</th>
+								<th>Monto</th>
+								<th>Frecuencia</th>
+								<th className='text-center'>Acciones</th>
 							</tr>
-						))}
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							{costs.map((c) => (
+								<tr key={c.id}>
+									<td>{c.date}</td>
+									<td>{c.reason || '-'}</td>
+									<td>
+										<span className='badge OTRO'>
+											{c.costType}
+										</span>
+									</td>
+									<td style={{fontWeight: 'bold'}}>
+										${Number(c.amount).toLocaleString()}
+									</td>
+									<td>{c.frequency}</td>
+									<td className='text-center'>
+										<button
+											className='btn-delete'
+											onClick={() => handleDelete(c.id)}
+										>
+											Eliminar
+										</button>
+									</td>
+								</tr>
+							))}
+							{costs.length === 0 && (
+								<tr>
+									<td
+										colSpan='6'
+										className='text-center'
+										style={{padding: '2rem'}}
+									>
+										No hay gastos registrados.
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
 			</div>
-		</div>
+		</section>
 	);
 }

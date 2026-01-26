@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {useOrders} from '../OrdersContext';
 import OrdersTable from '../components/ordersTable';
-import {FaCalendarWeek, FaPlus} from 'react-icons/fa';
+import {FaPlus} from 'react-icons/fa';
 import {BASE_URL} from '../api/config';
 
 export default function OrdersDueThisWeek({user}) {
@@ -42,21 +42,19 @@ export default function OrdersDueThisWeek({user}) {
 			setTimeout(() => setSuccessMessage(''), 2500);
 		}
 	};
+
 	return (
-		<section className='orders-due-container'>
+		<div className='p-6'>
 			<div className='orders-header'>
-				<h1 className='main-title'>
-					<FaCalendarWeek /> Pedidos de Esta Semana
-				</h1>
-				<p className='subtitle'>
-					Órdenes programadas para entrega dentro de la semana actual.
-				</p>
+				<h1 className='main-title'>Pedidos de Esta Semana</h1>
 			</div>
 
-			{/* Admin Add Order Section */}
 			{isAdmin && (
-				<div className='add-order-section box-shadow'>
-					<form onSubmit={handleAddOrder} className='add-order-form'>
+				<div className='add-order-section'>
+					<form
+						onSubmit={handleAddOrder}
+						className='add-order-form w-100'
+					>
 						<input
 							type='text'
 							placeholder='Buscar pedido por título...'
@@ -73,6 +71,7 @@ export default function OrdersDueThisWeek({user}) {
 							className={`add-order-message ${
 								successMessage.includes('✅') ? 'green' : 'red'
 							}`}
+							style={{width: '100%', marginTop: '10px'}}
 						>
 							{successMessage}
 						</p>
@@ -80,10 +79,8 @@ export default function OrdersDueThisWeek({user}) {
 				</div>
 			)}
 
-			{/* Orders Table */}
-			<div className='orders-table-wrapper box-shadow'>
-				<OrdersTable data={orders} />
-			</div>
-		</section>
+			{/* The Table Wrapper is now just for the table */}
+			<OrdersTable data={orders} />
+		</div>
 	);
 }

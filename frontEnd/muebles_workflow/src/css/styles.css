@@ -372,3 +372,189 @@ main,
 	color: #00b894;
 	margin: 0;
 }
+
+/* =========================================
+   LOGIN PAGE STYLES (Dark Theme)
+   ========================================= */
+.login-wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	background-color: #050505; /* Almost black background */
+
+	/* Ensure layout fixes don't shift this page */
+	margin-left: 0 !important;
+	width: 100% !important;
+	padding: 0 !important;
+}
+
+.login-card {
+	background-color: #121212; /* Dark grey card */
+	padding: 3rem 2.5rem;
+	border-radius: 12px;
+	width: 100%;
+	max-width: 400px;
+
+	/* Subtle border and glow effect */
+	border: 1px solid #333;
+	box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+	text-align: center;
+}
+
+/* "Iniciar Sesión" Title */
+.login-card h1,
+.login-card h2,
+.login-card h3 {
+	color: #fff;
+	margin-bottom: 2rem;
+	font-size: 1.5rem;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	/* Optional: If you want the Serif font from the image, uncomment below: */
+	/* font-family: 'Times New Roman', serif; */
+}
+
+/* Form Group (Spacing between inputs) */
+.form-group {
+	margin-bottom: 1.5rem;
+	text-align: left;
+}
+
+/* Labels (Usuario, Contraseña) */
+.login-card label {
+	display: block;
+	margin-bottom: 0.5rem;
+	color: #ccc; /* Light grey text */
+	font-size: 0.9rem;
+	font-weight: 500;
+}
+
+/* Inputs */
+.login-card input {
+	width: 100%;
+	padding: 0.8rem 1rem;
+	background-color: #222; /* Dark input background */
+	border: 1px solid #333; /* Subtle border */
+	border-radius: 6px;
+	color: #fff; /* White text */
+	font-size: 1rem;
+	margin-top: 0; /* Reset margin */
+	transition: all 0.2s ease;
+}
+
+.login-card input:focus {
+	outline: none;
+	border-color: #00b894; /* Green highlight on focus */
+	background-color: #2a2a2a;
+}
+
+.login-card input::placeholder {
+	color: #555;
+}
+
+/* Button */
+.login-card button,
+.login-card .button_3 {
+	width: 100%;
+	padding: 0.9rem;
+	margin-top: 1rem;
+	background-color: #00b894; /* Teal Green */
+	color: white;
+	border: none;
+	border-radius: 6px;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background 0.3s ease;
+}
+
+.login-card button:hover,
+.login-card .button_3:hover {
+	background-color: #00a17f; /* Darker green on hover */
+}
+
+/* Error Message */
+.error-message {
+	background-color: rgba(214, 48, 49, 0.2);
+	border: 1px solid #d63031;
+	color: #ff7675;
+	margin-bottom: 1.5rem;
+	padding: 0.8rem;
+	border-radius: 6px;
+	font-size: 0.9rem;
+}
+/* =========================================
+   COSTS / EXPENSES PAGE STYLES
+   ========================================= */
+
+/* The Main Card Container */
+.costs-wrapper {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	padding: 2rem;
+	width: 100%;
+	margin-top: 1rem;
+}
+
+/* Header Section */
+.costs-header {
+	margin-bottom: 2rem;
+	border-bottom: 1px solid #f1f2f6;
+	padding-bottom: 1rem;
+}
+
+.costs-header h2 {
+	color: #2d3436;
+	font-size: 1.5rem;
+	margin-bottom: 0.5rem;
+}
+
+/* Form Grid - Aligns inputs in a row */
+.costs-form {
+	display: grid;
+	/* This automatically fits as many columns as possible, min 150px wide */
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 1.5rem;
+	align-items: end; /* Aligns the button with the bottom of inputs */
+	margin-bottom: 3rem;
+}
+
+.form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.form-group label {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #636e72;
+}
+
+/* Button adjustment for the grid */
+.costs-form .button-green {
+	height: 45px; /* Matches input height exactly */
+	width: 100%;
+	justify-content: center;
+}
+
+/* Delete Action Button (Mini Red Button) */
+.btn-delete {
+	background-color: rgba(214, 48, 49, 0.1);
+	color: #d63031;
+	border: none;
+	padding: 0.4rem 0.8rem;
+	border-radius: 6px;
+	font-weight: 600;
+	font-size: 0.85rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+	background-color: #d63031;
+	color: white;
+}
