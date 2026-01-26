@@ -1,7 +1,6 @@
 package com.example.demo.repository;
 
 import com.example.demo.dto.MonthlyAmountRow;
-import com.example.demo.dto.ProductResponse;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
 import org.springframework.data.domain.Page;
@@ -42,14 +41,14 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
 
     @Query(value = """
-    SELECT u.username as userName, 
-           SUM(p.cantidad) as unitsSold, 
-           SUM(p.precio) as income
-    FROM products p
-    JOIN users u ON p.ownerid = u.id
-    WHERE p.startdate >= :from AND p.startdate <= :to
-    GROUP BY u.username
-    """, nativeQuery = true)
+            SELECT u.username as "userName",
+                COALESCE(SUM(p.cantidad), 0) as "unitsSold",
+                COALESCE(SUM(p.precio), 0) as "income"
+            FROM products p
+            JOIN usuarios u ON p.ownerid = u.id
+            WHERE p.startdate >= :from AND p.startdate <= :to
+            GROUP BY u.username
+            """, nativeQuery = true)
     List<Map<String, Object>> getUserPerformanceData(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
     List<Product> findByFechaEstimadaBetween(LocalDate today, LocalDate endOfWeek);

@@ -36,10 +36,10 @@ function OrdersTable({data}) {
 	};
 
 	const getRowClass = (status) => {
-		if (status === 'TERMINADO') return 'row-done';
-		if (status === 'ATRASADO') return 'row-late';
-		if (status === 'ENTREGADO') return 'row-delivered';
-		return 'row-inprogress';
+		if (status === 'TERMINADO') return 'row-terminado';
+		if (status === 'ATRASADO') return 'row-atrasado';
+		if (status === 'ENTREGADO') return 'row-entregado';
+		return 'row-produccion';
 	};
 
 	// 1. Filter by Search Term
@@ -103,8 +103,6 @@ function OrdersTable({data}) {
 				<table className='orders-table'>
 					<thead>
 						<tr>
-							<th>ID</th>
-							<th>Imagen</th>
 							<th>Título</th>
 							<th>Tipo</th>
 							<th>Medidas</th>
@@ -113,8 +111,8 @@ function OrdersTable({data}) {
 							<th>Color</th>
 							<th>Laqueado</th>
 							<th>Cant.</th>
-							<th>Inicio</th>
-							<th>Entrega</th>
+							<th>Fecha inicio</th>
+							<th>Fecha entrega</th>
 							{user?.role === 'ADMIN' && <th>Acciones</th>}
 						</tr>
 					</thead>
@@ -126,10 +124,6 @@ function OrdersTable({data}) {
 									className={getRowClass(o.workOrderStatus)}
 									onClick={() => handleDetail(o.id)}
 								>
-									<td>{o.id}</td>
-									<td className='truncate'>
-										{o.foto || '—'}
-									</td>
 									<td className='truncate'>
 										<strong>{o.titulo}</strong>
 									</td>

@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.dto.MonthlyAmountRow;
+import com.example.demo.dto.ProductPayments;
 import com.example.demo.model.OrderPayments;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,7 @@ import java.util.List;
 
 public interface PaymentRepo extends JpaRepository<OrderPayments, Long> {
 
-    List<OrderPayments> findByProduct_IdOrderByPaymentDate(Long productId);
+    ProductPayments findByProduct_Id(Long productId);
 
     List<OrderPayments> findByPaymentDateBetween(LocalDate from, LocalDate to);
 

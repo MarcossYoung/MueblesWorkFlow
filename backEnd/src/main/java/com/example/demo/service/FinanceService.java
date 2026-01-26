@@ -31,7 +31,7 @@ public class FinanceService {
     public FinanceDashboardResponse dashboard(LocalDate from, LocalDate to) {
         // 1) Fetch base data
         List<MonthlyAmountRow> incomeRows = safe(productRepository.incomeByMonth(from, to));
-        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.cashflowByMonth(from, to)); // Fixed variable name to match use below
+        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.depositsByMonth(from, to)); // Fixed variable name to match use below
         List<MonthlyAmountRow> expenseRows = safe(costsRepository.expensesByDate(from, to));
 
         // 2) Fetch Expense Breakdown (Pie Chart Data)
@@ -60,7 +60,7 @@ public class FinanceService {
         BigDecimal tInc = sumValues(incomeRows);
         BigDecimal tExp = sumValues(expenseRows);
         // Using cashflowTotal based on your previous code snippet
-        BigDecimal tDep = nz(paymentRepository.cashflowTotal(from, to));
+        BigDecimal tDep = sumValues(cashFlowRows);
 
         // 4) Return the Response matching your DTO order:
         // (from, to, income, deposits, spend, profit, expenseBreakdown, userStats)

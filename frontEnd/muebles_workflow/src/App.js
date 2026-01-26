@@ -1,119 +1,202 @@
-import React, {Suspense, lazy} from 'react'; //
+import React, {useState, useContext, Suspense, lazy} from 'react';
 import {
 	BrowserRouter as Router,
-	Routes,
 	Route,
+	Routes,
 	Navigate,
 } from 'react-router-dom';
-import UserProvider from './UserProvider';
+import {UserContext} from './UserProvider';
 import {OrdersProvider} from './OrdersContext';
-import ProtectedRoute from './components/protectedRoute';
-import AdminRoute from './AdminRoute';
-import './css/styles.css';
-import './css/utils.css';
-import './css/boxes.css';
 import Loader from './loader';
 
-// 1. Lazy Load your Views
-// Instead of import Dashboard from './views/dashboard';
+// Keep these static because they are wrappers/layouts used immediately
+import Sidebar from './components/sidebar';
+import ProtectedRoute from './components/protectedRoute';
+import AdminRoute from './AdminRoute';
+import RoleRoute from './RoleRoute';
+import './css/styles.css';
+
+// --- LAZY LOADED VIEWS ---
 const Login = lazy(() => import('./views/login'));
+const Register = lazy(() => import('./views/registro'));
 const Dashboard = lazy(() => import('./views/dashboard'));
-const ProductsAll = lazy(() => import('./views/productsAll'));
-const ProductCreateForm = lazy(() => import('./views/productCreateForm'));
-const ProductEditForm = lazy(() => import('./views/productEditForm'));
-const ProductsDetail = lazy(() => import('./views/productsDetail'));
-const OrdersDueThisWeek = lazy(() => import('./views/ordersDueThisWeek'));
-const OrdersPastDue = lazy(() => import('./views/ordersPastDue'));
-const OrdersNotPickedUp = lazy(() => import('./views/ordersNotPickedUp'));
-const Registro = lazy(() => import('./views/registro'));
-const AdminPage = lazy(() => import('./views/adminPage'));
+const Products = lazy(() => import('./views/productsAll')); // Was 'productsAll'
+const ProductDetail = lazy(() => import('./views/productsDetail'));
+const ProductEdit = lazy(() => import('./views/productEditForm'));
 const Profile = lazy(() => import('./views/profile'));
+const AdminPage = lazy(() => import('./views/adminPage'));
+const OrdersDueThisWeek = lazy(() => import('./views/ordersDueThisWeek'));
+const OrdersNotPickedUp = lazy(() => import('./views/ordersNotPickedUp'));
+const OrdersPastDue = lazy(() => import('./views/ordersPastDue'));
+const Finances = lazy(() => import('./views/finances'));
 const CostsManager = lazy(() => import('./views/CostsManager'));
-const Finance = lazy(() => import('./views/finances')); // Assuming you added this recently
+
+// Simple Loading Spinner Component
 
 function App() {
+	const {user, setUser} = useContext(UserContext);
+	// Keeping this state as it was in your original file, though it seems unused by the views
+	const [product] = useState(null);
+
 	return (
-		<UserProvider>
-			<OrdersProvider>
-				<Router>
-					{/* 2. Wrap Routes in Suspense */}
-					{/* The 'fallback' is what the user sees while the chunk is downloading */}
-					<Suspense fallback={<Loader />}>
-						<Routes>
-							{/* Public Routes */}
-							<Route path='/login' element={<Login />} />
-							<Route path='/register' element={<Registro />} />
+		<OrdersProvider>
+			<Router>
+				<Suspense fallback={<Loader />}>
+					<Routes>
+						{/* Public Routes */}
+						<Route
+							path='/login'
+							element={<Login setUser={setUser} />}
+						/>
+						<Route path='/registro' element={<Register />} />
 
-							{/* Protected Routes */}
-							<Route element={<ProtectedRoute />}>
-								<Route
-									path='/'
-									element={
-										<Navigate to='/dashboard' replace />
-									}
-								/>
-								<Route
-									path='/dashboard'
-									element={<Dashboard />}
-								/>
-								<Route
-									path='/products'
-									element={<ProductsAll />}
-								/>
-								<Route
-									path='/products/new'
-									element={<ProductCreateForm />}
-								/>
-								<Route
-									path='/products/:id'
-									element={<ProductsDetail />}
-								/>
-								<Route
-									path='/products/:id/edit'
-									element={<ProductEditForm />}
-								/>
-								<Route
-									path='/orders/week'
-									element={<OrdersDueThisWeek />}
-								/>
-								<Route
-									path='/orders/past-due'
-									element={<OrdersPastDue />}
-								/>
-								<Route
-									path='/orders/not-picked-up'
-									element={<OrdersNotPickedUp />}
-								/>
-								<Route path='/profile' element={<Profile />} />
-
-								{/* Admin/Role Specific Routes */}
-								<Route element={<AdminRoute />}>
-									<Route
-										path='/admin'
-										element={<AdminPage />}
-									/>
-									<Route
-										path='/costs'
-										element={<CostsManager />}
-									/>
-
-									<Route
-										path='/finance'
-										element={<Finance />}
-									/>
-								</Route>
-							</Route>
-
-							{/* Catch all */}
+						{/* --- PROTECTED DASHBOARD LAYOUT --- */}
+						<Route
+							path='/dashboard'
+							element={
+								<ProtectedRoute user={user}>
+									<Sidebar />
+									{/* Pass user prop as your original code did */}
+									<Dashboard user={user} />
+								</ProtectedRoute>
+							}
+						>
+							{/* Nested Routes inside Dashboard */}
 							<Route
-								path='*'
-								element={<Navigate to='/login' replace />}
+								path='due-this-week'
+								element={
+									<RoleRoute
+										user={user}
+										allowedRoles={[
+											'USER',
+											'SELLER',
+											'ADMIN',
+										]}
+									>
+										<OrdersDueThisWeek user={user} />
+									</RoleRoute>
+								}
 							/>
-						</Routes>
-					</Suspense>
-				</Router>
-			</OrdersProvider>
-		</UserProvider>
+
+							{/* SELLER + ADMIN Views */}
+							<Route
+								index
+								element={
+									<RoleRoute
+										user={user}
+										allowedRoles={['SELLER', 'ADMIN']}
+									>
+										<Products />
+									</RoleRoute>
+								}
+							/>
+							<Route
+								path='not-picked-up'
+								element={
+									<RoleRoute
+										user={user}
+										allowedRoles={['SELLER', 'ADMIN']}
+									>
+										<OrdersNotPickedUp />
+									</RoleRoute>
+								}
+							/>
+							<Route
+								path='late'
+								element={
+									<RoleRoute
+										user={user}
+										allowedRoles={['SELLER', 'ADMIN']}
+									>
+										<OrdersPastDue />
+									</RoleRoute>
+								}
+							/>
+						</Route>
+
+						{/* --- OTHER PROTECTED PAGES --- */}
+						<Route
+							path='/finance'
+							element={
+								<RoleRoute
+									user={user}
+									allowedRoles={['SELLER', 'ADMIN']}
+								>
+									<Sidebar />
+									<div className='main-content'>
+										<Finances />
+									</div>
+								</RoleRoute>
+							}
+						/>
+						<Route
+							path='/costs'
+							element={
+								<RoleRoute
+									user={user}
+									allowedRoles={['SELLER', 'ADMIN']}
+								>
+									<Sidebar />
+									<div className='main-content'>
+										<CostsManager />
+									</div>
+								</RoleRoute>
+							}
+						/>
+
+						<Route
+							path='/profile/:id'
+							element={
+								<ProtectedRoute user={user}>
+									<Sidebar />
+									<Profile user={user} />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path='/products/:productId'
+							element={
+								<ProtectedRoute user={user}>
+									<Sidebar />
+									<ProductDetail product={product} />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path='/edit/:productId'
+							element={
+								<ProtectedRoute user={user}>
+									<Sidebar />
+									<ProductEdit product={product} />
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route
+							path='/admin'
+							element={
+								<ProtectedRoute user={user}>
+									<AdminRoute user={user}>
+										<Sidebar />
+										<AdminPage />
+									</AdminRoute>
+								</ProtectedRoute>
+							}
+						/>
+
+						{/* Redirects */}
+						<Route
+							path='/'
+							element={<Navigate to='/dashboard' replace />}
+						/>
+						<Route
+							path='*'
+							element={<Navigate to='/dashboard' replace />}
+						/>
+					</Routes>
+				</Suspense>
+			</Router>
+		</OrdersProvider>
 	);
 }
 

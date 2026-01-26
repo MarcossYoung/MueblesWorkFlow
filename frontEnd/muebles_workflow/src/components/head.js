@@ -30,9 +30,7 @@ const Head = () => {
 			<link rel='icon' href='/img/favicon.png' type='image/x-icon' />
 
 			{/* Stylesheets */}
-			<link rel='stylesheet' href='/css/normalize.css' />
-			<link rel='stylesheet' href='/css/boxes.css' />
-			<link rel='stylesheet' href='/css/utils.css' />
+			<link rel='stylesheet' href='/css/styles.css' />
 
 			{/* Font Awesome */}
 			<link

@@ -1,5 +1,5 @@
 import React from 'react';
-import './css/utils.css'; // Assuming you have utility classes here
+import './css/styles.css'; // Assuming you have utility classes here
 
 const Loader = () => (
 	<div
