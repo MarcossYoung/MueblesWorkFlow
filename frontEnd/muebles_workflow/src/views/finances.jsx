@@ -6,13 +6,12 @@ import StatCard from '../components/statCard';
 import ComparisonBarChart from '../components/comaprisonBarChart';
 import ExpensePieChart from '../components/expensesPieChart';
 
-// Add the StatCard and money helpers here...
-
 export default function Finance() {
 	const {user} = useContext(UserContext);
 	const [financeData, setFinanceData] = useState(null);
-	const [chartData, setChartData] = useState([]);
+	const [loading, setLoading] = useState(true);
 
+	// Default to the current month
 	const [selectedMonth, setSelectedMonth] = useState(() => {
 		const now = new Date();
 		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -22,23 +21,34 @@ export default function Finance() {
 	});
 
 	useEffect(() => {
-		fetch('/api/finance/user-performance')
-			.then((res) => res.json())
-			.then((data) => setChartData(data)); // Ensure keys: userName, unitsSold, income
-	}, []);
+		const loadDashboard = async () => {
+			setLoading(true);
+			try {
+				// Calculate start and end of month based on selectedMonth (YYYY-MM)
+				const [year, month] = selectedMonth.split('-');
+				const from = `${year}-${month}-01`;
+				const to = new Date(year, month, 0).toISOString().split('T')[0];
 
-	useEffect(() => {
-		const load = async () => {
-			const res = await axios.get(`${BASE_URL}/api/finance`, {
-				params: {month: selectedMonth},
-				headers: {Authorization: `Bearer ${user?.token}`},
-			});
-			setFinanceData(res.data);
+				const res = await axios.get(`${BASE_URL}/api/finance`, {
+					params: {from, to},
+					headers: {Authorization: `Bearer ${user?.token}`},
+				});
+
+				setFinanceData(res.data);
+			} catch (err) {
+				console.error('Error fetching dashboard data:', err);
+			} finally {
+				setLoading(false);
+			}
 		};
-		load();
+
+		if (user?.token) {
+			loadDashboard();
+		}
 	}, [selectedMonth, user?.token]);
 
-	if (!financeData) return <div className='loader'>Cargando...</div>;
+	if (loading || !financeData)
+		return <div className='loader'>Cargando Datos Financieros...</div>;
 
 	return (
 		<div
@@ -48,43 +58,16 @@ export default function Finance() {
 				minHeight: '100vh',
 			}}
 		>
-			{/* 1. KPIs */}
+			{/* 1. Header & Month Selector */}
 			<div
 				style={{
-					display: 'grid',
-					gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-					gap: '20px',
+					display: 'flex',
+					justifyContent: 'space-between',
+					alignItems: 'center',
 					marginBottom: '30px',
 				}}
 			>
-				<StatCard
-					title='Ingresos'
-					value={financeData.totalIncome}
-					icon='💰'
-					borderColor='#00b894'
-				/>
-				<StatCard
-					title='Gastos'
-					value={financeData.monthlySpend}
-					icon='💸'
-					borderColor='#ff7675'
-				/>
-				<StatCard
-					title='Depósitos'
-					value={financeData.currentDeposits}
-					icon='📥'
-					borderColor='#0984e3'
-				/>
-				<StatCard
-					title='Neto'
-					value={financeData.totalProfit}
-					icon='📊'
-					borderColor='#6c5ce7'
-				/>
-			</div>
-
-			{/* 2. Controls */}
-			<div style={{marginBottom: '25px'}}>
+				<h2 style={{margin: 0, color: '#2d3436'}}>Panel Financiero</h2>
 				<input
 					type='month'
 					value={selectedMonth}
@@ -92,12 +75,48 @@ export default function Finance() {
 					style={{
 						padding: '10px',
 						borderRadius: '8px',
-						border: '1px solid #ddd',
+						border: '1px solid #dfe6e9',
+						boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
 					}}
 				/>
 			</div>
 
-			{/* 3. Concept B: Side-by-Side Charts */}
+			{/* 2. KPI Cards (Using FinanceDashboardResponse fields) */}
+			<div
+				style={{
+					display: 'grid',
+					gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+					gap: '20px',
+					marginBottom: '30px',
+				}}
+			>
+				<StatCard
+					title='Ingresos Totales'
+					value={financeData.totalIncome}
+					icon='💰'
+					borderColor='#00b894'
+				/>
+				<StatCard
+					title='Gastos del Mes'
+					value={financeData.monthlySpend}
+					icon='💸'
+					borderColor='#ff7675'
+				/>
+				<StatCard
+					title='Efectivo / Depósitos'
+					value={financeData.currentDeposits}
+					icon='📥'
+					borderColor='#0984e3'
+				/>
+				<StatCard
+					title='Ganancia Neta'
+					value={financeData.totalProfit}
+					icon='📊'
+					borderColor='#6c5ce7'
+				/>
+			</div>
+
+			{/* 3. Charts Section */}
 			<div
 				style={{
 					display: 'grid',
@@ -105,34 +124,51 @@ export default function Finance() {
 					gap: '25px',
 				}}
 			>
-				{/* Left: Comparison Bar Chart */}
+				{/* User Performance (Bar Chart) */}
 				<div
 					className='card-white'
 					style={{
 						background: 'white',
-						padding: '20px',
-						borderRadius: '12px',
+						padding: '25px',
+						borderRadius: '15px',
+						boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
 					}}
 				>
-					<h3 style={{marginTop: 0}}>Ingresos vs Gastos</h3>
-					<ComparisonBarChart data={chartData} />
+					<h3
+						style={{
+							marginTop: 0,
+							marginBottom: '20px',
+							color: '#636e72',
+						}}
+					>
+						Rendimiento por Vendedor
+					</h3>
+					{/* Passing userStats which contains {label, unitsSold, income} */}
+					<ComparisonBarChart data={financeData.userStats} />
 				</div>
 
-				{/* Right: Expense Pie Chart */}
+				{/* Expense Breakdown (Pie Chart) */}
 				<div
 					className='card-white'
 					style={{
 						background: 'white',
-						padding: '20px',
-						borderRadius: '12px',
+						padding: '25px',
+						borderRadius: '15px',
+						boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
 					}}
 				>
-					<h3 style={{marginTop: 0}}>Distribución de Gastos</h3>
+					<h3
+						style={{
+							marginTop: 0,
+							marginBottom: '20px',
+							color: '#636e72',
+						}}
+					>
+						Distribución de Gastos
+					</h3>
 					<ExpensePieChart data={financeData.expenseBreakdown} />
 				</div>
 			</div>
 		</div>
 	);
 }
-
-// Simple SVG Pie Chart implementation

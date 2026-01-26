@@ -1024,3 +1024,62 @@ textarea.editable {
 	margin: 4px auto 0;
 	border-radius: 2px;
 }
+
+/* Pagination Container */
+.pagination-container {
+	padding: 20px 0;
+	justify-content: center;
+}
+
+/* Base Pagination Buttons */
+.btn-pagination,
+.btn-page-number {
+	border: 1px solid #dfe6e9;
+	background: white;
+	padding: 8px 14px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	color: #2d3436;
+	font-weight: 500;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.btn-pagination:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.btn-pagination:hover:not(:disabled),
+.btn-page-number:hover {
+	background-color: #f1f2f6;
+	border-color: #b2bec3;
+}
+
+/* Active Page State */
+.btn-page-number.active {
+	background-color: #0984e3; /* Primary Blue */
+	color: white;
+	border-color: #0984e3;
+	box-shadow: 0 4px 6px rgba(9, 132, 227, 0.2);
+}
+
+/* Layout helpers if not present */
+.flex {
+	display: flex;
+}
+.center {
+	justify-content: center;
+	align-items: center;
+}
+.gap-8 {
+	gap: 8px;
+}
+.gap-12 {
+	gap: 12px;
+}
+.margin-top-24 {
+	margin-top: 24px;
+}

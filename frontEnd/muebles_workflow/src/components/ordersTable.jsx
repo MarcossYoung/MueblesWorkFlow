@@ -1,6 +1,6 @@
 import React, {useState, useContext} from 'react';
 import axios from 'axios';
-import {FaTrashAlt} from 'react-icons/fa';
+import {FaTrashAlt, FaChevronLeft, FaChevronRight} from 'react-icons/fa';
 import {UserContext} from '../UserProvider';
 import {useOrders} from '../OrdersContext';
 import {BASE_URL} from '../api/config';
@@ -9,9 +9,12 @@ function OrdersTable({data}) {
 	const {user} = useContext(UserContext);
 	const {setOrders} = useOrders();
 
-	// ✅ FIX: add setSearchTerm
 	const [searchTerm, setSearchTerm] = useState('');
 	const [showMySales, setShowMySales] = useState(false);
+
+	// Pagination State
+	const [currentPage, setCurrentPage] = useState(1);
+	const ordersPerPage = 13;
 
 	const token = localStorage.getItem('token');
 
@@ -35,45 +38,66 @@ function OrdersTable({data}) {
 	const getRowClass = (status) => {
 		if (status === 'TERMINADO') return 'row-done';
 		if (status === 'ATRASADO') return 'row-late';
-		if (status === 'ENTRGADO') return 'row-delivered';
+		if (status === 'ENTREGADO') return 'row-delivered';
 		return 'row-inprogress';
 	};
 
-	// ✅ FIXED FILTERING
+	// 1. Filter by Search Term
 	let filtered = data.filter((order) => {
 		const search = searchTerm.toLowerCase();
 		return (
-			order.titulo.toLowerCase().includes(search) ||
-			order.productType.toLowerCase().includes(search) ||
-			order.material.toLowerCase().includes(search) ||
-			order.color.toLowerCase().includes(search)
+			order.titulo?.toLowerCase().includes(search) ||
+			order.productType?.toLowerCase().includes(search) ||
+			order.material?.toLowerCase().includes(search) ||
+			order.color?.toLowerCase().includes(search)
 		);
 	});
 
-	// ✅ APPLY "My Sales" toggle
+	// 2. Apply "My Sales" filter
+	// Checks both direct ownerId and the nested owner object from your AppUser model
 	if (showMySales) {
-		filtered = filtered.filter((order) => order.ownerid === user.id);
+		filtered = filtered.filter(
+			(order) => order.ownerId === user.id || order.owner?.id === user.id
+		);
 	}
+
+	// 3. Pagination Calculation
+	const totalPages = Math.ceil(filtered.length / ordersPerPage);
+	const indexOfLastOrder = currentPage * ordersPerPage;
+	const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+	const currentOrders = filtered.slice(indexOfFirstOrder, indexOfLastOrder);
+
+	const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
 	return (
 		<div className='orders-container'>
-			{user?.role === 'ADMIN' && (
-				<div className='admin-tools'>
+			<div className='admin-tools flex justify-between align-center'>
+				<div className='flex gap-8'>
 					<input
 						type='text'
-						placeholder='Buscar pedidos...'
+						className='search-input'
+						placeholder='Buscar por título, material, color...'
 						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)} // ✅ FIXED
+						onChange={(e) => {
+							setSearchTerm(e.target.value);
+							setCurrentPage(1); // Reset to first page on new search
+						}}
 					/>
-
 					<button
-						onClick={() => setShowMySales(!showMySales)} // ✅ FIXED
-						className='button_2 margin-top-8'
+						onClick={() => {
+							setShowMySales(!showMySales);
+							setCurrentPage(1);
+						}}
+						className='button_2'
 					>
 						{showMySales ? 'Mostrar todo' : 'Ver mis ventas'}
 					</button>
 				</div>
-			)}
+
+				<div className='pagination-info'>
+					Página <strong>{currentPage}</strong> de {totalPages || 1}
+				</div>
+			</div>
 
 			<div className='table-wrapper box-shadow scrollable-table'>
 				<table className='orders-table'>
@@ -88,16 +112,15 @@ function OrdersTable({data}) {
 							<th>Pintura</th>
 							<th>Color</th>
 							<th>Laqueado</th>
-							<th>Cantidad</th>
-							<th>Fecha Inicio</th>
-							<th>Fecha Entrega</th>
-							{(user?.role === 'ADMIN' ||
-								user?.role === 'SELLER') && <th>Acciones</th>}
+							<th>Cant.</th>
+							<th>Inicio</th>
+							<th>Entrega</th>
+							{user?.role === 'ADMIN' && <th>Acciones</th>}
 						</tr>
 					</thead>
 					<tbody>
-						{filtered.length > 0 ? (
-							filtered.map((o) => (
+						{currentOrders.length > 0 ? (
+							currentOrders.map((o) => (
 								<tr
 									key={o.id}
 									className={getRowClass(o.workOrderStatus)}
@@ -107,7 +130,9 @@ function OrdersTable({data}) {
 									<td className='truncate'>
 										{o.foto || '—'}
 									</td>
-									<td className='truncate'>{o.titulo}</td>
+									<td className='truncate'>
+										<strong>{o.titulo}</strong>
+									</td>
 									<td>{o.productType}</td>
 									<td className='truncate'>{o.medidas}</td>
 									<td className='truncate'>{o.material}</td>
@@ -115,18 +140,18 @@ function OrdersTable({data}) {
 									<td>{o.color}</td>
 									<td>{o.laqueado}</td>
 									<td>{o.cantidad}</td>
-									<td>{o.startDate || 'N/A'}</td>
-									<td>{o.fechaEstimada || 'N/A'}</td>
+									<td>{o.startDate || '—'}</td>
+									<td>{o.fechaEstimada || '—'}</td>
 									{user?.role === 'ADMIN' && (
 										<td>
 											<button
-												className='button-red'
+												className='button-red-icon'
 												onClick={(e) => {
-													e.stopPropagation(); // ✅ Prevent detail click
+													e.stopPropagation();
 													handleDelete(o.id);
 												}}
 											>
-												<FaTrashAlt /> Eliminar
+												<FaTrashAlt />
 											</button>
 										</td>
 									)}
@@ -134,14 +159,56 @@ function OrdersTable({data}) {
 							))
 						) : (
 							<tr>
-								<td colSpan='12' style={{textAlign: 'center'}}>
-									No se encontraron pedidos
+								<td
+									colSpan='13'
+									style={{
+										textAlign: 'center',
+										padding: '40px',
+									}}
+								>
+									No se encontraron pedidos con los filtros
+									actuales.
 								</td>
 							</tr>
 						)}
 					</tbody>
 				</table>
 			</div>
+
+			{/* Pagination Controls */}
+			{totalPages > 1 && (
+				<div className='pagination-container flex center gap-12 margin-top-24'>
+					<button
+						disabled={currentPage === 1}
+						onClick={() => paginate(currentPage - 1)}
+						className='btn-pagination'
+					>
+						<FaChevronLeft />
+					</button>
+
+					<div className='flex gap-8'>
+						{[...Array(totalPages).keys()].map((num) => (
+							<button
+								key={num + 1}
+								onClick={() => paginate(num + 1)}
+								className={`btn-page-number ${
+									currentPage === num + 1 ? 'active' : ''
+								}`}
+							>
+								{num + 1}
+							</button>
+						))}
+					</div>
+
+					<button
+						disabled={currentPage === totalPages}
+						onClick={() => paginate(currentPage + 1)}
+						className='btn-pagination'
+					>
+						<FaChevronRight />
+					</button>
+				</div>
+			)}
 		</div>
 	);
 }
