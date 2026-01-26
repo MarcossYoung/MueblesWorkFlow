@@ -54,10 +54,7 @@ public class FinanceController {
         return new DateRange(current.atDay(1), current.atEndOfMonth());
     }
 
-    @GetMapping("/user-performance")
-    public ResponseEntity<List<Map<String, Object>>> getUserPerformance() {
-        return ResponseEntity.ok(financeService.getMonthlyUserStats());
-    }
+
 
 
     private record DateRange(LocalDate from, LocalDate to) {}

@@ -13,6 +13,7 @@ public record FinanceDashboardResponse(
         BigDecimal currentDeposits,
         BigDecimal monthlySpend,
         BigDecimal totalProfit,
-        List<Map<String, Object>> comparisonSeries, // For the Bar Chart
-        List<Map<String, Object>> expenseBreakdown   // For the Pie Chart
+        List<Map<String, Object>> expenseBreakdown,  // For the Pie Chart
+        List<Map<String, Object>> userStats   // For the Pie Chart
+
 ) {}

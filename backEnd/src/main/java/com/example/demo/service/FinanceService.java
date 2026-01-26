@@ -32,13 +32,15 @@ public class FinanceService {
     public FinanceDashboardResponse dashboard(LocalDate from, LocalDate to) {
         // 1) Fetch base data
         List<MonthlyAmountRow> incomeRows = safe(productRepository.incomeByMonth(from, to));
-        List<MonthlyAmountRow> cashflowRows = safe(paymentRepository.cashflowByMonth(from, to));
+        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.cashflowByMonth(from, to));
         List<MonthlyAmountRow> expenseRows = safe(costsRepository.expensesByDate(from, to));
+
+        // This is the raw data from your new SQL query (userName, unitsSold, income)
+        List<Map<String, Object>> rawUserStats = productRepository.getUserPerformanceData(from, to);
 
         // 2) Fetch Expense Breakdown (Pie Chart Data)
         List<Costs> allCosts = costsRepository.findByDateBetween(from, to);
 
-        // Group by Enum name and sum the 'amount' field
         Map<String, BigDecimal> breakdownMap = allCosts.stream()
                 .filter(c -> c.getCostType() != null)
                 .collect(Collectors.groupingBy(
@@ -46,40 +48,35 @@ public class FinanceService {
                         Collectors.mapping(Costs::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
                 ));
 
-        // Convert Map to List of Maps safely
         List<Map<String, Object>> expenseBreakdown = new ArrayList<>();
         breakdownMap.forEach((name, value) -> {
             Map<String, Object> item = new HashMap<>();
             item.put("name", name);
-            item.put("value", nz(value)); // Ensure no nulls reach the Pie Chart
+            item.put("value", nz(value));
             expenseBreakdown.add(item);
         });
 
-        // 3) Build Comparison Series (Bar Chart)
-        SortedSet<String> months = new TreeSet<>(allMonthsBetween(from, to));
-        Map<String, BigDecimal> incMap = toMap(incomeRows);
-        Map<String, BigDecimal> expMap = toMap(expenseRows);
-
-        List<Map<String, Object>> comparisonSeries = new ArrayList<>();
-        for (String m : months) {
-            BigDecimal inc = nz(incMap.get(m));
-            BigDecimal exp = nz(expMap.get(m));
-
-            Map<String, Object> row = new HashMap<>();
-            row.put("label", m);
-            row.put("income", inc);
-            row.put("expenses", exp);
-            comparisonSeries.add(row);
+        // 3) Process User Stats for the Chart
+        // We ensure the numbers are formatted correctly for the React Component
+        List<Map<String, Object>> userStats = new ArrayList<>();
+        if (rawUserStats != null) {
+            for (Map<String, Object> row : rawUserStats) {
+                Map<String, Object> formattedUser = new HashMap<>();
+                // Use the keys expected by your React ComparisonBarChart: label, income, unitsSold
+                formattedUser.put("label", row.get("userName"));
+                formattedUser.put("income", nz((BigDecimal) row.get("income")));
+                formattedUser.put("unitsSold", row.get("unitsSold") == null ? 0 : row.get("unitsSold"));
+                userStats.add(formattedUser);
+            }
         }
 
         // KPIs
         BigDecimal tInc = sumValues(incomeRows);
         BigDecimal tExp = sumValues(expenseRows);
-        BigDecimal tDep = nz(paymentRepository.cashflowTotal(from, to));
+        BigDecimal tDep = sumValues(cashFlowRows);
 
         return new FinanceDashboardResponse(
-                from, to, tInc, tDep, tExp, tInc.subtract(tExp),
-                comparisonSeries, expenseBreakdown
+                from, to, tInc, tDep, tExp, tInc.subtract(tExp), expenseBreakdown, userStats
         );
     }
 
@@ -115,15 +112,11 @@ public class FinanceService {
     private static BigDecimal sumValues(List<MonthlyAmountRow> rows) {
         BigDecimal total = BigDecimal.ZERO;
         for (MonthlyAmountRow r : rows) {
-            // Change from r.total() to r.getTotal() to match the Interface
+
             total = total.add(nz(r.getTotal()));
         }
         return total;
     }
 
-    public List<Map<String, Object>> getMonthlyUserStats() {
-        LocalDate start = LocalDate.now().withDayOfMonth(1);
-        LocalDate end = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
-        return productRepository.getUserPerformanceData(start,end);
-    }
+
 }

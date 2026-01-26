@@ -42,7 +42,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
 
     @Query(value = """
-    SELECT u.name as userName, 
+    SELECT u.username as userName, 
            SUM(p.cantidad) as unitsSold, 
            SUM(p.precio) as income
     FROM products p
