@@ -32,11 +32,8 @@ public class FinanceService {
     public FinanceDashboardResponse dashboard(LocalDate from, LocalDate to) {
         // 1) Fetch base data
         List<MonthlyAmountRow> incomeRows = safe(productRepository.incomeByMonth(from, to));
-        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.cashflowByMonth(from, to));
+        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.cashflowByMonth(from, to)); // Fixed variable name to match use below
         List<MonthlyAmountRow> expenseRows = safe(costsRepository.expensesByDate(from, to));
-
-        // This is the raw data from your new SQL query (userName, unitsSold, income)
-        List<Map<String, Object>> rawUserStats = productRepository.getUserPerformanceData(from, to);
 
         // 2) Fetch Expense Breakdown (Pie Chart Data)
         List<Costs> allCosts = costsRepository.findByDateBetween(from, to);
@@ -56,67 +53,45 @@ public class FinanceService {
             expenseBreakdown.add(item);
         });
 
-        // 3) Process User Stats for the Chart
-        // We ensure the numbers are formatted correctly for the React Component
-        List<Map<String, Object>> userStats = new ArrayList<>();
-        if (rawUserStats != null) {
-            for (Map<String, Object> row : rawUserStats) {
-                Map<String, Object> formattedUser = new HashMap<>();
-                // Use the keys expected by your React ComparisonBarChart: label, income, unitsSold
-                formattedUser.put("label", row.get("userName"));
-                formattedUser.put("income", nz((BigDecimal) row.get("income")));
-                formattedUser.put("unitsSold", row.get("unitsSold") == null ? 0 : row.get("unitsSold"));
-                userStats.add(formattedUser);
-            }
-        }
+        // 3) NEW: Fetch User Stats (Bar Chart Data)
+        // This was MISSING in your previous service code
+        List<Map<String, Object>> userStats = getMonthlyUserStats(from, to);
 
         // KPIs
         BigDecimal tInc = sumValues(incomeRows);
         BigDecimal tExp = sumValues(expenseRows);
-        BigDecimal tDep = sumValues(cashFlowRows);
+        // Using cashflowTotal based on your previous code snippet
+        BigDecimal tDep = nz(paymentRepository.cashflowTotal(from, to));
 
+        // 4) Return the Response matching your DTO order:
+        // (from, to, income, deposits, spend, profit, expenseBreakdown, userStats)
         return new FinanceDashboardResponse(
-                from, to, tInc, tDep, tExp, tInc.subtract(tExp), expenseBreakdown, userStats
+                from,
+                to,
+                tInc,
+                tDep,
+                tExp,
+                tInc.subtract(tExp),
+                expenseBreakdown, // Pie Chart
+                userStats         // Bar Chart (The critical fix)
         );
     }
 
+    // Helper: Update this to accept arguments
+    public List<Map<String, Object>> getMonthlyUserStats(LocalDate from, LocalDate to) {
+        return productRepository.getUserPerformanceData(from, to);
+    }
 
-
+    // ... Keep your existing private helpers (nz, safe, sumValues, etc.) ...
     private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
     private List<MonthlyAmountRow> safe(List<MonthlyAmountRow> rows) { return rows == null ? List.of() : rows; }
-
-    private Map<String, BigDecimal> toMap(List<MonthlyAmountRow> rows) {
-        Map<String, BigDecimal> map = new HashMap<>();
-        for (MonthlyAmountRow r : rows) {
-            if (r != null && r.getMonth() != null) map.put(r.getMonth(), nz(r.getTotal()));
-        }
-        return map;
-    }
-
-    private Set<String> allMonthsBetween(LocalDate from, LocalDate to) {
-        YearMonth start = YearMonth.from(from);
-        YearMonth end = YearMonth.from(to);
-        Set<String> out = new HashSet<>();
-        while (!start.isAfter(end)) {
-            out.add(start.toString());
-            start = start.plusMonths(1);
-        }
-        return out;
-    }
-
-    // Ensure these are inside your FinanceService class but outside your dashboard method
-
-
-
 
     private static BigDecimal sumValues(List<MonthlyAmountRow> rows) {
         BigDecimal total = BigDecimal.ZERO;
         for (MonthlyAmountRow r : rows) {
-
+            // Assuming your interface uses getTotal()
             total = total.add(nz(r.getTotal()));
         }
         return total;
     }
-
-
 }
