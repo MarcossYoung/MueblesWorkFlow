@@ -12,13 +12,13 @@ const ProductDetail = () => {
 	const [loading, setLoading] = useState(true);
 	const [types, setTypes] = useState([]);
 	const [statuses, setStatuses] = useState([]);
-	const [payments, setPayments] = useState([]); // Array de pagos
+	const [payments, setPayments] = useState([]);
 
-	// Mensajes
+	// Feedback
 	const [successMsg, setSuccessMsg] = useState('');
 	const [errorMsg, setErrorMsg] = useState('');
 
-	// Formulario Producto
+	// Estado del Producto
 	const [product, setProduct] = useState({
 		titulo: '',
 		productType: '',
@@ -34,10 +34,10 @@ const ProductDetail = () => {
 		fechaEntrega: '',
 		notas: '',
 		workOrderStatus: '',
-		latePickUpDays: 0,
+		daysLate: 0,
 	});
 
-	// Formulario Nuevo Pago
+	// Estado Nuevo Pago
 	const [newPayment, setNewPayment] = useState({
 		valor: '',
 		type: 'DEPOSIT',
@@ -51,13 +51,13 @@ const ProductDetail = () => {
 	useEffect(() => {
 		const loadData = async () => {
 			try {
-				// Usamos /api/pagos si tu backend no ha cambiado a /api/payments globalmente
+				// Usamos Promise.all para cargar todo junto
 				const [prodRes, typesRes, statusRes, paymentsRes] =
 					await Promise.all([
 						axios.get(`${BASE_URL}/api/products/${productId}`),
 						axios.get(`${BASE_URL}/api/products/types`),
 						axios.get(`${BASE_URL}/api/workorders/statuses`),
-						// Intenta cargar pagos, si falla (404) no rompe toda la app
+						// Usamos un catch aquí para que si falla pagos (404) no rompa todo
 						axios
 							.get(`${BASE_URL}/api/payments/${productId}`)
 							.catch(() => ({data: []})),
@@ -72,18 +72,19 @@ const ProductDetail = () => {
 						prodRes.data.workOrderStatus ||
 						prodRes.data.status ||
 						'',
+					// Aseguramos que daysLate venga del backend o sea 0
+					daysLate: prodRes.data.daysLate || 0,
 				});
 
 				setTypes(typesRes.data);
 				setStatuses(statusRes.data);
 
 				// Mapeo seguro de pagos (Array vs Objeto)
-				const pagosData = paymentsRes.data;
-				if (Array.isArray(pagosData)) {
-					setPayments(pagosData);
-				} else if (pagosData && typeof pagosData === 'object') {
-					// Si el backend devuelve un solo objeto en vez de lista
-					setPayments([pagosData]);
+				const dataPagos = paymentsRes.data;
+				if (Array.isArray(dataPagos)) {
+					setPayments(dataPagos);
+				} else if (dataPagos && typeof dataPagos === 'object') {
+					setPayments([dataPagos]); // Convertir objeto único a array
 				} else {
 					setPayments([]);
 				}
@@ -111,10 +112,10 @@ const ProductDetail = () => {
 			await axios.put(`${BASE_URL}/api/products/${productId}`, product, {
 				headers: {Authorization: `Bearer ${token}`},
 			});
-			setSuccessMsg('✅ Cambios guardados correctamente');
+			setSuccessMsg('✅ Producto actualizado correctamente');
 			setTimeout(() => setSuccessMsg(''), 3000);
 		} catch (err) {
-			setErrorMsg('❌ Error al guardar el producto.');
+			setErrorMsg('❌ Error al guardar cambios');
 		}
 	};
 
@@ -122,12 +123,11 @@ const ProductDetail = () => {
 		if (!newPayment.valor) return;
 		try {
 			const token = localStorage.getItem('token');
-			// Asegúrate de usar el endpoint correcto ('payments' o 'pagos')
 			const res = await axios.post(
 				`${BASE_URL}/api/payments`,
 				{
 					...newPayment,
-					product_id: productId, // El backend espera product_id
+					product_id: productId,
 					fecha: new Date().toISOString().split('T')[0],
 				},
 				{
@@ -135,18 +135,17 @@ const ProductDetail = () => {
 				}
 			);
 
-			// Agregar el nuevo pago a la lista visualmente
+			// Actualizamos la lista visualmente
 			setPayments([...payments, res.data]);
 			setNewPayment({...newPayment, valor: ''});
 			setSuccessMsg('✅ Pago registrado');
 			setTimeout(() => setSuccessMsg(''), 3000);
 		} catch (err) {
-			console.error(err);
-			setErrorMsg('Error al registrar el pago.');
+			setErrorMsg('Error al registrar pago');
 		}
 	};
 
-	// --- CALCULOS ---
+	// --- CALCULOS SEGUROS ---
 	const totalPaid = Array.isArray(payments)
 		? payments.reduce(
 				(acc, curr) => acc + Number(curr.valor || curr.amount || 0),
@@ -158,7 +157,7 @@ const ProductDetail = () => {
 
 	if (loading)
 		return (
-			<div style={{padding: '40px', textAlign: 'center'}}>
+			<div style={{padding: '50px', textAlign: 'center'}}>
 				Cargando...
 			</div>
 		);
@@ -170,11 +169,9 @@ const ProductDetail = () => {
 				maxWidth: '1200px',
 				margin: '0 auto',
 				color: '#2d3436',
-				fontFamily:
-					'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+				fontFamily: 'system-ui, -apple-system, sans-serif',
 			}}
 		>
-			{/* Header */}
 			<h1
 				style={{
 					marginBottom: '20px',
@@ -182,10 +179,10 @@ const ProductDetail = () => {
 					fontWeight: '700',
 				}}
 			>
-				Editar Pedido #{productId}
+				Detalle del Pedido #{productId}
 			</h1>
 
-			{/* Mensajes de Feedback */}
+			{/* MENSAJES DE FEEDBACK */}
 			{successMsg && (
 				<div
 					style={{
@@ -203,7 +200,7 @@ const ProductDetail = () => {
 				<div
 					style={{
 						padding: '15px',
-						background: '#ff7675',
+						background: '#d63031',
 						color: 'white',
 						borderRadius: '5px',
 						marginBottom: '20px',
@@ -213,22 +210,22 @@ const ProductDetail = () => {
 				</div>
 			)}
 
-			{/* --- GRID LAYOUT (1.5fr IZQUIERDA | 1fr DERECHA) --- */}
+			{/* --- LAYOUT PRINCIPAL (GRID) --- */}
 			<div
 				style={{
 					display: 'grid',
-					gridTemplateColumns: '1.5fr 1fr',
+					gridTemplateColumns: '1.5fr 1fr', // La proporción exacta de la imagen 1
 					gap: '30px',
 					alignItems: 'start',
 				}}
 			>
-				{/* === COLUMNA IZQUIERDA: DATOS DEL MUEBLE === */}
+				{/* === COLUMNA IZQUIERDA: FORMULARIO === */}
 				<div
 					style={{
 						background: 'white',
 						padding: '25px',
 						borderRadius: '10px',
-						boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+						boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
 					}}
 				>
 					<h3
@@ -251,53 +248,23 @@ const ProductDetail = () => {
 						>
 							{/* Título (Ancho completo) */}
 							<div style={{gridColumn: '1 / -1'}}>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Título
-								</label>
+								<label style={labelStyle}>Título</label>
 								<input
 									name='titulo'
 									value={product.titulo}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
-							{/* Campos Básicos */}
+							{/* Selects y Datos */}
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Tipo
-								</label>
+								<label style={labelStyle}>Tipo</label>
 								<select
 									name='productType'
 									value={product.productType}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								>
 									{types.map((t) => (
 										<option key={t} value={t}>
@@ -308,27 +275,12 @@ const ProductDetail = () => {
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Estado
-								</label>
+								<label style={labelStyle}>Estado</label>
 								<select
 									name='workOrderStatus'
 									value={product.workOrderStatus}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								>
 									{statuses.map((s) => (
 										<option key={s} value={s}>
@@ -339,193 +291,80 @@ const ProductDetail = () => {
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Material
-								</label>
+								<label style={labelStyle}>Material</label>
 								<input
 									name='material'
 									value={product.material}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Color
-								</label>
+								<label style={labelStyle}>Color</label>
 								<input
 									name='color'
 									value={product.color}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Medidas
-								</label>
+								<label style={labelStyle}>Medidas</label>
 								<input
 									name='medidas'
 									value={product.medidas}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Pintura
-								</label>
+								<label style={labelStyle}>Pintura</label>
 								<input
 									name='pintura'
 									value={product.pintura}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Laqueado
-								</label>
+								<label style={labelStyle}>Laqueado</label>
 								<input
 									name='laqueado'
 									value={product.laqueado}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Cantidad
-								</label>
+								<label style={labelStyle}>Cantidad</label>
 								<input
 									type='number'
 									name='cantidad'
 									value={product.cantidad}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
 							{/* Fechas */}
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Inicio
-								</label>
+								<label style={labelStyle}>Inicio</label>
 								<input
 									type='date'
 									name='startDate'
 									value={product.startDate}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
 							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
+								<label style={labelStyle}>
 									Entrega Estimada
 								</label>
 								<input
@@ -533,25 +372,30 @@ const ProductDetail = () => {
 									name='fechaEstimada'
 									value={product.fechaEstimada}
 									onChange={handleChange}
-									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
-									}}
+									style={inputStyle}
 								/>
 							</div>
 
-							{/* Precio (Solo Admin/Seller) */}
+							<div style={{gridColumn: '1 / -1'}}>
+								<label style={labelStyle}>
+									Fecha de Entrega Real (Opcional)
+								</label>
+								<input
+									type='date'
+									name='fechaEntrega'
+									value={product.fechaEntrega}
+									onChange={handleChange}
+									style={{...inputStyle, width: '50%'}}
+								/>
+							</div>
+
+							{/* Precio (Solo Admin/Seller) - Integrado en el form */}
 							{canSeeFinancials && (
 								<div style={{gridColumn: '1 / -1'}}>
 									<label
 										style={{
-											display: 'block',
-											fontSize: '0.85rem',
-											fontWeight: '600',
+											...labelStyle,
 											color: '#0984e3',
-											marginBottom: '5px',
 										}}
 									>
 										Precio Total ($)
@@ -562,12 +406,10 @@ const ProductDetail = () => {
 										value={product.precio}
 										onChange={handleChange}
 										style={{
-											width: '100%',
-											padding: '10px',
-											borderRadius: '5px',
-											border: '1px solid #0984e3',
+											...inputStyle,
 											fontWeight: 'bold',
 											fontSize: '1.1rem',
+											borderColor: '#0984e3',
 										}}
 									/>
 								</div>
@@ -575,50 +417,36 @@ const ProductDetail = () => {
 
 							{/* Notas */}
 							<div style={{gridColumn: '1 / -1'}}>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '0.85rem',
-										fontWeight: '600',
-										color: '#636e72',
-										marginBottom: '5px',
-									}}
-								>
-									Notas
-								</label>
+								<label style={labelStyle}>Notas</label>
 								<textarea
 									name='notas'
 									value={product.notas}
 									onChange={handleChange}
 									rows='3'
 									style={{
-										width: '100%',
-										padding: '10px',
-										borderRadius: '5px',
-										border: '1px solid #dfe6e9',
+										...inputStyle,
 										fontFamily: 'inherit',
 									}}
 								/>
 							</div>
 
 							{/* Alerta de Demora */}
-							{product.latePickUpDays > 0 && (
+							{product.daysLate > 0 && (
 								<div
 									style={{
 										gridColumn: '1 / -1',
-										padding: '10px',
+										padding: '12px',
 										background: '#ffeaa7',
 										color: '#d35400',
 										borderRadius: '5px',
 										textAlign: 'center',
 										fontWeight: 'bold',
-										fontSize: '0.9rem',
 									}}
 								>
 									⚠️{' '}
 									{product.workOrderStatus === 'TERMINADO'
-										? `Lleva ${product.latePickUpDays} días en depósito sin retirar.`
-										: `Tiene ${product.latePickUpDays} días de retraso.`}
+										? `Lleva ${product.daysLate} días en depósito sin retirar.`
+										: `Tiene ${product.daysLate} días de retraso.`}
 								</div>
 							)}
 						</div>
@@ -634,8 +462,8 @@ const ProductDetail = () => {
 								padding: '12px',
 								borderRadius: '5px',
 								fontWeight: '600',
-								cursor: 'pointer',
 								fontSize: '1rem',
+								cursor: 'pointer',
 							}}
 						>
 							Guardar Cambios
@@ -652,7 +480,7 @@ const ProductDetail = () => {
 							gap: '20px',
 						}}
 					>
-						{/* TARJETA 1: NUEVO PAGO (GRIS) */}
+						{/* 1. Tarjeta Nuevo Pago (Gris) */}
 						<div
 							style={{
 								background: '#f1f2f6',
@@ -664,48 +492,40 @@ const ProductDetail = () => {
 							<h3
 								style={{marginBottom: '15px', color: '#2d3436'}}
 							>
-								Nuevo Pago
+								Registrar Pago
 							</h3>
 
-							<input
-								type='number'
-								placeholder='Monto'
-								value={newPayment.valor}
-								onChange={(e) =>
-									setNewPayment({
-										...newPayment,
-										valor: e.target.value,
-									})
-								}
-								style={{
-									width: '100%',
-									padding: '10px',
-									marginBottom: '10px',
-									borderRadius: '5px',
-									border: '1px solid #ccc',
-								}}
-							/>
+							<div style={{marginBottom: '10px'}}>
+								<input
+									type='number'
+									placeholder='Monto'
+									value={newPayment.valor}
+									onChange={(e) =>
+										setNewPayment({
+											...newPayment,
+											valor: e.target.value,
+										})
+									}
+									style={inputStyle}
+								/>
+							</div>
 
-							<select
-								value={newPayment.type}
-								onChange={(e) =>
-									setNewPayment({
-										...newPayment,
-										type: e.target.value,
-									})
-								}
-								style={{
-									width: '100%',
-									padding: '10px',
-									marginBottom: '15px',
-									borderRadius: '5px',
-									border: '1px solid #ccc',
-								}}
-							>
-								<option value='DEPOSIT'>Seña</option>
-								<option value='RESTO'>Saldo</option>
-								<option value='EXTRA'>Extra</option>
-							</select>
+							<div style={{marginBottom: '15px'}}>
+								<select
+									value={newPayment.type}
+									onChange={(e) =>
+										setNewPayment({
+											...newPayment,
+											type: e.target.value,
+										})
+									}
+									style={inputStyle}
+								>
+									<option value='DEPOSIT'>Seña</option>
+									<option value='RESTO'>Saldo</option>
+									<option value='EXTRA'>Extra</option>
+								</select>
+							</div>
 
 							<button
 								onClick={handleAddPayment}
@@ -720,11 +540,11 @@ const ProductDetail = () => {
 									cursor: 'pointer',
 								}}
 							>
-								Registrar Pago
+								+ Agregar Pago
 							</button>
 						</div>
 
-						{/* TARJETA 2: HISTORIAL (BLANCO) */}
+						{/* 2. Tarjeta Resumen e Historial (Blanca) */}
 						<div
 							style={{
 								background: 'white',
@@ -733,25 +553,84 @@ const ProductDetail = () => {
 								border: '1px solid #dfe6e9',
 							}}
 						>
-							<h4
+							{/* Resumen */}
+							<div
 								style={{
+									borderBottom: '2px solid #eee',
+									paddingBottom: '15px',
 									marginBottom: '15px',
-									borderBottom: '1px solid #eee',
-									paddingBottom: '10px',
 								}}
 							>
-								Historial de Pagos
-							</h4>
-
-							{Array.isArray(payments) && payments.length > 0 ? (
 								<div
 									style={{
-										maxHeight: '300px',
-										overflowY: 'auto',
+										display: 'flex',
+										justifyContent: 'space-between',
+										marginBottom: '5px',
+									}}
+								>
+									<span style={{color: '#636e72'}}>
+										Total:
+									</span>
+									<strong>
+										$
+										{Number(
+											product.precio || 0
+										).toLocaleString()}
+									</strong>
+								</div>
+								<div
+									style={{
+										display: 'flex',
+										justifyContent: 'space-between',
+										marginBottom: '10px',
+										color: '#00b894',
+									}}
+								>
+									<span>Pagado:</span>
+									<strong>
+										${totalPaid.toLocaleString()}
+									</strong>
+								</div>
+								<div
+									style={{
+										display: 'flex',
+										justifyContent: 'space-between',
+										fontSize: '1.2rem',
+										fontWeight: 'bold',
+									}}
+								>
+									<span style={{color: '#2d3436'}}>
+										Restante:
+									</span>
+									<span
+										style={{
+											color:
+												balance > 0
+													? '#d63031'
+													: '#00b894',
+										}}
+									>
+										${balance.toLocaleString()}
+									</span>
+								</div>
+							</div>
+
+							{/* Lista */}
+							<h4
+								style={{marginBottom: '10px', color: '#2d3436'}}
+							>
+								Historial
+							</h4>
+							{Array.isArray(payments) && payments.length > 0 ? (
+								<ul
+									style={{
+										listStyle: 'none',
+										padding: 0,
+										margin: 0,
 									}}
 								>
 									{payments.map((p, i) => (
-										<div
+										<li
 											key={i}
 											style={{
 												display: 'flex',
@@ -767,8 +646,13 @@ const ProductDetail = () => {
 													color: '#636e72',
 												}}
 											>
-												{p.fecha || p.date} <br />
-												<b style={{color: '#2d3436'}}>
+												{p.fecha} <br />
+												<b
+													style={{
+														color: '#2d3436',
+														fontSize: '0.8rem',
+													}}
+												>
 													{p.type || p.paymentType}
 												</b>
 											</span>
@@ -783,78 +667,43 @@ const ProductDetail = () => {
 													p.valor || p.amount
 												).toLocaleString()}
 											</span>
-										</div>
+										</li>
 									))}
-								</div>
+								</ul>
 							) : (
 								<p
 									style={{
 										color: '#b2bec3',
 										textAlign: 'center',
-										padding: '10px',
+										fontSize: '0.9rem',
 									}}
 								>
 									No hay pagos registrados.
 								</p>
 							)}
-
-							{/* Resumen Financiero */}
-							<div
-								style={{
-									marginTop: '20px',
-									paddingTop: '15px',
-									borderTop: '2px solid #eee',
-								}}
-							>
-								<div
-									style={{
-										display: 'flex',
-										justifyContent: 'space-between',
-										marginBottom: '5px',
-									}}
-								>
-									<span>Total Pedido:</span>
-									<strong>
-										$
-										{Number(
-											product.precio
-										).toLocaleString()}
-									</strong>
-								</div>
-								<div
-									style={{
-										display: 'flex',
-										justifyContent: 'space-between',
-										marginBottom: '5px',
-										color: '#00b894',
-									}}
-								>
-									<span>Pagado:</span>
-									<strong>
-										${totalPaid.toLocaleString()}
-									</strong>
-								</div>
-								<div
-									style={{
-										display: 'flex',
-										justifyContent: 'space-between',
-										marginTop: '10px',
-										fontSize: '1.2rem',
-										fontWeight: 'bold',
-										color:
-											balance > 0 ? '#d63031' : '#2d3436',
-									}}
-								>
-									<span>Restante:</span>
-									<span>${balance.toLocaleString()}</span>
-								</div>
-							</div>
 						</div>
 					</div>
 				)}
 			</div>
 		</div>
 	);
+};
+
+// Estilos Reutilizables para limpiar el JSX
+const inputStyle = {
+	width: '100%',
+	padding: '10px',
+	borderRadius: '5px',
+	border: '1px solid #dfe6e9',
+	fontSize: '0.95rem',
+};
+
+const labelStyle = {
+	display: 'block',
+	fontSize: '0.85rem',
+	fontWeight: '600',
+	color: '#636e72',
+	marginBottom: '5px',
 };
 
 export default ProductDetail;
