@@ -1,25 +1,15 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import axios from 'axios';
-import {useOrders} from '../OrdersContext';
 import OrdersTable from '../components/ordersTable';
 import {FaPlus} from 'react-icons/fa';
 import {BASE_URL} from '../api/config';
 
 export default function OrdersDueThisWeek({user}) {
-	const {fetchOrdersByRange} = useOrders();
 	const [orders, setOrders] = useState([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [successMessage, setSuccessMessage] = useState('');
 
 	const isAdmin = user?.role === 'ADMIN';
-
-	useEffect(() => {
-		const load = async () => {
-			const data = await fetchOrdersByRange('/due-this-week');
-			setOrders(data);
-		};
-		load();
-	}, [fetchOrdersByRange]);
 
 	const handleAddOrder = async (e) => {
 		e.preventDefault();
@@ -80,7 +70,7 @@ export default function OrdersDueThisWeek({user}) {
 			)}
 
 			{/* The Table Wrapper is now just for the table */}
-			<OrdersTable data={orders} />
+			<OrdersTable endpoint={'/api/products/due-this-week'} />
 		</div>
 	);
 }

@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.CreatePaymentRequest;
+import com.example.demo.dto.ProductCreateRequest;
 import com.example.demo.dto.ProductPayments;
 import com.example.demo.dto.ProductResponse;
 import com.example.demo.exceptions.ResourceNotFoundException;
@@ -26,5 +28,10 @@ public class Payments {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(payments);
+    }
+    @PostMapping
+    public ResponseEntity<OrderPayments> createPayment(@RequestBody CreatePaymentRequest req) {
+        OrderPayments p = paymentService.createPayment(req);
+        return ResponseEntity.ok(p);
     }
 }

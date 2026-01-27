@@ -92,25 +92,25 @@ export default function Finance() {
 			>
 				<StatCard
 					title='Ingresos Totales'
-					value={financeData.totalIncome}
+					value={financeData.tInc}
 					icon='💰'
 					borderColor='#00b894'
 				/>
 				<StatCard
 					title='Gastos del Mes'
-					value={financeData.monthlySpend}
+					value={financeData.tExp}
 					icon='💸'
 					borderColor='#ff7675'
 				/>
 				<StatCard
 					title='Efectivo / Depósitos'
-					value={financeData.currentDeposits}
+					value={financeData.tDep}
 					icon='📥'
 					borderColor='#0984e3'
 				/>
 				<StatCard
 					title='Ganancia Neta'
-					value={financeData.totalProfit}
+					value={financeData.tRev}
 					icon='📊'
 					borderColor='#6c5ce7'
 				/>
