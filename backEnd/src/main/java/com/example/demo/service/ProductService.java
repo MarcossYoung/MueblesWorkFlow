@@ -16,7 +16,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ProductService {
@@ -92,6 +91,7 @@ public class ProductService {
         return productRepo.findAll(pageable).map(ProductResponse::from);
     }
 
+
     public Page<ProductResponse> findByType(ProductType productType, Pageable pageable) {
         return productRepo.findByProductType(productType, pageable).map(ProductResponse::from);
     }
@@ -165,7 +165,7 @@ public class ProductService {
     }
 
     public Product guardar(Product p) {return productRepo.save(p);}
-    public List<Product> getProductsDueThisWeek() {
+    public List<ProductResponse> getProductsDueThisWeek() {
         LocalDate today = LocalDate.now();
         LocalDate endOfWeek = today.plusDays(7);
         return productRepo.findByFechaEstimadaBetween(today, endOfWeek);
@@ -181,4 +181,8 @@ public class ProductService {
         return productRepo.findTopOrders();
     }
     public Product findByTitle(String title) { return productRepo.findByTitulo(title) .orElseThrow(() -> new RuntimeException("Product not found")); }
+
+    public List<ProductResponse> getProductsPastDue() { return productRepo.findByStatus(Status.ATRASADO);
+    }
+    public List<ProductResponse> getProductsNotPickedUp(){return productRepo.findByStatus(Status.TERMINADO);}
 }

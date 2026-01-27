@@ -37,5 +37,7 @@ public class Costs {
     @Enumerated(EnumType.STRING)
     private PaymentFrequency frequency;
 
+    @Column(name="asunto")
+    private String reason;
 
 }

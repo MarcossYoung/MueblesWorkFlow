@@ -4,6 +4,7 @@ import com.example.demo.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public record ProductResponse(
         Long id,
@@ -24,7 +25,8 @@ public record ProductResponse(
         Long workOrderId,
         Status workOrderStatus,
         BigDecimal totalPaid,
-        BigDecimal depositPaid
+        BigDecimal depositPaid,
+        BigDecimal daysLate
 ) {
 
     public static ProductResponse from(Product p) {
@@ -49,6 +51,13 @@ public record ProductResponse(
                 }
             }
         }
+        BigDecimal daysLate = null;
+        if (wo.getUpdateAt() != null & wo.getStatus()== Status.TERMINADO) {
+            daysLate = BigDecimal.valueOf(ChronoUnit.DAYS.between(
+                    wo.getUpdateAt(),
+                    java.time.LocalDateTime.now()
+            ));
+        }
 
         return new ProductResponse(
                 p.getId(),
@@ -66,10 +75,11 @@ public record ProductResponse(
                 p.getFoto(),
                 p.getNotas(),
                 p.getOwner().getId(), // Changed from p.getOwner().getId() to be safer
-                wo != null ? wo.getId() : null,
-                wo != null ? wo.getStatus() : null,
+                wo.getId(),
+                wo.getStatus(),
                 totalPaid,
-                depositPaid
+                depositPaid,
+                daysLate
         );
     }
     }

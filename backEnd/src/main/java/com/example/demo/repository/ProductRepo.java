@@ -1,8 +1,10 @@
 package com.example.demo.repository;
 
 import com.example.demo.dto.MonthlyAmountRow;
+import com.example.demo.dto.ProductResponse;
 import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
+import com.example.demo.model.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -51,7 +53,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             """, nativeQuery = true)
     List<Map<String, Object>> getUserPerformanceData(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    List<Product> findByFechaEstimadaBetween(LocalDate today, LocalDate endOfWeek);
+    List<ProductResponse> findByFechaEstimadaBetween(LocalDate today, LocalDate endOfWeek);
 
 
    @Query("""
@@ -60,6 +62,9 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
                JOIN WorkOrder w ON w.product = p
                GROUP BY w.status""")
    List<Object[]> findTopOrders();
+
+
+   List<ProductResponse> findByStatus(Status status);
 
 
 

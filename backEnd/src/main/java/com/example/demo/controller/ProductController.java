@@ -50,6 +50,7 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+
     @PostMapping("/create")
     public ResponseEntity<ProductResponse> createProduct(
             @RequestBody ProductCreateRequest req
@@ -91,8 +92,8 @@ public class ProductController {
     }
 
     @GetMapping("/due-this-week")
-    public ResponseEntity<List<Product>> getProductsDueThisWeek() {
-       List<Product> productsDueThisWeek = productService.getProductsDueThisWeek();
+    public ResponseEntity<List<ProductResponse>> getProductsDueThisWeek() {
+       List<ProductResponse> productsDueThisWeek = productService.getProductsDueThisWeek();
         return ResponseEntity.ok(productsDueThisWeek);
     }
 
@@ -111,6 +112,17 @@ public class ProductController {
     @GetMapping("/types")
     public ResponseEntity<ProductType[]> getAllTypes() {
         return ResponseEntity.ok(ProductType.values());
+    }
+
+    @GetMapping("/past-due")
+    public ResponseEntity<List<ProductResponse>> getProductsPastDue() {
+        List<ProductResponse> productsDueThisWeek = productService.getProductsPastDue();
+        return ResponseEntity.ok(productsDueThisWeek);
+    }
+    @GetMapping("/not-picked-up")
+    public ResponseEntity<List<ProductResponse>> getProductsNotPickedUp() {
+        List<ProductResponse> productsDueThisWeek = productService.getProductsNotPickedUp();
+        return ResponseEntity.ok(productsDueThisWeek);
     }
 
 }

@@ -1,23 +1,18 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.CreatePaymentRequest;
-import com.example.demo.dto.ProductCreateRequest;
 import com.example.demo.dto.ProductPayments;
-import com.example.demo.dto.ProductResponse;
 import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.OrderPayments;
 import com.example.demo.service.PaymentService;
-import com.example.demo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/payments")
 @CrossOrigin(origins = "*")
-public class Payments {
+public class PaymentsController {
     @Autowired
     private PaymentService paymentService;
 
