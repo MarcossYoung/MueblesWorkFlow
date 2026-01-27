@@ -64,7 +64,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
    List<Object[]> findTopOrders();
 
 
-   List<Product> findByStatus(Status status);
+   List<Product> findByWorkOrderStatus(Status status);
 
 
 

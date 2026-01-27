@@ -194,7 +194,7 @@ public class ProductService {
 
     public List<ProductResponse> getProductsPastDue() {
 
-        List<Product> products = productRepo.findByStatus(Status.ATRASADO);
+        List<Product> products = productRepo.findByWorkOrderStatus(Status.ATRASADO);
 
         // 2. Convert each Product -> ProductResponse one by one
         return products.stream()
@@ -203,7 +203,7 @@ public class ProductService {
 
     }
     public List<ProductResponse> getProductsNotPickedUp(){
-        List<Product> products = productRepo.findByStatus(Status.TERMINADO);
+        List<Product> products = productRepo.findByWorkOrderStatus(Status.TERMINADO);
 
         return products.stream()
                 .map(ProductResponse::from) // Use your static 'from' method
