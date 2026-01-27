@@ -192,7 +192,21 @@ public class ProductService {
     }
     public Product findByTitle(String title) { return productRepo.findByTitulo(title) .orElseThrow(() -> new RuntimeException("Product not found")); }
 
-    public List<ProductResponse> getProductsPastDue() { return productRepo.findByStatus(Status.ATRASADO);
+    public List<ProductResponse> getProductsPastDue() {
+
+        List<Product> products = productRepo.findByStatus(Status.ATRASADO);
+
+        // 2. Convert each Product -> ProductResponse one by one
+        return products.stream()
+                .map(ProductResponse::from) // Use your static 'from' method
+                .collect(Collectors.toList());
+
     }
-    public List<ProductResponse> getProductsNotPickedUp(){return productRepo.findByStatus(Status.TERMINADO);}
+    public List<ProductResponse> getProductsNotPickedUp(){
+        List<Product> products = productRepo.findByStatus(Status.TERMINADO);
+
+        return products.stream()
+                .map(ProductResponse::from) // Use your static 'from' method
+                .collect(Collectors.toList());
+    }
 }
