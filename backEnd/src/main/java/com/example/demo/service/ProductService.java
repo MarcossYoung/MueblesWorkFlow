@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -164,11 +165,20 @@ public class ProductService {
         return false;
     }
 
-    public Product guardar(Product p) {return productRepo.save(p);}
+    public void guardar(Product p) {
+        productRepo.save(p);
+    }
     public List<ProductResponse> getProductsDueThisWeek() {
         LocalDate today = LocalDate.now();
         LocalDate endOfWeek = today.plusDays(7);
-        return productRepo.findByFechaEstimadaBetween(today, endOfWeek);
+
+        // 1. Get the List<Product> from the Repo
+        List<Product> products = productRepo.findByFechaEstimadaBetween(today, endOfWeek);
+
+        // 2. Convert each Product -> ProductResponse one by one
+        return products.stream()
+                .map(ProductResponse::from) // Use your static 'from' method
+                .collect(Collectors.toList());
     }
 
     public long countOrders() {

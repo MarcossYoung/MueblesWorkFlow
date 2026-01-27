@@ -35,7 +35,6 @@ public record ProductResponse(
         BigDecimal totalPaid = BigDecimal.ZERO;
         BigDecimal depositPaid = BigDecimal.ZERO;
 
-        // Remove the 'OrderPayments op = ...' line entirely
 
         if (p.getOrderPayments() != null) {
             for (OrderPayments pay : p.getOrderPayments()) {
@@ -52,7 +51,7 @@ public record ProductResponse(
             }
         }
         BigDecimal daysLate = null;
-        if (wo.getUpdateAt() != null & wo.getStatus()== Status.TERMINADO) {
+        if (wo.getUpdateAt() != null && wo.getStatus()== Status.TERMINADO) {
             daysLate = BigDecimal.valueOf(ChronoUnit.DAYS.between(
                     wo.getUpdateAt(),
                     java.time.LocalDateTime.now()

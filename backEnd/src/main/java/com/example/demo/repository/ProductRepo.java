@@ -53,7 +53,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             """, nativeQuery = true)
     List<Map<String, Object>> getUserPerformanceData(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    List<ProductResponse> findByFechaEstimadaBetween(LocalDate today, LocalDate endOfWeek);
+    List<Product> findByFechaEstimadaBetween(LocalDate today, LocalDate endOfWeek);
 
 
    @Query("""
