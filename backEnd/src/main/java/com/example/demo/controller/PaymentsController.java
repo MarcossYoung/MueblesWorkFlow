@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/payments")
 @CrossOrigin(origins = "*")
@@ -17,8 +19,8 @@ public class PaymentsController {
     private PaymentService paymentService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductPayments> getPayments(@PathVariable Long id) throws ResourceNotFoundException {
-        ProductPayments payments= paymentService.getPayments(id);
+    public ResponseEntity<List<ProductPayments>> getPayments(@PathVariable Long id) throws ResourceNotFoundException {
+        List<ProductPayments> payments= paymentService.getPayments(id);
         if (payments == null) {
             return ResponseEntity.notFound().build();
         }

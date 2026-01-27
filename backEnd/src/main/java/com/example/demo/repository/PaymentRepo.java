@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface PaymentRepo extends JpaRepository<OrderPayments, Long> {
 
-    ProductPayments findByProduct_Id(Long productId);
+    List<ProductPayments> findByProduct_Id(Long productId);
 
     List<OrderPayments> findByPaymentDateBetween(LocalDate from, LocalDate to);
 

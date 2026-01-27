@@ -8,6 +8,8 @@ import com.example.demo.repository.PaymentRepo;
 import com.example.demo.repository.ProductRepo;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PaymentService {
     private final PaymentRepo orderPaymentsRepo;
@@ -18,7 +20,7 @@ public class PaymentService {
         this.productRepo = productRepo;
     }
 
-    public ProductPayments getPayments(Long id){
+    public List<ProductPayments> getPayments(Long id){
         return  orderPaymentsRepo.findByProduct_Id(id);
     }
     public OrderPayments createPayment(CreatePaymentRequest req) {

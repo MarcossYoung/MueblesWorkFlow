@@ -51,7 +51,7 @@ public record ProductResponse(
             }
         }
         BigDecimal daysLate = null;
-        if (wo.getUpdateAt() != null && wo.getStatus()== Status.TERMINADO) {
+        if (wo.getUpdateAt() != null && wo.getStatus()== Status.TERMINADO || wo.getStatus() == Status.ATRASADO) {
             daysLate = BigDecimal.valueOf(ChronoUnit.DAYS.between(
                     wo.getUpdateAt(),
                     java.time.LocalDateTime.now()
