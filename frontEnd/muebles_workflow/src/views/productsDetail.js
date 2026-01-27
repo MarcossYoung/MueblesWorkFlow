@@ -112,7 +112,7 @@ const ProductDetail = () => {
 		try {
 			const token = localStorage.getItem('token');
 			const res = await axios.post(
-				`${BASE_URL}/api/pagos`,
+				`${BASE_URL}/api/payments`,
 				{
 					...newPayment,
 					product_id: productId,
