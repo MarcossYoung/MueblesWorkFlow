@@ -57,15 +57,24 @@ public class ProductService {
         p.setFoto(req.foto());
         p.setNotas(req.notas());
         p.setOwner(userService.getCurrentUser());
-
         Product saved = productRepo.save(p);
 
+        //WorkOrder Creation
+        WorkOrder wo = new WorkOrder();
+        wo.setProduct(saved);
+        wo.setStatus(Status.CREADO);
+        wo.setUpdateAt(LocalDateTime.now());
+
+        workOrderRepo.save(wo); // Save the WorkOrder
+
+        saved.setWorkOrder(wo);
+
         // ----- CREATE PAYMENT: DEPOSIT -----
-        if (req.deposit() != null && req.deposit() > 0) {
+        if (req.amount() != null) {
             OrderPayments deposit = new OrderPayments();
             deposit.setProduct(saved);
             deposit.setPaymentType(PaymentType.DEPOSIT);
-            deposit.setAmount(BigDecimal.valueOf(req.deposit()));
+            deposit.setAmount(req.amount());
 
             LocalDate depositDate =
                     (req.startDate() != null) ? req.startDate() : LocalDate.now();
@@ -109,16 +118,16 @@ public class ProductService {
 
         // ----- CREATE PAYMENT: RESTO -----
         // For updates, dto.deposit = remainder
-        if (dto.getDeposit() != null && dto.getDeposit() > 0) {
-            OrderPayments resto = new OrderPayments();
-            resto.setProduct(saved);
-            resto.setPaymentType(PaymentType.RESTO);
-            resto.setAmount(BigDecimal.valueOf(dto.getDeposit()));
-            resto.setPaymentDate(LocalDate.now()); // or saved.getFechaEntrega()
+        if (dto.getAmount() != null) {
+            OrderPayments pago = new OrderPayments();
+            pago.setProduct(saved);
+            pago.setPaymentType(dto.getPaymentType());
+            pago.setAmount(dto.getAmount());
+            pago.setPaymentDate(LocalDate.now()); // or saved.getFechaEntrega()
 
             // resto.setPagoStatus(PaymentStatus.PAID);
 
-            orderPaymentsRepo.save(resto);
+            orderPaymentsRepo.save(pago);
         }
 
         return ProductResponse.from(saved);

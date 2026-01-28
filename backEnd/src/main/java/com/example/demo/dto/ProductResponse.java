@@ -21,6 +21,7 @@ public record ProductResponse(
         LocalDate fechaEstimada,
         String foto,
         String notas,
+        BigDecimal precio,
         Long ownerId,
         Long workOrderId,
         Status workOrderStatus,
@@ -73,6 +74,7 @@ public record ProductResponse(
                 p.getFechaEstimada(),
                 p.getFoto(),
                 p.getNotas(),
+                p.getPrecio(),
                 p.getOwner().getId(), // Changed from p.getOwner().getId() to be safer
                 wo.getId(),
                 wo.getStatus(),

@@ -78,6 +78,10 @@ import java.util.List;
     @JsonIgnore
     private AppUser owner;
 
+    @Column(name="pagostatus")
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus pagoStatus;
+
 
 
 

@@ -33,9 +33,7 @@ import java.time.LocalDate;
     @Column(name = "fecha")
     private LocalDate paymentDate;
 
-    @Column(name="pagostatus")
-    @Enumerated(EnumType.STRING)
-    private PaymentStatus pagoStatus;
+
 
 
 
