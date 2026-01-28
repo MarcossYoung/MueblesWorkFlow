@@ -32,7 +32,6 @@ public class PaymentService {
         OrderPayments payment = new OrderPayments();
         payment.setAmount(req.valor());
         payment.setPaymentType(req.type()); // Ensure your Enum/String matches
-        payment.setPagoStatus(req.pagostatus());
         payment.setPaymentDate(req.fecha());
 
         // 3. Link the Relationship

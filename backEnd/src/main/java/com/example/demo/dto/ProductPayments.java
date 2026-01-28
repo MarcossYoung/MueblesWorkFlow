@@ -14,8 +14,7 @@ public record ProductPayments (
     Product product,
     PaymentType paymentType,
     BigDecimal amount,
-    LocalDate paymentDate,
-    PaymentStatus pagoStatus
+    LocalDate paymentDate
 ) {
     public static ProductPayments from(OrderPayments op) {
         return new ProductPayments(
@@ -24,8 +23,7 @@ public record ProductPayments (
                 op.getProduct(),
                 op.getPaymentType(),
                 op.getAmount(),
-                op.getPaymentDate(),
-                op.getPagoStatus()
+                op.getPaymentDate()
         );
     }
 }
