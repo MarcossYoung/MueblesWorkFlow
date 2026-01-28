@@ -8,7 +8,7 @@ const ProductDetail = () => {
 	const {productId} = useParams();
 	const {user} = useContext(UserContext);
 
-	// --- ESTADOS ---
+	// --- STATES ---
 	const [loading, setLoading] = useState(true);
 	const [types, setTypes] = useState([]);
 	const [statuses, setStatuses] = useState([]);
@@ -18,7 +18,7 @@ const ProductDetail = () => {
 	const [successMsg, setSuccessMsg] = useState('');
 	const [errorMsg, setErrorMsg] = useState('');
 
-	// Estado del Producto
+	// Product State (Matches ProductResponse.java)
 	const [product, setProduct] = useState({
 		titulo: '',
 		productType: '',
@@ -37,33 +37,33 @@ const ProductDetail = () => {
 		daysLate: 0,
 	});
 
-	// Estado Nuevo Pago
+	// New Payment State
 	const [newPayment, setNewPayment] = useState({
 		valor: '',
 		type: 'DEPOSIT',
 		pagostatus: 'SEÑA',
 	});
 
-	// Permisos
+	// Permissions
 	const canSeeFinancials = user?.role === 'ADMIN' || user?.role === 'SELLER';
 
-	// --- CARGA DE DATOS ---
+	// --- LOAD DATA ---
 	useEffect(() => {
 		const loadData = async () => {
 			try {
-				// Usamos Promise.all para cargar todo junto
+				// Load everything in parallel
 				const [prodRes, typesRes, statusRes, paymentsRes] =
 					await Promise.all([
 						axios.get(`${BASE_URL}/api/products/${productId}`),
 						axios.get(`${BASE_URL}/api/products/types`),
 						axios.get(`${BASE_URL}/api/workorders/statuses`),
-						// Usamos un catch aquí para que si falla pagos (404) no rompa todo
+						// Catch 404 on payments gracefully
 						axios
 							.get(`${BASE_URL}/api/payments/${productId}`)
 							.catch(() => ({data: []})),
 					]);
 
-				// Mapeo seguro del producto
+				// Safe Mapping
 				setProduct({
 					...prodRes.data,
 					productType:
@@ -72,25 +72,25 @@ const ProductDetail = () => {
 						prodRes.data.workOrderStatus ||
 						prodRes.data.status ||
 						'',
-					// Aseguramos que daysLate venga del backend o sea 0
 					daysLate: prodRes.data.daysLate || 0,
+					precio: prodRes.data.precio || 0, // Ensure price isn't null
 				});
 
 				setTypes(typesRes.data);
 				setStatuses(statusRes.data);
 
-				// Mapeo seguro de pagos (Array vs Objeto)
+				// Handle Payments (Array vs Object check)
 				const dataPagos = paymentsRes.data;
 				if (Array.isArray(dataPagos)) {
 					setPayments(dataPagos);
 				} else if (dataPagos && typeof dataPagos === 'object') {
-					setPayments([dataPagos]); // Convertir objeto único a array
+					setPayments([dataPagos]);
 				} else {
 					setPayments([]);
 				}
 			} catch (err) {
 				console.error('Error loading data', err);
-				setErrorMsg('Error al cargar los datos del pedido.');
+				setErrorMsg('No se pudieron cargar los datos del producto.');
 			} finally {
 				setLoading(false);
 			}
@@ -135,7 +135,6 @@ const ProductDetail = () => {
 				}
 			);
 
-			// Actualizamos la lista visualmente
 			setPayments([...payments, res.data]);
 			setNewPayment({...newPayment, valor: ''});
 			setSuccessMsg('✅ Pago registrado');
@@ -145,7 +144,7 @@ const ProductDetail = () => {
 		}
 	};
 
-	// --- CALCULOS SEGUROS ---
+	// --- CALCULATIONS ---
 	const totalPaid = Array.isArray(payments)
 		? payments.reduce(
 				(acc, curr) => acc + Number(curr.valor || curr.amount || 0),
@@ -182,7 +181,7 @@ const ProductDetail = () => {
 				Detalle del Pedido #{productId}
 			</h1>
 
-			{/* MENSAJES DE FEEDBACK */}
+			{/* FEEDBACK MESSAGES */}
 			{successMsg && (
 				<div
 					style={{
@@ -210,16 +209,16 @@ const ProductDetail = () => {
 				</div>
 			)}
 
-			{/* --- LAYOUT PRINCIPAL (GRID) --- */}
+			{/* --- MAIN GRID LAYOUT --- */}
 			<div
 				style={{
 					display: 'grid',
-					gridTemplateColumns: '1.5fr 1fr', // La proporción exacta de la imagen 1
+					gridTemplateColumns: '1.5fr 1fr',
 					gap: '30px',
 					alignItems: 'start',
 				}}
 			>
-				{/* === COLUMNA IZQUIERDA: FORMULARIO === */}
+				{/* === LEFT COLUMN: FORM === */}
 				<div
 					style={{
 						background: 'white',
@@ -246,7 +245,7 @@ const ProductDetail = () => {
 								gap: '15px',
 							}}
 						>
-							{/* Título (Ancho completo) */}
+							{/* Title (Full Width) */}
 							<div style={{gridColumn: '1 / -1'}}>
 								<label style={labelStyle}>Título</label>
 								<input
@@ -257,7 +256,7 @@ const ProductDetail = () => {
 								/>
 							</div>
 
-							{/* Selects y Datos */}
+							{/* Dropdowns */}
 							<div>
 								<label style={labelStyle}>Tipo</label>
 								<select
@@ -290,6 +289,7 @@ const ProductDetail = () => {
 								</select>
 							</div>
 
+							{/* Details */}
 							<div>
 								<label style={labelStyle}>Material</label>
 								<input
@@ -351,7 +351,7 @@ const ProductDetail = () => {
 								/>
 							</div>
 
-							{/* Fechas */}
+							{/* Dates */}
 							<div>
 								<label style={labelStyle}>Inicio</label>
 								<input
@@ -376,9 +376,10 @@ const ProductDetail = () => {
 								/>
 							</div>
 
+							{/* Delivery Date */}
 							<div style={{gridColumn: '1 / -1'}}>
 								<label style={labelStyle}>
-									Fecha de Entrega Real (Opcional)
+									Fecha de Entrega Real
 								</label>
 								<input
 									type='date'
@@ -389,7 +390,7 @@ const ProductDetail = () => {
 								/>
 							</div>
 
-							{/* Precio (Solo Admin/Seller) - Integrado en el form */}
+							{/* PRICE FIELD (Only for Admin/Seller) - RESTORED */}
 							{canSeeFinancials && (
 								<div style={{gridColumn: '1 / -1'}}>
 									<label
@@ -415,7 +416,7 @@ const ProductDetail = () => {
 								</div>
 							)}
 
-							{/* Notas */}
+							{/* Notes */}
 							<div style={{gridColumn: '1 / -1'}}>
 								<label style={labelStyle}>Notas</label>
 								<textarea
@@ -430,7 +431,7 @@ const ProductDetail = () => {
 								/>
 							</div>
 
-							{/* Alerta de Demora */}
+							{/* Late Warning */}
 							{product.daysLate > 0 && (
 								<div
 									style={{
@@ -471,7 +472,7 @@ const ProductDetail = () => {
 					</form>
 				</div>
 
-				{/* === COLUMNA DERECHA: FINANZAS === */}
+				{/* === RIGHT COLUMN: FINANCIALS === */}
 				{canSeeFinancials && (
 					<div
 						style={{
@@ -480,7 +481,7 @@ const ProductDetail = () => {
 							gap: '20px',
 						}}
 					>
-						{/* 1. Tarjeta Nuevo Pago (Gris) */}
+						{/* 1. New Payment Card */}
 						<div
 							style={{
 								background: '#f1f2f6',
@@ -544,7 +545,7 @@ const ProductDetail = () => {
 							</button>
 						</div>
 
-						{/* 2. Tarjeta Resumen e Historial (Blanca) */}
+						{/* 2. Summary & History Card */}
 						<div
 							style={{
 								background: 'white',
@@ -553,7 +554,7 @@ const ProductDetail = () => {
 								border: '1px solid #dfe6e9',
 							}}
 						>
-							{/* Resumen */}
+							{/* Summary */}
 							<div
 								style={{
 									borderBottom: '2px solid #eee',
@@ -615,7 +616,7 @@ const ProductDetail = () => {
 								</div>
 							</div>
 
-							{/* Lista */}
+							{/* History List */}
 							<h4
 								style={{marginBottom: '10px', color: '#2d3436'}}
 							>
@@ -689,7 +690,7 @@ const ProductDetail = () => {
 	);
 };
 
-// Estilos Reutilizables para limpiar el JSX
+// Reusable Styles
 const inputStyle = {
 	width: '100%',
 	padding: '10px',
