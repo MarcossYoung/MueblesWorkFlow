@@ -16,7 +16,7 @@ export default function Finance() {
 		const now = new Date();
 		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
 			2,
-			'0'
+			'0',
 		)}`;
 	});
 
@@ -103,7 +103,7 @@ export default function Finance() {
 					borderColor='#ff7675'
 				/>
 				<StatCard
-					title='Efectivo / Depósitos'
+					title='Efectivo'
 					value={financeData.tDep}
 					icon='📥'
 					borderColor='#0984e3'
