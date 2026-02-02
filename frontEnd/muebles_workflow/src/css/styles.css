@@ -346,6 +346,7 @@ main,
 	font-size: 2rem;
 	color: #2d3436;
 	margin-bottom: 1rem;
+	text-align: center;
 }
 .dashboard-cards {
 	display: grid;

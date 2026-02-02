@@ -26,7 +26,7 @@ public interface PaymentRepo extends JpaRepository<OrderPayments, Long> {
     GROUP BY 1
     ORDER BY 1
     """, nativeQuery = true)
-    List<MonthlyAmountRow> cashflowByMonth(@Param("from") LocalDate from,
+    List<MonthlyAmountRow> cashFlowByMonth(@Param("from") LocalDate from,
                                            @Param("to") LocalDate to);
 
     // FIX: Changed p.paymentDate and p.date to p.fecha
@@ -38,7 +38,7 @@ public interface PaymentRepo extends JpaRepository<OrderPayments, Long> {
         GROUP BY 1
         ORDER BY 1
         """, nativeQuery = true)
-    List<MonthlyAmountRow> cashFlowByMonth(@Param("from") LocalDate from,
+    List<MonthlyAmountRow> depositsByMonth(@Param("from") LocalDate from,
                                            @Param("to") LocalDate to);
 
     // FIX: Changed p.paymentDate to p.fecha
