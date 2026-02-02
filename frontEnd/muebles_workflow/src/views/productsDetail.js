@@ -40,8 +40,7 @@ const ProductDetail = () => {
 	// New Payment State
 	const [newPayment, setNewPayment] = useState({
 		valor: '',
-		type: 'DEPOSIT',
-		pagostatus: 'SEÑA',
+		type: 'SEÑA',
 	});
 
 	// Permissions
@@ -132,7 +131,7 @@ const ProductDetail = () => {
 				},
 				{
 					headers: {Authorization: `Bearer ${token}`},
-				}
+				},
 			);
 
 			setPayments([...payments, res.data]);
@@ -148,8 +147,8 @@ const ProductDetail = () => {
 	const totalPaid = Array.isArray(payments)
 		? payments.reduce(
 				(acc, curr) => acc + Number(curr.valor || curr.amount || 0),
-				0
-		  )
+				0,
+			)
 		: 0;
 
 	const balance = (product.precio || 0) - totalPaid;
@@ -575,7 +574,7 @@ const ProductDetail = () => {
 									<strong>
 										$
 										{Number(
-											product.precio || 0
+											product.precio || 0,
 										).toLocaleString()}
 									</strong>
 								</div>
@@ -665,7 +664,7 @@ const ProductDetail = () => {
 											>
 												+$
 												{Number(
-													p.valor || p.amount
+													p.valor || p.amount,
 												).toLocaleString()}
 											</span>
 										</li>

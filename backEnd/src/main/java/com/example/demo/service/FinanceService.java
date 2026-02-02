@@ -31,7 +31,7 @@ public class FinanceService {
     public FinanceDashboardResponse dashboard(LocalDate from, LocalDate to) {
         // 1) Fetch base data
         List<MonthlyAmountRow> incomeRows = safe(productRepository.incomeByMonth(from, to));
-        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.depositsByMonth(from, to)); // Fixed variable name to match use below
+        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.cashFlowByMonth(from, to)); // Fixed variable name to match use below
         List<MonthlyAmountRow> expenseRows = safe(costsRepository.expensesByDate(from, to));
 
         // 2) Fetch Expense Breakdown (Pie Chart Data)

@@ -34,12 +34,11 @@ public interface PaymentRepo extends JpaRepository<OrderPayments, Long> {
         SELECT to_char(date_trunc('month', p.fecha), 'YYYY-MM') AS month,
                COALESCE(SUM(p.valor), 0) AS total
         FROM pagos p
-        WHERE p.type = 'DEPOSIT'
           AND p.fecha BETWEEN :from AND :to
         GROUP BY 1
         ORDER BY 1
         """, nativeQuery = true)
-    List<MonthlyAmountRow> depositsByMonth(@Param("from") LocalDate from,
+    List<MonthlyAmountRow> cashFlowByMonth(@Param("from") LocalDate from,
                                            @Param("to") LocalDate to);
 
     // FIX: Changed p.paymentDate to p.fecha

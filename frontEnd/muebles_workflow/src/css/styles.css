@@ -258,26 +258,26 @@ main,
 .row-entregado,
 .row-delivered,
 .status-entregado {
-	background-color: #d1fae5 !important;
-	color: #064e3b;
+	background-color: #99f6e4 !important;
+	color: #115e59;
 }
 .row-produccion,
 .row-production,
 .status-produccion {
-	background-color: #eeeeb5 !important;
-	color: #eeeeb5;
+	background-color: #bfdbfe !important;
+	color: #1e40af;
 }
 .row-terminado,
 .row-finished,
 .status-terminado {
-	background-color: #a6f9f9 !important;
-	color: #a6f9f9;
+	background-color: #bbf7d0 !important;
+	color: #166534;
 }
 .row-atrasado,
 .row-late,
 .status-atrasado {
-	background-color: #f76c6c !important;
-	color: #f76c6c;
+	background-color: #fecaca !important;
+	color: #991b1b;
 }
 .orders-table tr:hover {
 	filter: brightness(0.95);
@@ -398,7 +398,9 @@ main,
 
 	/* Subtle border and glow effect */
 	border: 1px solid #333;
-	box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+	box-shadow:
+		0 0 20px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.05);
 
 	text-align: center;
 }
