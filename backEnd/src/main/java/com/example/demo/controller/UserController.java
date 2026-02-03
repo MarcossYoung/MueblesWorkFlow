@@ -2,8 +2,12 @@ package com.example.demo.controller;
 
 import com.example.demo.exceptions.UserAlreadyExistsException;
 import com.example.demo.model.AppUser;
+import com.example.demo.repository.UserRepo;
 import com.example.demo.service.AppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +22,19 @@ public class UserController {
     @Autowired
     private AppUserService appUserService;
 
-  @PostMapping("/registro")
+    private UserRepo userRepo;
+
+
+    @GetMapping
+    public Page<AppUser> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        return userRepo.findAll(pageable);
+
+    }
+
+    @PostMapping("/registro")
   public ResponseEntity<?> registro(@RequestBody AppUser user) {
       try {
           AppUser regUser = appUserService.registerUser(user);
@@ -28,6 +44,7 @@ public class UserController {
                   .body("Error: " + e.getMessage());
       }
   }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AppUser user) {
         try {

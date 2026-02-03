@@ -1,34 +1,30 @@
 import React, {useState, useEffect, useContext, useCallback} from 'react';
 import axios from 'axios';
-import {FaTrashAlt, FaChevronLeft, FaChevronRight} from 'react-icons/fa';
-import {UserContext} from '../UserProvider'; // Ensure this path matches your file structure
-import {BASE_URL} from '../api/config'; // Ensure this path matches your file structure
+import {
+	FaTrashAlt,
+	FaChevronLeft,
+	FaChevronRight,
+	FaFilter,
+	FaPlus,
+} from 'react-icons/fa';
+import {UserContext} from '../UserProvider';
+import {BASE_URL} from '../api/config';
+import ProductFormModal from './productCreationModular';
 
 export default function OrdersTable({endpoint}) {
 	const {user} = useContext(UserContext);
 
-	// Data State
+	// States
 	const [orders, setOrders] = useState([]);
 	const [loading, setLoading] = useState(false);
-
-	// Pagination & Search State
-	const [currentPage, setCurrentPage] = useState(0); // 0-indexed for Spring Boot
+	const [currentPage, setCurrentPage] = useState(0);
 	const [totalPages, setTotalPages] = useState(0);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [showMySales, setShowMySales] = useState(false);
 
-	// Debounce search to prevent too many API calls
-	const [debouncedSearch, setDebouncedSearch] = useState('');
+	const [isModalOpen, setIsModalOpen] = useState(false);
 
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDebouncedSearch(searchTerm);
-			setCurrentPage(0); // Reset to page 1 on new search
-		}, 500);
-		return () => clearTimeout(timer);
-	}, [searchTerm]);
-
-	// FETCH DATA FUNCTION
+	// Fetch Data
 	const fetchOrders = useCallback(async () => {
 		if (!endpoint) return;
 
@@ -37,19 +33,13 @@ export default function OrdersTable({endpoint}) {
 			const token = localStorage.getItem('token');
 			const res = await axios.get(`${BASE_URL}${endpoint}`, {
 				headers: {Authorization: `Bearer ${token}`},
-				params: {
-					page: currentPage,
-					size: 10, // Items per page
-					query: debouncedSearch,
-				},
+				params: {page: currentPage, size: 10},
 			});
 
-			// Handle Page Object (Server Side) vs List (Legacy)
 			if (res.data.content) {
 				setOrders(res.data.content);
 				setTotalPages(res.data.totalPages);
 			} else {
-				// If endpoint returns a plain list (no pagination), handle gracefully
 				setOrders(res.data);
 				setTotalPages(1);
 			}
@@ -58,14 +48,19 @@ export default function OrdersTable({endpoint}) {
 		} finally {
 			setLoading(false);
 		}
-	}, [endpoint, currentPage, debouncedSearch]);
+	}, [endpoint, currentPage]);
 
-	// Initial Load & Updates
 	useEffect(() => {
 		fetchOrders();
 	}, [fetchOrders]);
 
-	// HANDLERS
+	// Función para cerrar el modal y refrescar la tabla
+	const handleModalClose = () => {
+		setIsModalOpen(false);
+		fetchOrders(); // <-- IMPORTANTE: Recarga los datos al cerrar
+	};
+
+	// Handlers
 	const handleDelete = async (id) => {
 		if (!window.confirm('¿Eliminar este pedido?')) return;
 		try {
@@ -73,9 +68,9 @@ export default function OrdersTable({endpoint}) {
 			await axios.delete(`${BASE_URL}/api/products/${id}`, {
 				headers: {Authorization: `Bearer ${token}`},
 			});
-			fetchOrders(); // Reload table after delete
+			fetchOrders();
 		} catch (err) {
-			alert('Error al eliminar el pedido');
+			alert('Error al eliminar');
 		}
 	};
 
@@ -90,48 +85,67 @@ export default function OrdersTable({endpoint}) {
 		return 'row-produccion';
 	};
 
-	// Client-side filter for "My Sales" (Applied to the current page data)
-	// Safe check: (user?.id) ensures we don't crash if user is null
-	const displayedOrders = showMySales
-		? orders.filter(
-				(o) => o.ownerId === user?.id || o.owner?.id === user?.id
-		  )
-		: orders;
+	// Filter Logic
+	const getProcessedOrders = () => {
+		let result = orders;
+		if (searchTerm) {
+			const search = searchTerm.toLowerCase();
+			result = result.filter(
+				(o) =>
+					o.titulo?.toLowerCase().includes(search) ||
+					o.productType?.toLowerCase().includes(search) ||
+					o.material?.toLowerCase().includes(search) ||
+					o.color?.toLowerCase().includes(search),
+			);
+		}
+		if (showMySales) {
+			result = result.filter(
+				(o) => o.ownerId === user?.id || o.owner?.id === user?.id,
+			);
+		}
+		return result;
+	};
+
+	const displayedOrders = getProcessedOrders();
 
 	return (
-		<div className='orders-container'>
-			{/* --- CONTROLS BAR --- */}
-			<div
-				className='admin-tools flex justify-between align-center'
-				style={{marginBottom: '1rem'}}
-			>
-				<div className='flex gap-8' style={{flex: 1}}>
-					<input
-						type='text'
-						className='search-input'
-						placeholder='Buscar por título, material...'
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-						style={{maxWidth: '400px'}}
-					/>
-					<button
-						onClick={() => setShowMySales(!showMySales)}
-						className='button_3'
-					>
-						{showMySales ? 'Mostrar todo' : 'Ver mis ventas'}
-					</button>
-				</div>
+		// Usamos una clase nueva para evitar doble margen
+		<div className='orders-view-container'>
+			{/* --- TOP BAR --- */}
+			<div className='admin-tools'>
+				<input
+					type='text'
+					placeholder='Buscar por título, material, color...'
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+				/>
 
-				<div className='pagination-info'>
-					Página <strong>{currentPage + 1}</strong> de{' '}
-					{totalPages || 1}
-				</div>
+				<button
+					onClick={() => setShowMySales(!showMySales)}
+					className={`btn-pill ${showMySales ? 'active' : ''}`}
+				>
+					<FaFilter size={14} />
+					{showMySales ? 'Todos los Pedidos' : 'Ver Mis Ventas'}
+				</button>
+
+				<button
+					className='btn-pill'
+					onClick={() => setIsModalOpen(true)}
+					style={{
+						backgroundColor: '#00b894',
+						color: 'white',
+						border: 'none',
+					}}
+				>
+					<FaPlus size={12} />
+					Nuevo Pedido
+				</button>
 			</div>
 
-			{/* --- TABLE --- */}
-			<div className='table-wrapper box-shadow scrollable-table'>
+			{/* --- TABLE (Fills remaining space) --- */}
+			<div className='table-wrapper full-height'>
 				{loading ? (
-					<div style={{padding: '2rem', textAlign: 'center'}}>
+					<div className='text-center' style={{padding: '2rem'}}>
 						Cargando...
 					</div>
 				) : (
@@ -142,10 +156,10 @@ export default function OrdersTable({endpoint}) {
 								<th>Título</th>
 								<th>Tipo</th>
 								<th>Cant.</th>
-								<th>Fecha inicio</th>
-								<th>Fecha estimada</th>
-								<th>Fecha entregada</th>
-								<th>Dias de atraso</th>
+								<th>Inicio</th>
+								<th>Estimada</th>
+								<th>Entregada</th>
+								<th>Días Atraso</th>
 								{user?.role === 'ADMIN' && <th>Acciones</th>}
 							</tr>
 						</thead>
@@ -155,7 +169,7 @@ export default function OrdersTable({endpoint}) {
 									<tr
 										key={o.id}
 										className={getRowClass(
-											o.workOrderStatus
+											o.workOrderStatus,
 										)}
 										onClick={() => handleDetail(o.id)}
 									>
@@ -181,8 +195,9 @@ export default function OrdersTable({endpoint}) {
 														background:
 															'transparent',
 														border: 'none',
-														color: '#d63031',
+														color: '#EF4444',
 														cursor: 'pointer',
+														fontSize: '1.2rem',
 													}}
 													onClick={() =>
 														handleDelete(o.id)
@@ -197,11 +212,9 @@ export default function OrdersTable({endpoint}) {
 							) : (
 								<tr>
 									<td
-										colSpan='13'
-										style={{
-											textAlign: 'center',
-											padding: '40px',
-										}}
+										colSpan='10'
+										className='text-center'
+										style={{padding: '2rem', color: '#888'}}
 									>
 										No se encontraron pedidos.
 									</td>
@@ -212,29 +225,32 @@ export default function OrdersTable({endpoint}) {
 				)}
 			</div>
 
-			{/* --- PAGINATION CONTROLS --- */}
-			{totalPages > 1 && (
-				<div
-					className='pagination-container flex center gap-12 margin-top-24'
-					style={{justifyContent: 'center', marginTop: '20px'}}
+			{/* --- FOOTER PAGINATION --- */}
+			<div className='pagination-container'>
+				<button
+					disabled={currentPage === 0}
+					onClick={() => setCurrentPage((prev) => prev - 1)}
+					className='btn-pagination'
 				>
-					<button
-						disabled={currentPage === 0}
-						onClick={() => setCurrentPage((prev) => prev - 1)}
-						className='btn-pagination'
-					>
-						<FaChevronLeft /> Anterior
-					</button>
+					<FaChevronLeft /> Anterior
+				</button>
 
-					<button
-						disabled={currentPage >= totalPages - 1}
-						onClick={() => setCurrentPage((prev) => prev + 1)}
-						className='btn-pagination'
-					>
-						Siguiente <FaChevronRight />
-					</button>
-				</div>
-			)}
+				<span>
+					Página <strong>{currentPage + 1}</strong> de{' '}
+					{totalPages || 1}
+				</span>
+
+				<button
+					disabled={currentPage >= totalPages - 1}
+					onClick={() => setCurrentPage((prev) => prev + 1)}
+					className='btn-pagination'
+				>
+					Siguiente <FaChevronRight />
+				</button>
+			</div>
+
+			{/* --- MODAL (Fuera del flujo normal) --- */}
+			<ProductFormModal isOpen={isModalOpen} onClose={handleModalClose} />
 		</div>
 	);
 }

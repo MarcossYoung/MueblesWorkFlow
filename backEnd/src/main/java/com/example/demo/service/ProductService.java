@@ -51,9 +51,9 @@ public class ProductService {
         p.setCantidad(req.cantidad() != null ? req.cantidad() : 0L);
         // if you’re using precio in Product, set it here:
         p.setPrecio(req.precio());
-        p.setStartDate(req.startDate());
+        p.setStartDate(LocalDate.now());
         p.setFechaEntrega(req.fechaEntrega());
-        p.setFechaEstimada(req.fechaEstimada());
+        p.setFechaEstimada(LocalDate.now().plusDays(35));
         p.setFoto(req.foto());
         p.setNotas(req.notas());
         p.setOwner(userService.getCurrentUser());

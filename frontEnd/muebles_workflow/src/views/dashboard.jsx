@@ -21,7 +21,7 @@ export default function Dashboard() {
 				const res = await axios.get(`${BASE_URL}/api/products`, {
 					headers: {
 						Authorization: `Bearer ${localStorage.getItem(
-							'token'
+							'token',
 						)}`,
 					},
 				});
@@ -44,7 +44,7 @@ export default function Dashboard() {
 						Pedidos
 					</NavLink>
 					<NavLink to='due-this-week' className={linkClass}>
-						Entregas esta semana
+						Semana actual
 					</NavLink>
 					{isAdmin && (
 						<>

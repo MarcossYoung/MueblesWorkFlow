@@ -20,7 +20,7 @@ export default function OrdersDueThisWeek({user}) {
 				`${BASE_URL}/api/products/add-existing`,
 				{
 					titulo: searchTerm,
-				}
+				},
 			);
 			setOrders([...orders, res.data]);
 			setSuccessMessage('✅ Pedido agregado con éxito.');
@@ -36,7 +36,7 @@ export default function OrdersDueThisWeek({user}) {
 	return (
 		<div className='p-6'>
 			<div className='orders-header'>
-				<h1 className='main-title'>Pedidos de Esta Semana</h1>
+				<h1 className='main-title'>Produccion semana actual</h1>
 			</div>
 
 			{isAdmin && (

@@ -1,12 +1,20 @@
 import React, {useState, useEffect, useContext, useCallback} from 'react';
 import axios from 'axios';
+import {FaChevronLeft, FaChevronRight} from 'react-icons/fa'; // Iconos para paginación
 import {UserContext} from '../UserProvider';
 import {BASE_URL} from '../api/config';
 
 export default function CostsManager() {
 	const {user} = useContext(UserContext);
+
+	// Data State
 	const [costs, setCosts] = useState([]);
 	const [loading, setLoading] = useState(true);
+
+	// Pagination & Search State
+	const [currentPage, setCurrentPage] = useState(0);
+	const [totalPages, setTotalPages] = useState(0);
+	const [searchTerm, setSearchTerm] = useState('');
 
 	// Form State
 	const [formData, setFormData] = useState({
@@ -17,23 +25,44 @@ export default function CostsManager() {
 		reason: '',
 	});
 
+	// --- FETCH CON PAGINACIÓN ---
 	const fetchCosts = useCallback(async () => {
 		try {
 			setLoading(true);
 			const res = await axios.get(`${BASE_URL}/api/costs`, {
 				headers: {Authorization: `Bearer ${user.token}`},
+				params: {page: currentPage, size: 10},
+				// Items por página
 			});
-			setCosts(res.data);
+
+			// Soporte dual: Si el backend pagina devuelve "content", sino devuelve array directo
+			if (res.data.content) {
+				setCosts(res.data.content);
+				setTotalPages(res.data.totalPages);
+			} else {
+				setCosts(res.data);
+				setTotalPages(1);
+			}
 		} catch (err) {
 			console.error('Error fetching costs', err);
 		} finally {
 			setLoading(false);
 		}
-	}, [user.token]);
+	}, [user.token, currentPage]);
 
 	useEffect(() => {
 		fetchCosts();
 	}, [fetchCosts]);
+
+	// --- FILTRO SEGURO (Mantenemos la lógica arreglada) ---
+	let filtered = costs.filter((c) => {
+		const search = searchTerm.toLowerCase();
+		// Usamos (valor || '') para evitar crash con nulls
+		return (
+			(c.reason || '').toLowerCase().includes(search) ||
+			(c.costType || '').toLowerCase().includes(search)
+		);
+	});
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -41,8 +70,8 @@ export default function CostsManager() {
 			await axios.post(`${BASE_URL}/api/costs`, formData, {
 				headers: {Authorization: `Bearer ${user.token}`},
 			});
-			setFormData({...formData, amount: '', reason: ''}); // Reset amount and reason
-			fetchCosts(); // Refresh list
+			setFormData({...formData, amount: '', reason: ''});
+			fetchCosts();
 		} catch (err) {
 			alert('Error saving cost');
 		}
@@ -50,23 +79,31 @@ export default function CostsManager() {
 
 	const handleDelete = async (id) => {
 		if (!window.confirm('¿Eliminar este gasto?')) return;
-		await axios.delete(`${BASE_URL}/api/costs/${id}`, {
-			headers: {Authorization: `Bearer ${user.token}`},
-		});
-		fetchCosts();
+		try {
+			await axios.delete(`${BASE_URL}/api/costs/${id}`, {
+				headers: {Authorization: `Bearer ${user.token}`},
+			});
+			fetchCosts();
+		} catch (err) {
+			console.error(err);
+		}
 	};
 
 	if (loading && costs.length === 0) {
-		return <div className='admin-dashboard'>Cargando costos...</div>;
+		return (
+			<div className='admin-dashboard' style={{padding: '2rem'}}>
+				Cargando costos...
+			</div>
+		);
 	}
 
 	return (
 		<section className='admin-dashboard'>
 			<h1 className='main-title'>Gestión de Costos</h1>
 
-			{/* MAIN WHITE CARD WRAPPER */}
+			{/* --- CONTENEDOR PRINCIPAL (Estilo original del CSS) --- */}
 			<div className='costs-wrapper'>
-				{/* --- 1. FORM SECTION --- */}
+				{/* 1. SECCIÓN DE FORMULARIO (Mantiene tu CSS Grid) */}
 				<div className='costs-header'>
 					<h2>Registrar Nuevo Gasto</h2>
 				</div>
@@ -155,18 +192,41 @@ export default function CostsManager() {
 						</select>
 					</div>
 
+					{/* El botón se alineará correctamente gracias al grid del CSS original */}
 					<button type='submit' className='button-green'>
 						Agregar
 					</button>
 				</form>
 
-				{/* --- 2. TABLE SECTION --- */}
-				<div className='costs-header' style={{marginTop: '2rem'}}>
+				{/* Buscador */}
+				<div
+					className='search-container'
+					style={{marginTop: '2rem', marginBottom: '1rem'}}
+				>
+					<input
+						type='text'
+						placeholder='Buscar por asunto o tipo...'
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						style={{
+							width: '100%',
+							padding: '10px',
+							borderRadius: '8px',
+							border: '1px solid #ccc',
+						}}
+					/>
+				</div>
+
+				{/* 2. SECCIÓN DE TABLA */}
+				<div className='costs-header'>
 					<h2>Gastos Recientes</h2>
 				</div>
 
-				<div className='table-wrapper'>
-					<table className='orders-table'>
+				<div
+					className='table-wrapper'
+					style={{boxShadow: 'none', padding: 0}}
+				>
+					<table className='orders-table' style={{width: '100%'}}>
 						<thead>
 							<tr>
 								<th>Fecha</th>
@@ -178,42 +238,109 @@ export default function CostsManager() {
 							</tr>
 						</thead>
 						<tbody>
-							{costs.map((c) => (
-								<tr key={c.id}>
-									<td>{c.date}</td>
-									<td>{c.reason || '-'}</td>
-									<td>
-										<span className='badge OTRO'>
-											{c.costType}
-										</span>
-									</td>
-									<td style={{fontWeight: 'bold'}}>
-										${Number(c.amount).toLocaleString()}
-									</td>
-									<td>{c.frequency}</td>
-									<td className='text-center'>
-										<button
-											className='btn-delete'
-											onClick={() => handleDelete(c.id)}
-										>
-											Eliminar
-										</button>
-									</td>
-								</tr>
-							))}
-							{costs.length === 0 && (
+							{filtered.length > 0 ? (
+								filtered.map((c) => (
+									<tr key={c.id}>
+										<td>{c.date}</td>
+										<td>{c.reason || '-'}</td>
+										<td>
+											<span className='badge OTRO'>
+												{c.costType}
+											</span>
+										</td>
+										<td style={{fontWeight: 'bold'}}>
+											${Number(c.amount).toLocaleString()}
+										</td>
+										<td>{c.frequency}</td>
+										<td className='text-center'>
+											<button
+												className='btn-delete'
+												onClick={() =>
+													handleDelete(c.id)
+												}
+											>
+												Eliminar
+											</button>
+										</td>
+									</tr>
+								))
+							) : (
 								<tr>
 									<td
 										colSpan='6'
 										className='text-center'
-										style={{padding: '2rem'}}
+										style={{padding: '2rem', color: '#888'}}
 									>
-										No hay gastos registrados.
+										{searchTerm
+											? 'No se encontraron gastos con esa búsqueda.'
+											: 'No hay gastos registrados.'}
 									</td>
 								</tr>
 							)}
 						</tbody>
 					</table>
+				</div>
+
+				{/* 3. PAGINACIÓN (Estilo idéntico a OrdersTable) */}
+				<div
+					className='pagination-container'
+					style={{
+						display: 'flex',
+						justifyContent: 'center',
+						alignItems: 'center',
+						gap: '20px',
+						marginTop: '30px',
+						marginBottom: '10px',
+					}}
+				>
+					<button
+						disabled={currentPage === 0}
+						onClick={() => setCurrentPage((prev) => prev - 1)}
+						className='btn-pagination'
+						style={{
+							// Estilos inline para asegurar match visual si no están en CSS global
+							background: 'white',
+							border: '1px solid #ddd',
+							padding: '0.5rem 1rem',
+							borderRadius: '8px',
+							cursor:
+								currentPage === 0 ? 'not-allowed' : 'pointer',
+							opacity: currentPage === 0 ? 0.5 : 1,
+							display: 'flex',
+							alignItems: 'center',
+							gap: '0.5rem',
+							fontWeight: '600',
+						}}
+					>
+						<FaChevronLeft /> Anterior
+					</button>
+
+					<span style={{fontWeight: 'bold', color: '#555'}}>
+						Página {currentPage + 1} de {totalPages || 1}
+					</span>
+
+					<button
+						disabled={currentPage >= totalPages - 1}
+						onClick={() => setCurrentPage((prev) => prev + 1)}
+						className='btn-pagination'
+						style={{
+							background: 'white',
+							border: '1px solid #ddd',
+							padding: '0.5rem 1rem',
+							borderRadius: '8px',
+							cursor:
+								currentPage >= totalPages - 1
+									? 'not-allowed'
+									: 'pointer',
+							opacity: currentPage >= totalPages - 1 ? 0.5 : 1,
+							display: 'flex',
+							alignItems: 'center',
+							gap: '0.5rem',
+							fontWeight: '600',
+						}}
+					>
+						Siguiente <FaChevronRight />
+					</button>
 				</div>
 			</div>
 		</section>

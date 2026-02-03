@@ -45,4 +45,5 @@ public interface CostRepo extends JpaRepository<Costs, Long> {
     List<MonthlyAmountRow> expensesByMonthForCostTypeRaw(@Param("type") String type,
                                                          @Param("from") LocalDate from,
                                                          @Param("to") LocalDate to);
+
 }
