@@ -1,5 +1,5 @@
 import React from 'react';
-import ProductCreation from '../views/productCreateForm';
+import ProductCreation from '../views/productCreateForm.jsx';
 
 const ProductFormModal = ({isOpen, onClose}) => {
 	if (!isOpen) return null;
