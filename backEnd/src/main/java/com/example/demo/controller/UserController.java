@@ -26,12 +26,11 @@ public class UserController {
 
 
     @GetMapping
-    public Page<AppUser> getAllUsers(
+    public ResponseEntity<Page<AppUser>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size){
         Pageable pageable = PageRequest.of(page, size);
-        return userRepo.findAll(pageable);
-
+        return ResponseEntity.ok(userRepo.findAll(pageable));
     }
 
     @PostMapping("/registro")
