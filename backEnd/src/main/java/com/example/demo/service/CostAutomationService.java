@@ -20,7 +20,7 @@ public class CostAutomationService {
 
         // 1. Traer todos los costos recurrentes activos (Excluye ONE_TIME)
         // Nota: Idealmente deberías tener un método en el repo: findByFrequencyNot("ONE_TIME")
-        List<Costs> recurringCosts = costRepo.findByFrecuenciaNot(PaymentFrequency.ONE_TIME).stream()
+        List<Costs> recurringCosts = costRepo.findByFrecuencyNot(PaymentFrequency.ONE_TIME).stream()
                 .filter(c -> !PaymentFrequency.ONE_TIME.equals(c.getFrequency()))
                 .toList();
 
