@@ -47,5 +47,5 @@ public interface CostRepo extends JpaRepository<Costs, Long> {
                                                          @Param("from") LocalDate from,
                                                          @Param("to") LocalDate to);
 
-    List<Costs> findByFrecuencyNot(PaymentFrequency frequency);
+    List<Costs> findByFrequencyNot(PaymentFrequency frequency);
 }
