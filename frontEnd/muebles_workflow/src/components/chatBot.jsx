@@ -41,27 +41,39 @@ const Chatbot = () => {
 
 		try {
 			// 2. Enviar a n8n
-			// IMPORTANTE: El body { message: ... } debe coincidir con lo que esperas en n8n
 			const response = await axios.post(N8N_WEBHOOK_URL, {
 				message: userMsg.text,
 			});
 
-			// 3. Procesar respuesta de n8n
-			// n8n suele devolver la respuesta del último nodo.
-			// Si el agente devuelve texto plano o un JSON, ajústalo aquí.
-			// Generalmente el agente devuelve: { output: "Texto..." } o similar.
-			const botResponseText =
-				response.data.output ||
-				response.data.text ||
-				JSON.stringify(response.data);
+			console.log('Respuesta cruda de n8n:', response.data); // Para debuggear en consola
 
-			const botMsg = {text: botResponseText, sender: 'bot'};
+			// 3. LIMPIEZA DE DATOS (La parte clave)
+			let botText = '';
+
+			// Caso A: n8n devuelve un Array (común en modo Test)
+			if (Array.isArray(response.data)) {
+				botText =
+					response.data[0]?.output || JSON.stringify(response.data);
+			}
+			// Caso B: n8n devuelve un Objeto limpio (lo que configuramos en Paso 1)
+			else if (response.data && response.data.output) {
+				botText = response.data.output;
+			}
+			// Caso C: Fallback (por si acaso)
+			else {
+				botText =
+					typeof response.data === 'string'
+						? response.data
+						: JSON.stringify(response.data);
+			}
+
+			const botMsg = {text: botText, sender: 'bot'};
 			setMessages((prev) => [...prev, botMsg]);
 		} catch (error) {
 			console.error('Error chatbot:', error);
 			setMessages((prev) => [
 				...prev,
-				{text: 'Ups, me dormí. Intenta de nuevo.', sender: 'bot'},
+				{text: 'Ups, hubo un error de conexión.', sender: 'bot'},
 			]);
 		} finally {
 			setLoading(false);
