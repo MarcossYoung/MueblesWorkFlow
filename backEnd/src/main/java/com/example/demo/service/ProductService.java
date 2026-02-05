@@ -57,6 +57,8 @@ public class ProductService {
         p.setFoto(req.foto());
         p.setNotas(req.notas());
         p.setOwner(userService.getCurrentUser());
+        p.setClientEmail(req.clientEmail());
+
         Product saved = productRepo.save(p);
 
         //WorkOrder Creation

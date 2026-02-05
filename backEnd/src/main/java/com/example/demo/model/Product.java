@@ -82,6 +82,9 @@ import java.util.List;
     @Enumerated(EnumType.STRING)
     private PaymentStatus pagoStatus;
 
+    @Column(name = "client_email")
+    private String clientEmail;
+
 
 
 

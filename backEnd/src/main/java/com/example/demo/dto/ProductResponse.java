@@ -27,7 +27,8 @@ public record ProductResponse(
         Status workOrderStatus,
         BigDecimal totalPaid,
         BigDecimal depositPaid,
-        BigDecimal daysLate
+        BigDecimal daysLate,
+        String clientEmail
 ) {
 
     public static ProductResponse from(Product p) {
@@ -80,7 +81,8 @@ public record ProductResponse(
                 wo.getStatus(),
                 totalPaid,
                 depositPaid,
-                daysLate
+                daysLate,
+                p.getClientEmail()
         );
     }
     }

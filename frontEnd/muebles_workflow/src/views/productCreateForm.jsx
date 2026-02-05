@@ -26,6 +26,7 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		startDate: new Date().toISOString().split('T')[0], // Backend usa esto para la fecha del depósito
 		fechaEstimada: '', // Backend: req.fechaEstimada()
 		notas: '',
+		clientEmail: '',
 		// ownerid no es necesario enviarlo, el backend lo saca del token (userService.getCurrentUser())
 	});
 
@@ -232,6 +233,16 @@ const ProductCreation = ({isModal = false, onClose}) => {
 							min='1'
 						/>
 					</div>
+				</div>
+				<div className='input-group'>
+					<label>Email del Cliente</label>
+					<input
+						type='email'
+						name='clientEmail'
+						value={productData.clientEmail}
+						onChange={handleInputChange}
+						placeholder='cliente@ejemplo.com'
+					/>
 				</div>
 
 				{/* FILA 6: Notas */}

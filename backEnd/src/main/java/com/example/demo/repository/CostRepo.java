@@ -2,6 +2,7 @@ package com.example.demo.repository;
 
 import com.example.demo.dto.MonthlyAmountRow;
 import com.example.demo.model.Costs;
+import com.example.demo.model.PaymentFrequency;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,4 +47,5 @@ public interface CostRepo extends JpaRepository<Costs, Long> {
                                                          @Param("from") LocalDate from,
                                                          @Param("to") LocalDate to);
 
+    List<Costs> findByFrecuenciaNot(PaymentFrequency frequency);
 }

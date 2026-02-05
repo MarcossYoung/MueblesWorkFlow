@@ -23,5 +23,9 @@ public record ProductCreateRequest(
         String notas,
         BigDecimal precio,
         PaymentStatus status,
-        BigDecimal amount
-){}
+        BigDecimal amount,
+        String clientEmail
+
+){
+
+}
