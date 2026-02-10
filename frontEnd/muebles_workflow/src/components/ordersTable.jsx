@@ -138,7 +138,7 @@ export default function OrdersTable({endpoint}) {
 					}}
 				>
 					<FaPlus size={12} />
-					Nuevo Pedido
+					Agregar Pedido
 				</button>
 			</div>
 
