@@ -158,7 +158,7 @@ export default function OrdersTable({endpoint}) {
 								<th>Cant.</th>
 								<th>Inicio</th>
 								<th>Estimada</th>
-								<th>Entregada</th>
+								<th>Entrega</th>
 								<th>Días Atraso</th>
 								{user?.role === 'ADMIN' && <th>Acciones</th>}
 							</tr>
@@ -181,7 +181,7 @@ export default function OrdersTable({endpoint}) {
 										<td>{o.cantidad}</td>
 										<td>{o.startDate || '—'}</td>
 										<td>{o.fechaEstimada || '—'}</td>
-										<td>{o.fechaEntregada || '—'}</td>
+										<td>{o.fechaEntrega || '—'}</td>
 										<td>{o.daysLate || '—'}</td>
 										{user?.role === 'ADMIN' && (
 											<td
