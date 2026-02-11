@@ -4,7 +4,7 @@ import {useLocation} from 'react-router-dom';
 import '../css/styles.css';
 
 const N8N_WEBHOOK_URL =
-	'https://n8n-production-f545f.up.railway.app/webhook/chatt';
+	'https://n8n-production-f545f.up.railway.app/webhook/chat';
 
 const Chatbot = () => {
 	const location = useLocation();
