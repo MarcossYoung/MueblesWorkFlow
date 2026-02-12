@@ -1,6 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
 import axios from 'axios';
-import {useLocation} from 'react-router-dom';
 import {v4 as uuidv4} from 'uuid'; // Necesitarás instalar: npm install uuid
 import '../css/styles.css';
 
@@ -8,7 +7,6 @@ const N8N_WEBHOOK_URL =
 	'https://n8n-production-f545f.up.railway.app/webhook/chat';
 
 const Chatbot = () => {
-	const location = useLocation();
 	const [isOpen, setIsOpen] = useState(false);
 
 	// 1. ESTADO PARA EL SESSION ID
@@ -84,12 +82,6 @@ const Chatbot = () => {
 			setLoading(false);
 		}
 	};
-
-	const hiddenRoutes = ['/login', '/register'];
-
-	if (hiddenRoutes.includes(location.pathname)) {
-		return null;
-	}
 
 	return (
 		<div className='chatbot-wrapper'>

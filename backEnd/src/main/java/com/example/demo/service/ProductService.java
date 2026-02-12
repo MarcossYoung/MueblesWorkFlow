@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -180,7 +181,7 @@ public class ProductService {
         productRepo.save(p);
     }
     public List<ProductResponse> getProductsDueThisWeek() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
         LocalDate endOfWeek = today.plusDays(7);
 
         // 1. Get the List<Product> from the Repo

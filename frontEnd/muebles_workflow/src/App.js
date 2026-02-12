@@ -178,6 +178,7 @@ function App() {
 							element={
 								<ProtectedRoute user={user}>
 									<AdminRoute user={user}>
+										<Chatbot />
 										<Sidebar />
 										<AdminPage />
 									</AdminRoute>
@@ -196,7 +197,6 @@ function App() {
 						/>
 					</Routes>
 				</Suspense>
-				<Chatbot />
 			</Router>
 		</OrdersProvider>
 	);
