@@ -111,6 +111,7 @@ main,
 
 	min-height: 100vh;
 	background-color: #f7f9fc;
+	overflow-x: hidden;
 }
 
 /* Full width for Login page only */
@@ -679,10 +680,9 @@ main,
 /* Arreglo del contenedor de la tabla para que no deje espacio a la izquierda */
 .orders-view-container {
 	width: 100%;
-	height: calc(100vh - 4rem);
 	display: flex;
 	flex-direction: column;
-	/* Quitamos márgenes extraños si existen */
+	gap: 0.5rem;
 	padding: 0;
 }
 
@@ -1014,5 +1014,58 @@ main,
 		right: -10px;
 		bottom: 70px;
 		height: 60vh;
+	}
+}
+
+/* =========================================
+   RESPONSIVE LAYOUT
+   ========================================= */
+
+/* Laptops / medium desktops */
+@media (max-width: 1200px) {
+	.sidebar a {
+		padding: 0.8rem 1rem;
+		font-size: 1rem;
+	}
+}
+
+/* Tablets landscape — narrow the sidebar */
+@media (max-width: 960px) {
+	:root {
+		--sidebar-width: 140px;
+	}
+	.sidebar a {
+		padding: 0.7rem 0.8rem;
+		font-size: 0.9rem;
+		gap: 0.4rem;
+	}
+}
+
+/* Tablets portrait — compact sidebar */
+@media (max-width: 768px) {
+	:root {
+		--sidebar-width: 0px;
+	}
+	.sidebar {
+		display: none;
+	}
+	main,
+	.main-content,
+	.admin-dashboard,
+	.orders-container,
+	.orders-due-container,
+	.profile-wrapper,
+	.product-wrapper,
+	.dashboard-content {
+		padding: 1rem;
+	}
+	.orders-table th,
+	.orders-table td {
+		padding: 0.6rem 0.5rem;
+		font-size: 0.85rem;
+	}
+	.dashboard-content nav {
+		flex-wrap: wrap;
+		gap: 0.5rem;
 	}
 }
