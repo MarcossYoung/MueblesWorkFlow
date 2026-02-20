@@ -33,7 +33,12 @@ import java.time.LocalDate;
     @Column(name = "fecha")
     private LocalDate paymentDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private PaymentMethod paymentMethod;
 
+    @Column(name = "receipt_path")
+    private String receiptPath;
 
 
 

@@ -41,7 +41,10 @@ const ProductDetail = () => {
 	const [newPayment, setNewPayment] = useState({
 		valor: '',
 		type: 'SEÑA',
+		paymentMethod: 'BANK_TRANSFER',
 	});
+	const [receiptFile, setReceiptFile] = useState(null);
+	const [uploadingReceipt, setUploadingReceipt] = useState(null); // paymentId being uploaded inline
 
 	// Permissions
 	const canSeeFinancials = user?.role === 'ADMIN' || user?.role === 'SELLER';
@@ -134,12 +137,50 @@ const ProductDetail = () => {
 				},
 			);
 
-			setPayments([...payments, res.data]);
-			setNewPayment({...newPayment, valor: ''});
+			// If a file was selected, upload the receipt now
+			if (receiptFile) {
+				const newPaymentId = res.data.id;
+				const formData = new FormData();
+				formData.append('file', receiptFile);
+				await axios.post(
+					`${BASE_URL}/api/payments/${newPaymentId}/receipt`,
+					formData,
+					{headers: {Authorization: `Bearer ${token}`}},
+				);
+			}
+
+			// Refresh payments list to get updated hasReceipt flags
+			const paymentsRes = await axios.get(`${BASE_URL}/api/payments/${productId}`);
+			setPayments(Array.isArray(paymentsRes.data) ? paymentsRes.data : []);
+
+			setNewPayment({...newPayment, valor: '', paymentMethod: 'BANK_TRANSFER'});
+			setReceiptFile(null);
 			setSuccessMsg('✅ Pago registrado');
 			setTimeout(() => setSuccessMsg(''), 3000);
 		} catch (err) {
 			setErrorMsg('Error al registrar pago');
+		}
+	};
+
+	const handleInlineReceiptUpload = async (paymentId, file) => {
+		if (!file) return;
+		try {
+			const token = localStorage.getItem('token');
+			const formData = new FormData();
+			formData.append('file', file);
+			await axios.post(
+				`${BASE_URL}/api/payments/${paymentId}/receipt`,
+				formData,
+				{headers: {Authorization: `Bearer ${token}`}},
+			);
+			// Refresh payments to update hasReceipt
+			const paymentsRes = await axios.get(`${BASE_URL}/api/payments/${productId}`);
+			setPayments(Array.isArray(paymentsRes.data) ? paymentsRes.data : []);
+			setUploadingReceipt(null);
+			setSuccessMsg('✅ Comprobante subido');
+			setTimeout(() => setSuccessMsg(''), 3000);
+		} catch (err) {
+			setErrorMsg('Error al subir comprobante');
 		}
 	};
 
@@ -510,7 +551,7 @@ const ProductDetail = () => {
 								/>
 							</div>
 
-							<div style={{marginBottom: '15px'}}>
+							<div style={{marginBottom: '10px'}}>
 								<select
 									value={newPayment.type}
 									onChange={(e) =>
@@ -525,6 +566,36 @@ const ProductDetail = () => {
 									<option value='RESTO'>Saldo</option>
 									<option value='EXTRA'>Extra</option>
 								</select>
+							</div>
+
+							<div style={{marginBottom: '10px'}}>
+								<select
+									value={newPayment.paymentMethod}
+									onChange={(e) =>
+										setNewPayment({
+											...newPayment,
+											paymentMethod: e.target.value,
+										})
+									}
+									style={inputStyle}
+								>
+									<option value='CASH'>Efectivo</option>
+									<option value='BANK_TRANSFER'>Transferencia</option>
+									<option value='CREDIT_DEBIT_CARD'>Tarjeta</option>
+									<option value='OTHER'>Otro</option>
+								</select>
+							</div>
+
+							<div style={{marginBottom: '15px'}}>
+								<label style={{...labelStyle, marginBottom: '4px'}}>
+									Comprobante (opcional)
+								</label>
+								<input
+									type='file'
+									accept='.jpg,.jpeg,.png,.pdf'
+									onChange={(e) => setReceiptFile(e.target.files[0] || null)}
+									style={{...inputStyle, padding: '6px'}}
+								/>
 							</div>
 
 							<button
@@ -633,40 +704,69 @@ const ProductDetail = () => {
 										<li
 											key={i}
 											style={{
-												display: 'flex',
-												justifyContent: 'space-between',
 												padding: '10px 0',
-												borderBottom:
-													'1px solid #f5f5f5',
+												borderBottom: '1px solid #f5f5f5',
 											}}
 										>
-											<span
-												style={{
-													fontSize: '0.9rem',
-													color: '#636e72',
-												}}
-											>
-												{p.fecha} <br />
-												<b
-													style={{
+											<div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+												<span style={{fontSize: '0.9rem', color: '#636e72'}}>
+													{p.paymentDate || p.fecha} <br />
+													<b style={{color: '#2d3436', fontSize: '0.8rem'}}>
+														{p.paymentType || p.type}
+													</b>
+												</span>
+												<span style={{color: '#00b894', fontWeight: 'bold'}}>
+													+${Number(p.amount || p.valor).toLocaleString()}
+												</span>
+											</div>
+											<div style={{marginTop: '5px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
+												{p.paymentMethod && (
+													<span style={{
+														fontSize: '0.75rem',
+														padding: '2px 8px',
+														borderRadius: '12px',
+														background: '#dfe6e9',
 														color: '#2d3436',
-														fontSize: '0.8rem',
-													}}
-												>
-													{p.type || p.paymentType}
-												</b>
-											</span>
-											<span
-												style={{
-													color: '#00b894',
-													fontWeight: 'bold',
-												}}
-											>
-												+$
-												{Number(
-													p.valor || p.amount,
-												).toLocaleString()}
-											</span>
+													}}>
+														{methodLabel(p.paymentMethod)}
+													</span>
+												)}
+												{p.hasReceipt ? (
+													<a
+														href={`${BASE_URL}/api/payments/${p.id}/receipt`}
+														target='_blank'
+														rel='noreferrer'
+														style={{fontSize: '0.8rem', color: '#0984e3', textDecoration: 'none'}}
+													>
+														Ver comprobante
+													</a>
+												) : p.paymentMethod !== 'CASH' && (
+													uploadingReceipt === p.id ? (
+														<input
+															type='file'
+															accept='.jpg,.jpeg,.png,.pdf'
+															autoFocus
+															style={{fontSize: '0.75rem'}}
+															onChange={(e) => handleInlineReceiptUpload(p.id, e.target.files[0])}
+														/>
+													) : (
+														<button
+															onClick={() => setUploadingReceipt(p.id)}
+															style={{
+																fontSize: '0.75rem',
+																padding: '2px 8px',
+																border: '1px solid #b2bec3',
+																borderRadius: '4px',
+																background: 'transparent',
+																cursor: 'pointer',
+																color: '#636e72',
+															}}
+														>
+															Subir comprobante
+														</button>
+													)
+												)}
+											</div>
 										</li>
 									))}
 								</ul>
@@ -687,6 +787,17 @@ const ProductDetail = () => {
 			</div>
 		</div>
 	);
+};
+
+// Payment method display labels
+const methodLabel = (method) => {
+	const labels = {
+		CASH: 'Efectivo',
+		BANK_TRANSFER: 'Transferencia',
+		CREDIT_DEBIT_CARD: 'Tarjeta',
+		OTHER: 'Otro',
+	};
+	return labels[method] || method;
 };
 
 // Reusable Styles

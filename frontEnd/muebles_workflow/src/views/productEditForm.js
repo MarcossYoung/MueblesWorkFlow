@@ -32,6 +32,7 @@ const EditProduct = () => {
 		valor: '',
 		type: 'DEPOSIT',
 		pagostatus: 'SEÑA',
+		paymentMethod: 'BANK_TRANSFER',
 	});
 
 	useEffect(() => {
@@ -91,6 +92,7 @@ const EditProduct = () => {
 				valor: '',
 				type: 'DEPOSIT',
 				pagostatus: 'PAGO_SEÑA',
+				paymentMethod: 'BANK_TRANSFER',
 			});
 		} catch (err) {
 			setError('Error al registrar el pago.');
@@ -243,6 +245,21 @@ const EditProduct = () => {
 							<option value='DEPOSIT'>Seña</option>
 							<option value='RESTO'>Saldo</option>
 							<option value='EXTRA'>Extra</option>
+						</select>
+						<select
+							value={newPayment.paymentMethod}
+							onChange={(e) =>
+								setNewPayment({
+									...newPayment,
+									paymentMethod: e.target.value,
+								})
+							}
+							style={{width: '100%', marginBottom: '10px'}}
+						>
+							<option value='CASH'>Efectivo</option>
+							<option value='BANK_TRANSFER'>Transferencia</option>
+							<option value='CREDIT_DEBIT_CARD'>Tarjeta</option>
+							<option value='OTHER'>Otro</option>
 						</select>
 						<button
 							onClick={handleAddPayment}

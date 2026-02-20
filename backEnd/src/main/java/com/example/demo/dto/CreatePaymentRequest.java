@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.model.PaymentMethod;
 import com.example.demo.model.PaymentStatus;
 import com.example.demo.model.PaymentType;
 
@@ -12,5 +13,6 @@ public record CreatePaymentRequest(
         PaymentType type,        // DEPOSIT, RESTO, etc.
         PaymentStatus pagostatus,  // SEÑA, etc.
         Long product_id,    // Matches your frontend key
-        LocalDate fecha
+        LocalDate fecha,
+        PaymentMethod paymentMethod
 ) {}
