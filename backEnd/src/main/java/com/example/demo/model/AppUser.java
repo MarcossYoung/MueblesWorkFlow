@@ -1,6 +1,8 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +12,8 @@ import java.util.Collections;
 import java.util.Set;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "usuarios")
 public class AppUser implements UserDetails {
 
@@ -21,13 +25,15 @@ public class AppUser implements UserDetails {
     private String password;
     @Enumerated(EnumType.STRING)
     private AppUserRole appUserRole;
+    private String phoneNumber;
 
 
 
-    public AppUser( String username, String password, AppUserRole appUserRole) {
+    public AppUser( String username, String password, AppUserRole appUserRole,String phoneNumber) {
         this.username = username;
         this.password = password;
         this.appUserRole = appUserRole;
+        this.phoneNumber = phoneNumber;
     }
 
 
