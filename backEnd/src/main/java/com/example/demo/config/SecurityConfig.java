@@ -75,6 +75,9 @@ public class SecurityConfig {
                         // Existing public paths
                         .requestMatchers("/api/users/registro", "/api/users/login").permitAll()
                         .requestMatchers("/api/products", "/api/products/**").permitAll()
+                        .requestMatchers("/api/payments", "/api/payments/**").permitAll()
+                        .requestMatchers("/api/costs", "/api/costs/**").permitAll()
+                        .requestMatchers("/api/workorders", "/api/workorders/**").permitAll()
 
                         // Existing restricted paths
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
