@@ -35,7 +35,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
                                          @Param("to") LocalDate to);
 
 
-    @Query("SELECT p FROM Product p WHERE LOWER(p.titulo) LIKE LOWER(CONCAT('%', :query)) ")
+    @Query("SELECT p FROM Product p WHERE LOWER(p.titulo) LIKE LOWER(CONCAT('%', :query, '%')) ")
     Page<Product> searchByTitulo(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.titulo) LIKE LOWER(:titulo)")

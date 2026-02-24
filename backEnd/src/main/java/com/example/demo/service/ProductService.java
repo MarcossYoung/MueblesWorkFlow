@@ -206,6 +206,10 @@ public class ProductService {
     }
     public Product findByTitle(String title) { return productRepo.findByTitulo(title) .orElseThrow(() -> new RuntimeException("Product not found")); }
 
+    public Page<ProductResponse> searchByTitle(String query, Pageable pageable) {
+        return productRepo.searchByTitulo(query, pageable).map(ProductResponse::from);
+    }
+
     public List<ProductResponse> getProductsPastDue() {
 
         List<Product> products = productRepo.findByWorkOrderStatus(Status.ATRASADO);
