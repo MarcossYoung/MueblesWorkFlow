@@ -14,4 +14,4 @@ public record CreatePaymentRequest(
         Long product_id,    // Matches your frontend key
         LocalDate fecha,
         PaymentMethod paymentMethod
-) {}
+) { }
