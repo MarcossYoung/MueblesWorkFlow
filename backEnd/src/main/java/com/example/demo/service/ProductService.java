@@ -57,7 +57,9 @@ public class ProductService {
         p.setFechaEstimada(LocalDate.now().plusDays(35));
         p.setFoto(req.foto());
         p.setNotas(req.notas());
-        p.setOwner(userService.getCurrentUser());
+        AppUser owner = userService.getCurrentUser();
+        if (owner == null) owner = userService.getFirstUser();
+        p.setOwner(owner);
         p.setClientEmail(req.clientEmail());
 
         Product saved = productRepo.save(p);

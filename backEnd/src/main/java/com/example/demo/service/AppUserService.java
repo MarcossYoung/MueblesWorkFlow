@@ -121,6 +121,10 @@ public class AppUserService {
         return appUserRepository.findByUsername(username).orElse(null);
     }
 
+    public AppUser getFirstUser() {
+        return appUserRepository.findAll().stream().findFirst().orElse(null);
+    }
+
     public boolean delete(Long id) {
         Optional<AppUser> category = appUserRepository.findById(id);
         if (category.isPresent()) {
