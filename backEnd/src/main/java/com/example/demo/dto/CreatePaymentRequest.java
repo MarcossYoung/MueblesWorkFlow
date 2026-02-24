@@ -11,7 +11,6 @@ import java.time.LocalDate;
 public record CreatePaymentRequest(
         BigDecimal valor,
         PaymentType type,        // DEPOSIT, RESTO, etc.
-        PaymentStatus pagostatus,  // SEÑA, etc.
         Long product_id,    // Matches your frontend key
         LocalDate fecha,
         PaymentMethod paymentMethod
