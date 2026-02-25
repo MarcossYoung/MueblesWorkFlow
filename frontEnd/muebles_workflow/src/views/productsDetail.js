@@ -40,7 +40,7 @@ const ProductDetail = () => {
 	// New Payment State
 	const [newPayment, setNewPayment] = useState({
 		valor: '',
-		type: 'SEÑA',
+		type: 'DEPOSIT',
 		paymentMethod: 'BANK_TRANSFER',
 	});
 	const [receiptFile, setReceiptFile] = useState(null);
