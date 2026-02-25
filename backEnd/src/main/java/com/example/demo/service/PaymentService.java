@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +51,7 @@ public class PaymentService {
         OrderPayments payment = new OrderPayments();
         payment.setAmount(req.valor());
         payment.setPaymentType(req.type());
-        payment.setPaymentDate(req.fecha());
+        payment.setPaymentDate(LocalDate.parse(req.fecha()));
         payment.setPaymentMethod(req.paymentMethod());
         payment.setProduct(product);
 
