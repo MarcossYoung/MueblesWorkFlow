@@ -5,7 +5,6 @@ import com.example.demo.model.ProductType;
 import com.example.demo.model.Status;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.cglib.core.Local;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,8 +24,8 @@ public class ProductUpdateDto {
     private BigDecimal precio;
     private String notas;
     private String foto;
-    private LocalDate fechaEstimada;// "2025-01-15"
-    private LocalDate fechaEntregada;
+    private String fechaEstimada;// "2025-01-15"
+    private String fechaEntregada;
 
 
     // WORK ORDER fields
