@@ -51,7 +51,7 @@ public class PaymentService {
         OrderPayments payment = new OrderPayments();
         payment.setAmount(req.valor());
         payment.setPaymentType(req.type());
-        payment.setPaymentDate(LocalDate.parse(req.fecha()));
+        payment.setPaymentDate(LocalDate.parse(req.fecha().replace('/', '-')));
         payment.setPaymentMethod(req.paymentMethod());
         payment.setProduct(product);
 

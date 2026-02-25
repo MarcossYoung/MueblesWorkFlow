@@ -25,8 +25,8 @@ public class ProductUpdateDto {
     private BigDecimal precio;
     private String notas;
     private String foto;
-    private String fechaEstimada;// "2025-01-15"
-    private String fechaEntregada;
+    private LocalDate fechaEstimada;// "2025-01-15"
+    private LocalDate fechaEntregada;
 
 
     // WORK ORDER fields
