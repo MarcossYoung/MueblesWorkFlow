@@ -6,6 +6,8 @@ import com.example.demo.model.OrderPayments;
 import com.example.demo.model.Product;
 import com.example.demo.repository.PaymentRepo;
 import com.example.demo.repository.ProductRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -24,6 +26,7 @@ import java.util.Set;
 
 @Service
 public class PaymentService {
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
     private final PaymentRepo orderPaymentsRepo;
     private final ProductRepo productRepo;
 
@@ -45,6 +48,8 @@ public class PaymentService {
     }
 
     public OrderPayments createPayment(CreatePaymentRequest req) {
+        log.info("createPayment called with product_id={}, type={}, valor={}, method={}, fecha={}",
+                req.product_id(), req.type(), req.valor(), req.paymentMethod(), req.fecha());
         Product product = productRepo.findById(req.product_id())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
