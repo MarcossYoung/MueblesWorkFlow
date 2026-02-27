@@ -15,7 +15,6 @@ import ProtectedRoute from './components/protectedRoute';
 import AdminRoute from './AdminRoute';
 import RoleRoute from './RoleRoute';
 import './css/styles.css';
-import Chatbot from './components/chatBot';
 
 // --- LAZY LOADED VIEWS ---
 const Login = lazy(() => import('./views/login'));
@@ -178,7 +177,6 @@ function App() {
 							element={
 								<ProtectedRoute user={user}>
 									<AdminRoute user={user}>
-										<Chatbot />
 										<Sidebar />
 										<AdminPage />
 									</AdminRoute>
