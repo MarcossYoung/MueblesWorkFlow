@@ -26,7 +26,7 @@ public class PaymentService {
     private final PaymentRepo orderPaymentsRepo;
     private final ProductRepo productRepo;
 
-    @Autowired
+    @Autowired(required = false)
     private Cloudinary cloudinary;
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "pdf");
@@ -69,6 +69,8 @@ public class PaymentService {
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
             throw new IllegalArgumentException("File type not allowed. Accepted: jpg, jpeg, png, pdf");
         }
+
+        if (cloudinary == null) throw new IllegalStateException("Cloudinary not configured (check env vars)");
 
         OrderPayments payment = orderPaymentsRepo.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));

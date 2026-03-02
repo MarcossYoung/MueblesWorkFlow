@@ -12,10 +12,11 @@ import java.util.Map;
 @Service
 public class FileStorageService {
 
-    @Autowired
+    @Autowired(required = false)
     private Cloudinary cloudinary;
 
     public String saveFile(MultipartFile file) throws IOException {
+        if (cloudinary == null) throw new IllegalStateException("Cloudinary not configured (check env vars)");
         Map uploadResult = cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap("folder", "muebles/productos")
