@@ -18,16 +18,20 @@ export default function Sidebar() {
 						Pedidos
 					</NavLink>
 				</div>
-				<div>
-					<NavLink to='/finance' className={linkClass}>
-						Finanzas
-					</NavLink>
-				</div>
-				<div>
-					<NavLink to='/costs' className={linkClass}>
-						Costos
-					</NavLink>
-				</div>
+				{isAdmin && (
+					<div>
+						<NavLink to='/finance' className={linkClass}>
+							Finanzas
+						</NavLink>
+					</div>
+				)}
+				{isAdmin && (
+					<div>
+						<NavLink to='/costs' className={linkClass}>
+							Costos
+						</NavLink>
+					</div>
+				)}
 			</div>
 
 			{/*<NavLink to='/inventory' className={linkClass}>

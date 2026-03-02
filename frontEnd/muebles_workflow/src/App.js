@@ -120,7 +120,7 @@ function App() {
 							element={
 								<RoleRoute
 									user={user}
-									allowedRoles={['SELLER', 'ADMIN']}
+									allowedRoles={['ADMIN']}
 								>
 									<Sidebar />
 									<div className='main-content'>
@@ -134,7 +134,7 @@ function App() {
 							element={
 								<RoleRoute
 									user={user}
-									allowedRoles={['SELLER', 'ADMIN']}
+									allowedRoles={['ADMIN']}
 								>
 									<Sidebar />
 									<div className='main-content'>

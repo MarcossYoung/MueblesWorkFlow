@@ -49,6 +49,20 @@ public class AdminController {
         }
     }
 
+    @PutMapping("/users/{id}/role")
+    public ResponseEntity<AppUser> updateUserRole(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        AppUser user = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String role = body.get("appUserRole");
+        if (role != null && !role.isBlank()) {
+            user.setAppUserRole(com.example.demo.model.AppUserRole.valueOf(role));
+            userRepo.save(user);
+        }
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getSummary() {
         Map<String, Object> summary = new HashMap<>();

@@ -176,7 +176,7 @@ public class ProductService {
         }
 
         productRepo.delete(product);
-        return false;
+        return true;
     }
 
     public void guardar(Product p) {

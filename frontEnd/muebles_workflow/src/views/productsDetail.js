@@ -49,6 +49,7 @@ const ProductDetail = () => {
 
 	// Permissions
 	const canSeeFinancials = user?.role === 'ADMIN' || user?.role === 'SELLER';
+	const canRegisterPayments = user?.role === 'ADMIN' || user?.role === 'SELLER';
 
 	// --- LOAD DATA ---
 	useEffect(() => {
@@ -554,8 +555,8 @@ const ProductDetail = () => {
 					</form>
 				</div>
 
-				{/* === RIGHT COLUMN: FINANCIALS === */}
-				{canSeeFinancials && (
+				{/* === RIGHT COLUMN: PAYMENTS === */}
+				{(
 					<div
 						style={{
 							display: 'flex',
@@ -563,7 +564,8 @@ const ProductDetail = () => {
 							gap: '20px',
 						}}
 					>
-						{/* 1. New Payment Card */}
+						{canRegisterPayments && (
+						<>{/* 1. New Payment Card */}
 						<div
 							style={{
 								background: '#f1f2f6',
@@ -655,7 +657,8 @@ const ProductDetail = () => {
 							>
 								+ Agregar Pago
 							</button>
-						</div>
+						</div></>
+						)}
 
 						{/* 2. Summary & History Card */}
 						<div
@@ -666,7 +669,8 @@ const ProductDetail = () => {
 								border: '1px solid #dfe6e9',
 							}}
 						>
-							{/* Summary */}
+							{canSeeFinancials && (
+							<>{/* Summary */}
 							<div
 								style={{
 									borderBottom: '2px solid #eee',
@@ -728,6 +732,8 @@ const ProductDetail = () => {
 								</div>
 							</div>
 
+							</>
+							)}
 							{/* History List */}
 							<h4
 								style={{marginBottom: '10px', color: '#2d3436'}}

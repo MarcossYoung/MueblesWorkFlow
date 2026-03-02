@@ -7,6 +7,9 @@ import {
 	FaCheckCircle,
 	FaTrashAlt,
 	FaUserPlus,
+	FaEdit,
+	FaCheck,
+	FaTimes,
 } from 'react-icons/fa';
 import {
 	BarChart,
@@ -38,6 +41,8 @@ function AdminPage() {
 		appUserRole: 'USER', // Default role
 	});
 	const [msg, setMsg] = useState({text: '', type: ''}); // Unified message state
+	const [editingUserId, setEditingUserId] = useState(null);
+	const [editingRole, setEditingRole] = useState('');
 
 	// --- FETCH DATA ---
 	const fetchData = useCallback(async () => {
@@ -60,7 +65,7 @@ function AdminPage() {
 			// 2. Fetch Users List (Nuevo)
 			// Si tu endpoint es diferente, cambialo aqui.
 			// Generalmente es /api/users o /api/admin/users
-			const usersRes = await axios.get(`${BASE_URL}/api/users`, config);
+			const usersRes = await axios.get(`${BASE_URL}/api/admin/users`, config);
 			setUsers(usersRes.data);
 		} catch (err) {
 			console.error('Error fetching admin data:', err);
@@ -92,11 +97,28 @@ function AdminPage() {
 		}
 	};
 
+	const handleEditRole = async (id) => {
+		try {
+			const token = localStorage.getItem('token');
+			await axios.put(
+				`${BASE_URL}/api/admin/users/${id}/role`,
+				{appUserRole: editingRole},
+				{headers: {Authorization: `Bearer ${token}`}},
+			);
+			setMsg({text: 'Rol actualizado', type: 'green'});
+			setEditingUserId(null);
+			fetchData();
+			setTimeout(() => setMsg({text: '', type: ''}), 3000);
+		} catch {
+			setMsg({text: 'Error al actualizar rol', type: 'red'});
+		}
+	};
+
 	const handleDeleteUser = async (id) => {
 		if (!window.confirm('¿Estás seguro de eliminar este usuario?')) return;
 		try {
 			const token = localStorage.getItem('token');
-			await axios.delete(`${BASE_URL}/api/users/${id}`, {
+			await axios.delete(`${BASE_URL}/api/admin/users/${id}`, {
 				headers: {Authorization: `Bearer ${token}`},
 			});
 			fetchData();
@@ -243,38 +265,87 @@ function AdminPage() {
 												<strong>{u.username}</strong>
 											</td>
 											<td>
-												<span
-													className='badge'
-													style={{
-														background:
-															u.appUserRole ===
-															'ADMIN'
-																? '#e1bee7'
-																: '#e0f2f1',
-														color:
-															u.appUserRole ===
-															'ADMIN'
-																? '#7b1fa2'
-																: '#00695c',
-														padding: '4px 12px',
-														borderRadius: '20px',
-														fontSize: '0.85rem',
-													}}
-												>
-													{u.appUserRole}
-												</span>
+												{editingUserId === u.id ? (
+													<select
+														value={editingRole}
+														onChange={(e) => setEditingRole(e.target.value)}
+														style={{
+															padding: '4px 8px',
+															borderRadius: '6px',
+															border: '1px solid #b2bec3',
+															fontSize: '0.85rem',
+														}}
+													>
+														<option value='USER'>USER</option>
+														<option value='SELLER'>SELLER</option>
+														<option value='ADMIN'>ADMIN</option>
+													</select>
+												) : (
+													<span
+														className='badge'
+														style={{
+															background:
+																u.appUserRole === 'ADMIN'
+																	? '#e1bee7'
+																	: u.appUserRole === 'SELLER'
+																	? '#fff3e0'
+																	: '#e0f2f1',
+															color:
+																u.appUserRole === 'ADMIN'
+																	? '#7b1fa2'
+																	: u.appUserRole === 'SELLER'
+																	? '#e65100'
+																	: '#00695c',
+															padding: '4px 12px',
+															borderRadius: '20px',
+															fontSize: '0.85rem',
+														}}
+													>
+														{u.appUserRole}
+													</span>
+												)}
 											</td>
-											<td className='text-center'>
-												{/* Evitamos que se borre a sí mismo si quieres agregar esa logica despues */}
-												<button
-													className='btn-delete'
-													onClick={() =>
-														handleDeleteUser(u.id)
-													}
-													title='Eliminar usuario'
-												>
-													<FaTrashAlt />
-												</button>
+											<td className='text-center' style={{display: 'flex', gap: '6px', justifyContent: 'center'}}>
+												{editingUserId === u.id ? (
+													<>
+														<button
+															className='btn-delete'
+															style={{color: '#00b894'}}
+															onClick={() => handleEditRole(u.id)}
+															title='Confirmar'
+														>
+															<FaCheck />
+														</button>
+														<button
+															className='btn-delete'
+															onClick={() => setEditingUserId(null)}
+															title='Cancelar'
+														>
+															<FaTimes />
+														</button>
+													</>
+												) : (
+													<>
+														<button
+															className='btn-delete'
+															style={{color: '#0984e3'}}
+															onClick={() => {
+																setEditingUserId(u.id);
+																setEditingRole(u.appUserRole);
+															}}
+															title='Editar rol'
+														>
+															<FaEdit />
+														</button>
+														<button
+															className='btn-delete'
+															onClick={() => handleDeleteUser(u.id)}
+															title='Eliminar usuario'
+														>
+															<FaTrashAlt />
+														</button>
+													</>
+												)}
 											</td>
 										</tr>
 									))
@@ -285,8 +356,7 @@ function AdminPage() {
 											className='text-center'
 											style={{padding: '2rem'}}
 										>
-											No se encontraron usuarios (o
-											endpoint no disponible).
+											No se encontraron usuarios.
 										</td>
 									</tr>
 								)}
