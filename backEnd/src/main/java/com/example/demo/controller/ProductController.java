@@ -111,7 +111,7 @@ public class ProductController {
             ProductUpdateDto dto = new ProductUpdateDto();
             dto.setFoto(url);
             return ResponseEntity.ok(productService.update(id, dto));
-        } catch (IOException e) {
+        } catch (IOException | ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error al guardar imagen"));
         }
