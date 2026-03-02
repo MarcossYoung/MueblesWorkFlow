@@ -19,9 +19,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/products")
@@ -92,6 +96,26 @@ public class ProductController {
         }
     }
 
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<?> uploadProductImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        String name = file.getOriginalFilename() != null ? file.getOriginalFilename() : "";
+        String ext = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : "";
+        if (!Set.of("jpg", "jpeg", "png", "webp").contains(ext)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Solo se permiten jpg, jpeg, png, webp"));
+        }
+        try {
+            String url = fileStorageService.saveFile(file);
+            ProductUpdateDto dto = new ProductUpdateDto();
+            dto.setFoto(url);
+            return ResponseEntity.ok(productService.update(id, dto));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al guardar imagen"));
+        }
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) throws ResourceNotFoundException {

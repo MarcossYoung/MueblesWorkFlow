@@ -6,9 +6,7 @@ import com.example.demo.exceptions.ResourceNotFoundException;
 import com.example.demo.model.OrderPayments;
 import com.example.demo.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,27 +52,14 @@ public class PaymentsController {
     }
 
     @GetMapping("/{id}/receipt")
-    public ResponseEntity<Resource> getReceipt(@PathVariable Long id) {
+    public ResponseEntity<Void> getReceipt(@PathVariable Long id) {
         try {
-            Resource resource = paymentService.getReceiptResource(id);
-            String filename = paymentService.getReceiptFilename(id);
-            String extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-
-            MediaType mediaType = switch (extension) {
-                case "pdf" -> MediaType.APPLICATION_PDF;
-                case "png" -> MediaType.IMAGE_PNG;
-                default -> MediaType.IMAGE_JPEG;
-            };
-
-            return ResponseEntity.ok()
-                    .contentType(mediaType)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
-                    .body(resource);
+            String url = paymentService.getReceiptUrl(id);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", url)
+                    .build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
         }
-
     }
 }

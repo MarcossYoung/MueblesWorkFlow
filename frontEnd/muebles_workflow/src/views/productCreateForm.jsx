@@ -1,4 +1,4 @@
-import {useState, useContext, useEffect} from 'react';
+import {useState, useContext, useEffect, useRef} from 'react';
 import axios from 'axios';
 import {UserContext} from '../UserProvider';
 import {useNavigate} from 'react-router-dom';
@@ -10,6 +10,8 @@ const ProductCreation = ({isModal = false, onClose}) => {
 	const [types, setTypes] = useState([]);
 	const [error, setError] = useState(null);
 	const [success, setSuccess] = useState(false);
+	const [imageFile, setImageFile] = useState(null);
+	const [imagePreview, setImagePreview] = useState(null);
 
 	// Estado inicial alineado con ProductCreateRequest del Backend
 	const [productData, setProductData] = useState({
@@ -29,6 +31,14 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		clientEmail: '',
 		// ownerid no es necesario enviarlo, el backend lo saca del token (userService.getCurrentUser())
 	});
+
+	useEffect(() => () => { if (imagePreview) URL.revokeObjectURL(imagePreview); }, [imagePreview]);
+
+	const handleImageChange = (e) => {
+		const file = e.target.files[0] || null;
+		setImageFile(file);
+		setImagePreview(file ? URL.createObjectURL(file) : null);
+	};
 
 	useEffect(() => {
 		const fetchTypes = async () => {
@@ -71,12 +81,24 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		};
 
 		try {
-			await axios.post(`${BASE_URL}/api/products/create`, payload, {
+			const res = await axios.post(`${BASE_URL}/api/products/create`, payload, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 					'Content-Type': 'application/json',
 				},
 			});
+
+			if (imageFile && res.data?.id) {
+				try {
+					const fd = new FormData();
+					fd.append('file', imageFile);
+					await axios.post(`${BASE_URL}/api/products/${res.data.id}/image`, fd,
+						{ headers: { Authorization: `Bearer ${token}` } }
+					);
+				} catch (imgErr) {
+					console.warn('Image upload failed (product was created):', imgErr);
+				}
+			}
 
 			setSuccess(true);
 
@@ -254,6 +276,25 @@ const ProductCreation = ({isModal = false, onClose}) => {
 						onChange={handleInputChange}
 						rows='3'
 					></textarea>
+				</div>
+
+				<div className='input-group full-width'>
+					<label>Foto del Pedido (opcional)</label>
+					<input type='file' accept='.jpg,.jpeg,.png,.webp' onChange={handleImageChange} />
+					{imagePreview && (
+						<img
+							src={imagePreview}
+							alt='Vista previa'
+							style={{
+								marginTop: 8,
+								maxWidth: '100%',
+								maxHeight: 200,
+								borderRadius: 5,
+								objectFit: 'contain',
+								border: '1px solid #dfe6e9',
+							}}
+						/>
+					)}
 				</div>
 
 				<button

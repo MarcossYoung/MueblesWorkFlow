@@ -20,8 +20,8 @@ public class GlobalExceptions {
     public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
         Map<String, Object> response = new HashMap<>();
         response.put("error", ex.getMessage());
-        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
-        return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)

@@ -35,6 +35,7 @@ const ProductDetail = () => {
 		notas: '',
 		workOrderStatus: '',
 		daysLate: 0,
+		foto: '',
 	});
 
 	// New Payment State
@@ -159,6 +160,23 @@ const ProductDetail = () => {
 			setTimeout(() => setSuccessMsg(''), 3000);
 		} catch (err) {
 			setErrorMsg('Error al registrar pago');
+		}
+	};
+
+	const handleProductImageUpload = async (e) => {
+		const file = e.target.files[0];
+		if (!file) return;
+		const token = localStorage.getItem('token');
+		const fd = new FormData();
+		fd.append('file', file);
+		try {
+			const res = await axios.post(`${BASE_URL}/api/products/${productId}/image`, fd,
+				{ headers: { Authorization: `Bearer ${token}` } });
+			setProduct(prev => ({ ...prev, foto: res.data.foto }));
+			setSuccessMsg('Foto actualizada');
+			setTimeout(() => setSuccessMsg(''), 3000);
+		} catch {
+			setErrorMsg('Error al subir la foto');
 		}
 	};
 
@@ -491,6 +509,30 @@ const ProductDetail = () => {
 								</div>
 							)}
 						</div>
+
+						<div style={{gridColumn: '1 / -1'}}>
+								<label style={labelStyle}>Foto del Mueble</label>
+								{product.foto
+									? <img
+										src={product.foto}
+										alt={product.titulo}
+										style={{
+											width: '100%',
+											maxHeight: 250,
+											objectFit: 'contain',
+											borderRadius: 8,
+											border: '1px solid #dfe6e9',
+											marginBottom: 8,
+										}}
+									/>
+									: <p style={{color: '#b2bec3', fontSize: '0.85rem'}}>Sin foto cargada.</p>}
+								<input
+									type='file'
+									accept='.jpg,.jpeg,.png,.webp'
+									style={{marginTop: 8}}
+									onChange={handleProductImageUpload}
+								/>
+							</div>
 
 						<button
 							type='submit'

@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.demo.dto.CreatePaymentRequest;
 import com.example.demo.dto.ProductPayments;
 import com.example.demo.model.OrderPayments;
@@ -8,20 +10,14 @@ import com.example.demo.repository.PaymentRepo;
 import com.example.demo.repository.ProductRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -30,8 +26,8 @@ public class PaymentService {
     private final PaymentRepo orderPaymentsRepo;
     private final ProductRepo productRepo;
 
-    @Value("${upload.receipts.path}")
-    private String uploadPath;
+    @Autowired
+    private Cloudinary cloudinary;
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "pdf");
 
@@ -77,41 +73,22 @@ public class PaymentService {
         OrderPayments payment = orderPaymentsRepo.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
-        Path dir = Paths.get(uploadPath);
-        if (!Files.exists(dir)) {
-            Files.createDirectories(dir);
-        }
+        Map uploadResult = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap("folder", "muebles/comprobantes", "resource_type", "auto")
+        );
+        String secureUrl = (String) uploadResult.get("secure_url");
 
-        String fileName = paymentId + "_" + originalFilename;
-        Path destination = dir.resolve(fileName);
-        Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-
-        payment.setReceiptPath(destination.toString());
+        payment.setReceiptPath(secureUrl);
         orderPaymentsRepo.save(payment);
     }
 
-    public Resource getReceiptResource(Long paymentId) throws MalformedURLException {
+    public String getReceiptUrl(Long paymentId) {
         OrderPayments payment = orderPaymentsRepo.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
-
         if (payment.getReceiptPath() == null) {
             throw new RuntimeException("No receipt found for this payment");
         }
-
-        Path filePath = Paths.get(payment.getReceiptPath());
-        Resource resource = new UrlResource(filePath.toUri());
-        if (!resource.exists() || !resource.isReadable()) {
-            throw new RuntimeException("Receipt file not found or not readable");
-        }
-        return resource;
-    }
-
-    public String getReceiptFilename(Long paymentId) {
-        OrderPayments payment = orderPaymentsRepo.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
-        if (payment.getReceiptPath() == null) {
-            throw new RuntimeException("No receipt for this payment");
-        }
-        return Paths.get(payment.getReceiptPath()).getFileName().toString();
+        return payment.getReceiptPath();
     }
 }
