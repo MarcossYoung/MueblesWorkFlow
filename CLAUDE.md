@@ -76,6 +76,28 @@ npm test                   # Jest test runner
 
 Roles: `ADMIN`, `SELLER`, `USER` (defined in `AppUserRole.java`).
 
+## Role-Based Frontend Access
+
+| Feature | USER | SELLER | ADMIN |
+|---|---|---|---|
+| Sidebar: Pedidos | ✓ | ✓ | ✓ |
+| Sidebar: Finanzas | ✗ | ✓ | ✓ |
+| Sidebar: Costos | ✗ | ✗ | ✓ |
+| Sidebar: Panel Admin | ✗ | ✗ | ✓ |
+| Sidebar: Perfil | ✓ | ✓ | ✓ |
+| Tab: Pedidos (all orders) | ✗ (redirects to Atrasados) | ✓ | ✓ |
+| Tab: Semana actual | ✓ | ✓ | ✓ |
+| Tab: Atrasados | ✓ | ✓ | ✓ |
+| Tab: No retirados | ✓ | ✓ | ✓ |
+| Finance view | ✗ | Own income only | Full dashboard |
+| Add payments | ✗ | ✓ | ✓ |
+
+Role checks live in:
+- **Route guards**: `App.js` — `RoleRoute` with `allowedRoles`; USER at `/dashboard` index redirects to `/dashboard/late`
+- **Tab visibility**: `views/dashboard.jsx` — `isSeller`, `isAdmin` flags gate the "Pedidos" tab
+- **Sidebar links**: `components/sidebar.jsx` — `isSeller`, `isAdmin` flags
+- **Finance branching**: `views/finances.jsx` — seller sees own-income view, admin sees full dashboard
+
 ## Key Config Locations
 
 - Backend URL / CORS: `backEnd/src/main/resources/application.properties`

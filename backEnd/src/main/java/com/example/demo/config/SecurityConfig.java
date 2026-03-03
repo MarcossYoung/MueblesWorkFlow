@@ -69,9 +69,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/workorders", "/api/workorders/**").permitAll()
 
                         // Existing restricted paths
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/costs/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/finance/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/finance", "/api/finance/**").hasAnyAuthority("ADMIN", "SELLER")
                         .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
 
                         // Ensure all other paths are secured (Fixing the previous issue I pointed out)
