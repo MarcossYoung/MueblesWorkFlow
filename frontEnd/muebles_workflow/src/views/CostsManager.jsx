@@ -90,15 +90,11 @@ export default function CostsManager() {
 	};
 
 	if (loading && costs.length === 0) {
-		return (
-			<div className='admin-dashboard' style={{padding: '2rem'}}>
-				Cargando costos...
-			</div>
-		);
+		return <div style={{padding: '2rem'}}>Cargando costos...</div>;
 	}
 
 	return (
-		<section className='admin-dashboard'>
+		<section>
 			<h1 className='main-title'>Gestión de Costos</h1>
 
 			{/* --- CONTENEDOR PRINCIPAL (Estilo original del CSS) --- */}

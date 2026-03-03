@@ -149,9 +149,13 @@ public class ProductService {
         if (dto.getNotas() != null) product.setNotas(dto.getNotas());
         if (dto.getFoto() != null) product.setFoto(dto.getFoto());
         if (dto.getCantidad() != null) product.setCantidad(dto.getCantidad());
+        if (dto.getPrecio() != null) product.setPrecio(dto.getPrecio());
 
         if (dto.getFechaEstimada() != null && !dto.getFechaEstimada().isBlank()) {
             product.setFechaEstimada(LocalDate.parse(dto.getFechaEstimada()));
+        }
+        if (dto.getFechaEntrega() != null && !dto.getFechaEntrega().isBlank()) {
+            product.setFechaEntrega(LocalDate.parse(dto.getFechaEntrega()));
         }
 
         WorkOrder wo = product.getWorkOrder();

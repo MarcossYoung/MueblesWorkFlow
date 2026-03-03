@@ -25,7 +25,7 @@ public class ProductUpdateDto {
     private String notas;
     private String foto;
     private String fechaEstimada;// "2025-01-15"
-    private String fechaEntregada;
+    private String fechaEntrega;
 
 
     // WORK ORDER fields
