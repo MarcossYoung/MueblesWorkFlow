@@ -9,6 +9,7 @@ export default function Sidebar() {
 
 	const {user} = useContext(UserContext);
 	const isAdmin = user?.role === 'ADMIN';
+	const isSeller = user?.role === 'SELLER';
 
 	return (
 		<aside className='sidebar bg-gray-100 p-4 justifyContent'>
@@ -18,7 +19,7 @@ export default function Sidebar() {
 						Pedidos
 					</NavLink>
 				</div>
-				{isAdmin && (
+				{(isAdmin || isSeller) && (
 					<div>
 						<NavLink to='/finance' className={linkClass}>
 							Finanzas

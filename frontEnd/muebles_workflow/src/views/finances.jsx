@@ -11,6 +11,8 @@ export default function Finance() {
 	const [financeData, setFinanceData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
+	const isSeller = user?.role === 'SELLER';
+
 	// Default to the current month
 	const [selectedMonth, setSelectedMonth] = useState(() => {
 		const now = new Date();
@@ -50,6 +52,67 @@ export default function Finance() {
 	if (loading || !financeData)
 		return <div className='loader'>Cargando Datos Financieros...</div>;
 
+	// Seller view: only their own income stats
+	if (isSeller) {
+		const myStats = financeData.userStats?.find(
+			(s) => s.label === user?.username,
+		) ?? {income: 0, unitsSold: 0};
+
+		return (
+			<div
+				style={{
+					padding: '25px',
+					backgroundColor: '#f5f6fa',
+					minHeight: '100vh',
+				}}
+			>
+				<div
+					style={{
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+						marginBottom: '30px',
+					}}
+				>
+					<h2 style={{margin: 0, color: '#2d3436'}}>Mis Finanzas</h2>
+					<input
+						type='month'
+						value={selectedMonth}
+						onChange={(e) => setSelectedMonth(e.target.value)}
+						style={{
+							padding: '10px',
+							borderRadius: '8px',
+							border: '1px solid #dfe6e9',
+							boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+						}}
+					/>
+				</div>
+
+				<div
+					style={{
+						display: 'grid',
+						gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+						gap: '20px',
+					}}
+				>
+					<StatCard
+						title='Mis Ingresos'
+						value={myStats.income}
+						icon='💰'
+						borderColor='#00b894'
+					/>
+					<StatCard
+						title='Unidades Vendidas'
+						value={myStats.unitsSold}
+						icon='📦'
+						borderColor='#0984e3'
+					/>
+				</div>
+			</div>
+		);
+	}
+
+	// Admin view: full dashboard
 	return (
 		<div
 			style={{

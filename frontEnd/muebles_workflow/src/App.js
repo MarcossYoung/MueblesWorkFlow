@@ -82,12 +82,16 @@ function App() {
 							<Route
 								index
 								element={
-									<RoleRoute
-										user={user}
-										allowedRoles={['USER','SELLER', 'ADMIN']}
-									>
-										<Products />
-									</RoleRoute>
+									user?.role === 'USER' ? (
+										<Navigate to='late' replace />
+									) : (
+										<RoleRoute
+											user={user}
+											allowedRoles={['SELLER', 'ADMIN']}
+										>
+											<Products />
+										</RoleRoute>
+									)
 								}
 							/>
 							<Route
@@ -95,7 +99,7 @@ function App() {
 								element={
 									<RoleRoute
 										user={user}
-										allowedRoles={['SELLER', 'ADMIN']}
+										allowedRoles={['USER', 'SELLER', 'ADMIN']}
 									>
 										<OrdersNotPickedUp />
 									</RoleRoute>
@@ -106,7 +110,7 @@ function App() {
 								element={
 									<RoleRoute
 										user={user}
-										allowedRoles={['SELLER', 'ADMIN']}
+										allowedRoles={['USER', 'SELLER', 'ADMIN']}
 									>
 										<OrdersPastDue />
 									</RoleRoute>
@@ -120,7 +124,7 @@ function App() {
 							element={
 								<RoleRoute
 									user={user}
-									allowedRoles={['ADMIN']}
+									allowedRoles={['ADMIN', 'SELLER']}
 								>
 									<Sidebar />
 									<div className='main-content'>

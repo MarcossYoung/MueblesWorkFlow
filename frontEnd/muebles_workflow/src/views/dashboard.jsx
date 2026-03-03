@@ -14,6 +14,7 @@ export default function Dashboard() {
 		isActive ? 'nav-pill active' : 'nav-pill';
 
 	const isAdmin = user?.role === 'ADMIN';
+	const isSeller = user?.role === 'SELLER';
 
 	useEffect(() => {
 		const fetchOrders = async () => {
@@ -40,22 +41,20 @@ export default function Dashboard() {
 				<nav style={{display: 'flex', gap: '10px'}}>
 					{' '}
 					{/* Horizontal layout for links */}
-					<NavLink to='/dashboard' end className={linkClass}>
-						Pedidos
-					</NavLink>
+					{(isSeller || isAdmin) && (
+						<NavLink to='/dashboard' end className={linkClass}>
+							Pedidos
+						</NavLink>
+					)}
 					<NavLink to='due-this-week' className={linkClass}>
 						Semana actual
 					</NavLink>
-					{isAdmin && (
-						<>
-							<NavLink to='late' className={linkClass}>
-								Atrasados
-							</NavLink>
-							<NavLink to='not-picked-up' className={linkClass}>
-								No retirados
-							</NavLink>
-						</>
-					)}
+					<NavLink to='late' className={linkClass}>
+						Atrasados
+					</NavLink>
+					<NavLink to='not-picked-up' className={linkClass}>
+						No retirados
+					</NavLink>
 				</nav>
 
 				<div className='tab-content'>
