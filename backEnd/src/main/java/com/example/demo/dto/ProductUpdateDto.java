@@ -29,7 +29,7 @@ public class ProductUpdateDto {
 
 
     // WORK ORDER fields
-    private Status status;
+    private Status workOrderStatus;
     private String workOrderNotes;
 
     //Payment fields

@@ -160,7 +160,7 @@ public class ProductService {
 
         WorkOrder wo = product.getWorkOrder();
         if (wo != null) {
-            if (dto.getStatus() != null) wo.setStatus(dto.getStatus());
+            if (dto.getWorkOrderStatus() != null) wo.setStatus(dto.getWorkOrderStatus());
             wo.setUpdateAt(LocalDateTime.now());
         }
     }
