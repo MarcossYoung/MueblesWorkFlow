@@ -84,7 +84,7 @@ function App() {
 								element={
 									<RoleRoute
 										user={user}
-										allowedRoles={['SELLER', 'ADMIN']}
+										allowedRoles={['USER','SELLER', 'ADMIN']}
 									>
 										<Products />
 									</RoleRoute>
