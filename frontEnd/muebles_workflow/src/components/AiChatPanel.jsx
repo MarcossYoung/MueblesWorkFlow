@@ -75,9 +75,10 @@ export default function AiChatPanel() {
 						const delta = line.slice(5).trim();
 						if (delta) {
 							assistantText += delta;
+							const snapshot = assistantText;
 							setMessages(prev => {
 								const updated = [...prev];
-								updated[updated.length - 1] = {role: 'assistant', content: assistantText};
+								updated[updated.length - 1] = {role: 'assistant', content: snapshot};
 								return updated;
 							});
 						}
