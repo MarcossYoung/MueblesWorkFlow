@@ -30,6 +30,7 @@ function AdminPage() {
 		finishedOrders: 0,
 		dueThisWeek: 0,
 	});
+	const [digest, setDigest] = useState('');
 	const [chartData, setChartData] = useState([]);
 
 	// User Management States
@@ -75,6 +76,20 @@ function AdminPage() {
 	useEffect(() => {
 		fetchData();
 	}, [fetchData]);
+
+	// Weekly digest: fetch once per week
+	useEffect(() => {
+		const now = new Date();
+		const year = now.getFullYear();
+		const week = Math.ceil(((now - new Date(year, 0, 1)) / 86400000 + new Date(year, 0, 1).getDay() + 1) / 7);
+		const weekKey = `${year}-W${String(week).padStart(2, '0')}`;
+		const stored = localStorage.getItem('digest_week');
+		if (stored === weekKey) return; // Already shown this week
+		const token = localStorage.getItem('token');
+		axios.get(`${BASE_URL}/api/ai/weekly-digest`, {headers: {Authorization: `Bearer ${token}`}})
+			.then(res => setDigest(res.data.digest))
+			.catch(() => {});
+	}, []);
 
 	// --- HANDLERS ---
 	const handleCreateUser = async (e) => {
@@ -127,8 +142,44 @@ function AdminPage() {
 		}
 	};
 
+	const dismissDigest = () => {
+		const now = new Date();
+		const year = now.getFullYear();
+		const week = Math.ceil(((now - new Date(year, 0, 1)) / 86400000 + new Date(year, 0, 1).getDay() + 1) / 7);
+		localStorage.setItem('digest_week', `${year}-W${String(week).padStart(2, '0')}`);
+		setDigest('');
+	};
+
 	return (
 		<div className='admin-dashboard'>
+			{/* WEEKLY AI DIGEST BANNER */}
+			{digest && (
+				<div style={{
+					background: 'linear-gradient(135deg, #6c5ce7, #a29bfe)',
+					color: 'white',
+					borderRadius: '12px',
+					padding: '16px 20px',
+					marginBottom: '1.5rem',
+					display: 'flex',
+					justifyContent: 'space-between',
+					alignItems: 'flex-start',
+					gap: '12px',
+					boxShadow: '0 4px 12px rgba(108,92,231,0.3)',
+				}}>
+					<div>
+						<strong style={{fontSize: '0.85rem', opacity: 0.85}}>Resumen Semanal IA</strong>
+						<p style={{margin: '4px 0 0', fontSize: '0.95rem', lineHeight: '1.5'}}>{digest}</p>
+					</div>
+					<button
+						onClick={dismissDigest}
+						style={{background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem', flexShrink: 0, padding: '0 4px'}}
+						title='Cerrar'
+					>
+						×
+					</button>
+				</div>
+			)}
+
 			{/* 1. HEADER & KPI CARDS */}
 			<div className='dashboard-header' style={{marginBottom: '2rem'}}>
 				<h1 className='main-title'>Panel de Administración</h1>

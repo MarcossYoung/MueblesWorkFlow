@@ -160,4 +160,21 @@ public class ProductController {
         return ResponseEntity.ok(productsDueThisWeek);
     }
 
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ProductResponse>> filterProducts(
+            @RequestParam(required = false) String titulo,
+            @RequestParam(required = false) String productType,
+            @RequestParam(required = false) String material,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) String workOrderStatus,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+        return ResponseEntity.ok(productService.searchWithFilters(
+                titulo, productType, material, color, workOrderStatus, from, to, pageable));
+    }
+
 }

@@ -12,6 +12,9 @@ const ProductCreation = ({isModal = false, onClose}) => {
 	const [success, setSuccess] = useState(false);
 	const [imageFile, setImageFile] = useState(null);
 	const [imagePreview, setImagePreview] = useState(null);
+	const [aiDescription, setAiDescription] = useState('');
+	const [aiLoading, setAiLoading] = useState(false);
+	const [aiError, setAiError] = useState('');
 
 	// Estado inicial alineado con ProductCreateRequest del Backend
 	const [productData, setProductData] = useState({
@@ -51,6 +54,41 @@ const ProductCreation = ({isModal = false, onClose}) => {
 		};
 		fetchTypes();
 	}, []);
+
+	const handleAiFill = async () => {
+		if (!aiDescription.trim()) return;
+		setAiLoading(true);
+		setAiError('');
+		try {
+			const token = user?.token || localStorage.getItem('token');
+			const res = await axios.post(
+				`${BASE_URL}/api/ai/parse-order`,
+				{description: aiDescription},
+				{headers: {Authorization: `Bearer ${token}`}},
+			);
+			const fields = res.data;
+			if (!fields || Object.keys(fields).length === 0) {
+				setAiError('No se pudieron extraer datos. Intenta con más detalles.');
+				return;
+			}
+			setProductData((prev) => {
+				const updated = {...prev};
+				Object.entries(fields).forEach(([k, v]) => {
+					if (v !== null && v !== undefined) {
+						const cur = prev[k];
+						if (cur === '' || cur === 0 || cur == null) {
+							updated[k] = v;
+						}
+					}
+				});
+				return updated;
+			});
+		} catch {
+			setAiError('Error al contactar la IA. Intenta de nuevo.');
+		} finally {
+			setAiLoading(false);
+		}
+	};
 
 	const handleInputChange = (e) => {
 		const {name, value} = e.target;
@@ -132,6 +170,31 @@ const ProductCreation = ({isModal = false, onClose}) => {
 			</div>
 
 			<form onSubmit={handleSubmit} className='creation-form'>
+				{/* AI AUTOFILL */}
+				<details style={{marginBottom: '16px', border: '1px solid #dfe6e9', borderRadius: '8px', padding: '12px 16px'}}>
+					<summary style={{cursor: 'pointer', fontWeight: '600', color: '#6c5ce7', fontSize: '0.9rem'}}>
+						Completar con IA
+					</summary>
+					<div style={{marginTop: '12px'}}>
+						<textarea
+							value={aiDescription}
+							onChange={(e) => setAiDescription(e.target.value)}
+							rows={3}
+							placeholder='Ej: Mesa de roble 180x90, precio 450000, seña 100000, para el 15 de abril'
+							style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #dfe6e9', resize: 'vertical', fontSize: '0.875rem', boxSizing: 'border-box'}}
+						/>
+						{aiError && <p style={{color: '#e74c3c', fontSize: '0.8rem', margin: '4px 0'}}>{aiError}</p>}
+						<button
+							type='button'
+							onClick={handleAiFill}
+							disabled={aiLoading || !aiDescription.trim()}
+							style={{marginTop: '8px', padding: '8px 16px', background: '#6c5ce7', color: 'white', border: 'none', borderRadius: '6px', cursor: aiLoading ? 'not-allowed' : 'pointer', opacity: aiLoading ? 0.7 : 1, fontSize: '0.875rem'}}
+						>
+							{aiLoading ? 'Completando...' : 'Completar campos'}
+						</button>
+					</div>
+				</details>
+
 				{/* FILA 1: Título y Tipo */}
 				<div className='input-row'>
 					<div className='input-group'>

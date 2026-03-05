@@ -14,6 +14,7 @@ import Sidebar from './components/sidebar';
 import ProtectedRoute from './components/protectedRoute';
 import AdminRoute from './AdminRoute';
 import RoleRoute from './RoleRoute';
+import AiChatPanel from './components/AiChatPanel';
 import './css/styles.css';
 
 // --- LAZY LOADED VIEWS ---
@@ -41,6 +42,7 @@ function App() {
 	return (
 		<OrdersProvider>
 			<Router>
+				<AiChatPanel />
 				<Suspense fallback={<Loader />}>
 					<Routes>
 						{/* Public Routes */}

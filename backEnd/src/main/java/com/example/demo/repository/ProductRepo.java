@@ -66,7 +66,26 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
    List<Product> findByWorkOrderStatus(Status status);
 
-
+   @Query("""
+           SELECT p FROM Product p LEFT JOIN p.workOrder wo
+           WHERE (:titulo IS NULL OR LOWER(p.titulo) LIKE LOWER(CONCAT('%', :titulo, '%')))
+           AND (:productType IS NULL OR p.productType = :productType)
+           AND (:material IS NULL OR LOWER(p.material) LIKE LOWER(CONCAT('%', :material, '%')))
+           AND (:color IS NULL OR LOWER(p.color) LIKE LOWER(CONCAT('%', :color, '%')))
+           AND (:workOrderStatus IS NULL OR wo.status = :workOrderStatus)
+           AND (:from IS NULL OR p.startDate >= :from)
+           AND (:to IS NULL OR p.startDate <= :to)
+           """)
+   Page<Product> filterProducts(
+           @Param("titulo") String titulo,
+           @Param("productType") ProductType productType,
+           @Param("material") String material,
+           @Param("color") String color,
+           @Param("workOrderStatus") Status workOrderStatus,
+           @Param("from") LocalDate from,
+           @Param("to") LocalDate to,
+           Pageable pageable
+   );
 
 }
 

@@ -10,8 +10,30 @@ export default function Finance() {
 	const {user} = useContext(UserContext);
 	const [financeData, setFinanceData] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [aiInsight, setAiInsight] = useState('');
+	const [aiLoading, setAiLoading] = useState(false);
 
 	const isSeller = user?.role === 'SELLER';
+
+	const handleAnalyze = async () => {
+		setAiLoading(true);
+		setAiInsight('');
+		try {
+			const [year, month] = selectedMonth.split('-');
+			const from = `${year}-${month}-01`;
+			const to = new Date(year, month, 0).toISOString().split('T')[0];
+			const res = await axios.post(
+				`${BASE_URL}/api/ai/finance-insight`,
+				{from, to},
+				{headers: {Authorization: `Bearer ${user?.token}`}},
+			);
+			setAiInsight(res.data.insight);
+		} catch {
+			setAiInsight('Error al generar análisis. Verifique la configuración de la API.');
+		} finally {
+			setAiLoading(false);
+		}
+	};
 
 	// Default to the current month
 	const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -179,7 +201,47 @@ export default function Finance() {
 				/>
 			</div>
 
-			{/* 3. Charts Section */}
+			{/* AI Insight Card */}
+		<div
+			style={{
+				background: 'white',
+				borderLeft: '6px solid #6c5ce7',
+				borderRadius: '12px',
+				padding: '20px 25px',
+				marginBottom: '30px',
+				boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+			}}
+		>
+			<div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+				<h3 style={{margin: 0, color: '#2d3436', fontSize: '1rem'}}>Análisis IA</h3>
+				<button
+					onClick={handleAnalyze}
+					disabled={aiLoading}
+					style={{
+						padding: '8px 18px',
+						background: '#6c5ce7',
+						color: 'white',
+						border: 'none',
+						borderRadius: '8px',
+						cursor: aiLoading ? 'not-allowed' : 'pointer',
+						opacity: aiLoading ? 0.7 : 1,
+						fontSize: '0.875rem',
+						fontWeight: '600',
+					}}
+				>
+					{aiLoading ? 'Analizando...' : 'Analizar'}
+				</button>
+			</div>
+			{aiInsight ? (
+				<p style={{margin: 0, color: '#636e72', lineHeight: '1.6', fontSize: '0.95rem'}}>{aiInsight}</p>
+			) : (
+				<p style={{margin: 0, color: '#b2bec3', fontSize: '0.875rem'}}>
+					Haz clic en "Analizar" para obtener un resumen inteligente del mes.
+				</p>
+			)}
+		</div>
+
+		{/* 3. Charts Section */}
 			<div
 				style={{
 					display: 'grid',

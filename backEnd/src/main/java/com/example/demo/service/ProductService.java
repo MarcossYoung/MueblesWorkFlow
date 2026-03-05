@@ -228,7 +228,34 @@ public class ProductService {
         List<Product> products = productRepo.findByWorkOrderStatus(Status.TERMINADO);
 
         return products.stream()
-                .map(ProductResponse::from) // Use your static 'from' method
+                .map(ProductResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    public Page<ProductResponse> searchWithFilters(
+            String titulo, String productTypeStr, String material, String color,
+            String workOrderStatusStr, String from, String to, Pageable pageable) {
+
+        ProductType productType = null;
+        if (productTypeStr != null && !productTypeStr.isBlank()) {
+            try { productType = ProductType.valueOf(productTypeStr.toUpperCase()); } catch (Exception ignored) {}
+        }
+
+        Status workOrderStatus = null;
+        if (workOrderStatusStr != null && !workOrderStatusStr.isBlank()) {
+            try { workOrderStatus = Status.valueOf(workOrderStatusStr.toUpperCase()); } catch (Exception ignored) {}
+        }
+
+        LocalDate fromDate = (from != null && !from.isBlank()) ? LocalDate.parse(from) : null;
+        LocalDate toDate = (to != null && !to.isBlank()) ? LocalDate.parse(to) : null;
+
+        String tituloParam = (titulo != null && !titulo.isBlank()) ? titulo : null;
+        String materialParam = (material != null && !material.isBlank()) ? material : null;
+        String colorParam = (color != null && !color.isBlank()) ? color : null;
+
+        return productRepo.filterProducts(
+                tituloParam, productType, materialParam, colorParam,
+                workOrderStatus, fromDate, toDate, pageable
+        ).map(ProductResponse::from);
     }
 }
