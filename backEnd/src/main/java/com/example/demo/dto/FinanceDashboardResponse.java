@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-
-// FinanceDashboardResponse.java
 public record FinanceDashboardResponse(
         LocalDate from,
         LocalDate to,
@@ -14,7 +12,9 @@ public record FinanceDashboardResponse(
         BigDecimal tDep,
         BigDecimal tExp,
         BigDecimal tRev,
-        List<Map<String,Object>> expenseBreakdown, // Pie Chart
-        List<Map<String,Object>> userStats         // Bar Chart (The critical fix)
-
+        List<Map<String,Object>> expenseBreakdown,
+        List<Map<String,Object>> userStats,
+        BigDecimal tCogs,
+        BigDecimal grossProfit,
+        BigDecimal netProfit
 ) {}

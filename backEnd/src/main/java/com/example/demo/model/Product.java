@@ -1,6 +1,5 @@
 package com.example.demo.model;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,9 +12,11 @@ import java.util.List;
 @Setter
 @Getter
 @Entity
-
-    @Table(name = "products")
-    public class Product {
+@Table(name = "products", indexes = {
+    @Index(columnList = "startdate"),
+    @Index(columnList = "type")
+})
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,23 +25,23 @@ import java.util.List;
     @Column(name = "titulo")
     private String titulo;
 
-    @Enumerated(EnumType.STRING )
-    @Column(name="type")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
     private ProductType productType;
 
     @Column(name = "medidas")
     private String medidas;
 
-    @Column(name="material")
+    @Column(name = "material")
     private String material;
 
-    @Column(name="pintura")
+    @Column(name = "pintura")
     private String pintura;
 
-    @Column(name="color")
+    @Column(name = "color")
     private String color;
 
-    @Column(name="laqueado")
+    @Column(name = "laqueado")
     private String laqueado;
 
     @Column(name = "cantidad")
@@ -64,6 +65,8 @@ import java.util.List;
     @Column(name = "precio", nullable = false, precision = 12, scale = 2)
     private BigDecimal precio;
 
+    @Column(name = "cogs_amount", precision = 12, scale = 2)
+    private BigDecimal cogsAmount;
 
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -73,19 +76,19 @@ import java.util.List;
     @JsonIgnore
     private List<OrderPayments> orderPayments;
 
-    @ManyToOne( fetch = FetchType.LAZY)
-    @JoinColumn(name = "ownerid",referencedColumnName = "id")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<ProductMaterial> materials;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ownerid", referencedColumnName = "id")
     @JsonIgnore
     private AppUser owner;
 
-    @Column(name="pagostatus")
+    @Column(name = "pagostatus")
     @Enumerated(EnumType.STRING)
     private PaymentStatus pagoStatus;
 
     @Column(name = "client_email")
     private String clientEmail;
-
-
-
-
 }

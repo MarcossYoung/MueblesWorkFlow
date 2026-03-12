@@ -4,7 +4,7 @@ import com.example.demo.model.Product;
 import com.example.demo.model.Status;
 import com.example.demo.model.WorkOrder;
 import com.example.demo.repository.WorkOrderRepo;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,8 +16,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class WorkOrderService {
-    @Autowired
-    private WorkOrderRepo workOrderRepository;
+
+    private final WorkOrderRepo workOrderRepository;
+    private final InventoryService inventoryService;
+    private final ProductMaterialService productMaterialService;
+
+    public WorkOrderService(WorkOrderRepo workOrderRepository,
+                             @Lazy InventoryService inventoryService,
+                             @Lazy ProductMaterialService productMaterialService) {
+        this.workOrderRepository = workOrderRepository;
+        this.inventoryService = inventoryService;
+        this.productMaterialService = productMaterialService;
+    }
 
     public WorkOrder createForProduct(Product product) {
         WorkOrder order = new WorkOrder();
@@ -30,8 +40,17 @@ public class WorkOrderService {
                 .orElseThrow(() -> new RuntimeException("WorkOrder not found"));
         workOrder.setStatus(status);
         workOrder.setUpdateAt(LocalDateTime.now());
-        return workOrderRepository.save(workOrder);
+        WorkOrder saved = workOrderRepository.save(workOrder);
+
+        if (status == Status.TERMINADO) {
+            Long productId = workOrder.getProduct().getId();
+            inventoryService.deductMaterialsForProduct(productId);
+            productMaterialService.syncCogsToProduct(productId);
+        }
+
+        return saved;
     }
+
     public List<WorkOrder> getAll() {
         return workOrderRepository.findAll();
     }
@@ -41,22 +60,20 @@ public class WorkOrderService {
                 .orElseThrow(() -> new RuntimeException("WorkOrder not found for product ID " + productId));
     }
 
-    public long countByType(Status type){
+    public long countByType(Status type) {
         return workOrderRepository.findByStatus(type).size();
     }
 
     public long countDueBetween(LocalDate today, LocalDate endOfWeek) {
-        return workOrderRepository.countFechaEntrega(today,endOfWeek);
+        return workOrderRepository.countFechaEntrega(today, endOfWeek);
     }
 
     public List<WorkOrder> getLateProducts() {
-        return  workOrderRepository.findByStatus(Status.ATRASADO);
+        return workOrderRepository.findByStatus(Status.ATRASADO);
     }
-
 
     public Map<String, Long> countOrdersByStatus() {
         return workOrderRepository.findAll().stream()
                 .collect(Collectors.groupingBy(w -> w.getStatus().name(), Collectors.counting()));
     }
-
 }

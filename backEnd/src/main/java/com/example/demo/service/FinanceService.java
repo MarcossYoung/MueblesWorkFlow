@@ -6,7 +6,6 @@ import com.example.demo.model.Costs;
 import com.example.demo.repository.CostRepo;
 import com.example.demo.repository.PaymentRepo;
 import com.example.demo.repository.ProductRepo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,11 +15,10 @@ import java.util.stream.Collectors;
 
 @Service
 public class FinanceService {
-    @Autowired
+
     private final ProductRepo productRepository;
     private final PaymentRepo paymentRepository;
     private final CostRepo costsRepository;
-
 
     public FinanceService(ProductRepo productRepository, PaymentRepo paymentRepository, CostRepo costsRepository) {
         this.productRepository = productRepository;
@@ -29,14 +27,11 @@ public class FinanceService {
     }
 
     public FinanceDashboardResponse dashboard(LocalDate from, LocalDate to) {
-        // 1) Fetch base data
         List<MonthlyAmountRow> incomeRows = safe(productRepository.incomeByMonth(from, to));
-        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.cashFlowByMonth(from, to)); // Fixed variable name to match use below
+        List<MonthlyAmountRow> cashFlowRows = safe(paymentRepository.cashFlowByMonth(from, to));
         List<MonthlyAmountRow> expenseRows = safe(costsRepository.expensesByDate(from, to));
 
-        // 2) Fetch Expense Breakdown (Pie Chart Data)
         List<Costs> allCosts = costsRepository.findByDateBetween(from, to);
-
         Map<String, BigDecimal> breakdownMap = allCosts.stream()
                 .filter(c -> c.getCostType() != null)
                 .collect(Collectors.groupingBy(
@@ -52,43 +47,40 @@ public class FinanceService {
             expenseBreakdown.add(item);
         });
 
-        // 3) NEW: Fetch User Stats (Bar Chart Data)
-        // This was MISSING in your previous service code
         List<Map<String, Object>> userStats = getMonthlyUserStats(from, to);
 
-        // KPIs
         BigDecimal tInc = sumValues(incomeRows);
         BigDecimal tExp = sumValues(expenseRows);
-        // Using cashflowTotal based on your previous code snippet
         BigDecimal tDep = sumValues(cashFlowRows);
+        BigDecimal tCogs = nz(productRepository.cogsByDateRange(from, to));
+        BigDecimal grossProfit = tInc.subtract(tCogs);
+        BigDecimal netProfit = grossProfit.subtract(tExp);
 
-        // 4) Return the Response matching your DTO order:
-        // (from, to, income, deposits, spend, profit, expenseBreakdown, userStats)
         return new FinanceDashboardResponse(
                 from,
                 to,
                 tInc,
                 tDep,
                 tExp,
-                tInc.subtract(tExp),
-                expenseBreakdown, // Pie Chart
-                userStats         // Bar Chart (The critical fix)
+                tInc.subtract(tExp),  // tRev kept for backward compat
+                expenseBreakdown,
+                userStats,
+                tCogs,
+                grossProfit,
+                netProfit
         );
     }
 
-    // Helper: Update this to accept arguments
     public List<Map<String, Object>> getMonthlyUserStats(LocalDate from, LocalDate to) {
         return productRepository.getUserPerformanceData(from, to);
     }
 
-    // ... Keep your existing private helpers (nz, safe, sumValues, etc.) ...
     private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
     private List<MonthlyAmountRow> safe(List<MonthlyAmountRow> rows) { return rows == null ? List.of() : rows; }
 
     private static BigDecimal sumValues(List<MonthlyAmountRow> rows) {
         BigDecimal total = BigDecimal.ZERO;
         for (MonthlyAmountRow r : rows) {
-            // Assuming your interface uses getTotal()
             total = total.add(nz(r.getTotal()));
         }
         return total;

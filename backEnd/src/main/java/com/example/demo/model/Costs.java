@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 
-@Table(name = "costos")
+@Table(name = "costos", indexes = {@Index(columnList = "fecha")})
 public class Costs {
 
     @Id

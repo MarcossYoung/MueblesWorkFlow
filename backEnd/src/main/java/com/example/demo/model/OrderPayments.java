@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Setter
 @Entity
 
-    @Table(name= "pagos")
+    @Table(name = "pagos", indexes = {@Index(columnList = "fecha")})
     public class OrderPayments {
 
     @Id

@@ -166,39 +166,20 @@ export default function Finance() {
 				/>
 			</div>
 
-			{/* 2. KPI Cards (Using FinanceDashboardResponse fields) */}
-			<div
-				style={{
-					display: 'grid',
-					gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-					gap: '20px',
-					marginBottom: '30px',
-				}}
-			>
-				<StatCard
-					title='Ingresos Totales'
-					value={financeData.tInc}
-					icon='💰'
-					borderColor='#00b894'
-				/>
-				<StatCard
-					title='Gastos del Mes'
-					value={financeData.tExp}
-					icon='💸'
-					borderColor='#ff7675'
-				/>
-				<StatCard
-					title='Efectivo'
-					value={financeData.tDep}
-					icon='📥'
-					borderColor='#0984e3'
-				/>
-				<StatCard
-					title='Ganancia Neta'
-					value={financeData.tRev}
-					icon='📊'
-					borderColor='#6c5ce7'
-				/>
+			{/* 2. KPI Cards — Two-step profit */}
+			<div style={{ marginBottom: '30px' }}>
+				{/* Row 1: Ingresos - COGS = Ganancia Bruta */}
+				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '16px' }}>
+					<StatCard title='Ingresos Totales' value={financeData.tInc} icon='💰' borderColor='#00b894' />
+					<StatCard title='COGS (Entregados)' value={financeData.tCogs} icon='🏭' borderColor='#fdcb6e' />
+					<StatCard title='Ganancia Bruta' value={financeData.grossProfit} icon='📈' borderColor='#0984e3' />
+				</div>
+				{/* Row 2: Ganancia Bruta - Gastos = Ganancia Neta */}
+				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+					<StatCard title='Gastos Operativos' value={financeData.tExp} icon='💸' borderColor='#ff7675' />
+					<StatCard title='Efectivo Recibido' value={financeData.tDep} icon='📥' borderColor='#636e72' />
+					<StatCard title='Ganancia Neta' value={financeData.netProfit} icon='📊' borderColor='#6c5ce7' />
+				</div>
 			</div>
 
 			{/* AI Insight Card */}

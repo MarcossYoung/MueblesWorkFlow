@@ -33,11 +33,14 @@ export default function Sidebar() {
 						</NavLink>
 					</div>
 				)}
+				{(isAdmin || isSeller) && (
+					<div>
+						<NavLink to='/inventory' className={linkClass}>
+							Inventario
+						</NavLink>
+					</div>
+				)}
 			</div>
-
-			{/*<NavLink to='/inventory' className={linkClass}>
-				Inventario
-				</NavLink>*/}
 
 			{isAdmin && (
 				<NavLink className={linkClass} to='/admin'>
@@ -50,5 +53,5 @@ export default function Sidebar() {
 			</div>
 		</aside>
 	);
-	
+
 }

@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,15 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
 
    List<Product> findByWorkOrderStatus(Status status);
+
+   @Query(value = """
+    SELECT COALESCE(SUM(p.cogs_amount), 0)
+    FROM products p
+    JOIN work_orders wo ON wo.product_id = p.id
+    WHERE wo.status = 'ENTREGADO'
+    AND p.startdate BETWEEN :from AND :to
+    """, nativeQuery = true)
+   BigDecimal cogsByDateRange(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
    @Query("""
            SELECT p FROM Product p LEFT JOIN p.workOrder wo

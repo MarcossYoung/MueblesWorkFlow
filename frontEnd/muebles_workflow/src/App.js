@@ -31,6 +31,7 @@ const OrdersNotPickedUp = lazy(() => import('./views/ordersNotPickedUp'));
 const OrdersPastDue = lazy(() => import('./views/ordersPastDue'));
 const Finances = lazy(() => import('./views/finances'));
 const CostsManager = lazy(() => import('./views/CostsManager'));
+const InventoryView = lazy(() => import('./views/inventoryView'));
 
 // Simple Loading Spinner Component
 
@@ -145,6 +146,20 @@ function App() {
 									<Sidebar />
 									<div className='main-content'>
 										<CostsManager />
+									</div>
+								</RoleRoute>
+							}
+						/>
+						<Route
+							path='/inventory'
+							element={
+								<RoleRoute
+									user={user}
+									allowedRoles={['ADMIN', 'SELLER']}
+								>
+									<Sidebar />
+									<div className='main-content'>
+										<InventoryView />
 									</div>
 								</RoleRoute>
 							}

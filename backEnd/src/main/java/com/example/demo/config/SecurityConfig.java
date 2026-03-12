@@ -64,9 +64,14 @@ public class SecurityConfig {
 
                         // Existing public paths
                         .requestMatchers("/api/users/registro", "/api/users/login").permitAll()
-                        .requestMatchers("/api/products", "/api/products/**", "/api/products/filter").permitAll()
                         .requestMatchers("/api/payments", "/api/payments/**").permitAll()
                         .requestMatchers("/api/workorders", "/api/workorders/**").permitAll()
+
+                        // Product sub-routes that require auth (must come before the products permitAll catch-all)
+                        .requestMatchers("/api/products/*/materials", "/api/products/*/materials/**", "/api/products/*/cogs").hasAnyAuthority("ADMIN", "SELLER")
+
+                        // Public product routes
+                        .requestMatchers("/api/products", "/api/products/**", "/api/products/filter").permitAll()
 
                         // Existing restricted paths
                         .requestMatchers("/error").permitAll()
@@ -74,6 +79,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/costs/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/finance", "/api/finance/**").hasAnyAuthority("ADMIN", "SELLER")
                         .requestMatchers("/api/ai/**").hasAnyAuthority("ADMIN", "SELLER")
+                        .requestMatchers(HttpMethod.GET, "/api/inventory", "/api/inventory/**").hasAnyAuthority("ADMIN", "SELLER")
+                        .requestMatchers(HttpMethod.POST, "/api/inventory", "/api/inventory/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/inventory/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/inventory/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
 
                         // Ensure all other paths are secured (Fixing the previous issue I pointed out)
@@ -93,7 +102,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("http://localhost:3000","https://mueblesworkflow.netlify.app", "https://*--mueblesworkflow.netlify.app"));
+        config.setAllowedOriginPatterns(List.of("**localhost:3000","https://mueblesworkflow.netlify.app", "https://*--mueblesworkflow.netlify.app"));
 
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ProductCreateRequest;
+import com.example.demo.dto.ProductMaterialRequest;
+import com.example.demo.dto.ProductMaterialResponse;
 import com.example.demo.dto.ProductResponse;
 import com.example.demo.dto.ProductUpdateDto;
 import com.example.demo.exceptions.ResourceNotFoundException;
@@ -8,6 +10,7 @@ import com.example.demo.model.Product;
 import com.example.demo.model.ProductType;
 import com.example.demo.service.AppUserService;
 import com.example.demo.service.FileStorageService;
+import com.example.demo.service.ProductMaterialService;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.WorkOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,9 @@ public class ProductController {
 
     @Autowired
     private WorkOrderService workOrderService;
+
+    @Autowired
+    private ProductMaterialService productMaterialService;
 
 
     @GetMapping
@@ -175,6 +182,41 @@ public class ProductController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
         return ResponseEntity.ok(productService.searchWithFilters(
                 titulo, productType, material, color, workOrderStatus, from, to, pageable));
+    }
+
+    @GetMapping("/{id}/materials")
+    public ResponseEntity<List<ProductMaterialResponse>> getMaterials(@PathVariable Long id) {
+        return ResponseEntity.ok(productMaterialService.getMaterialsForProduct(id));
+    }
+
+    @PostMapping("/{id}/materials")
+    public ResponseEntity<ProductMaterialResponse> addMaterial(
+            @PathVariable Long id,
+            @RequestBody ProductMaterialRequest req
+    ) {
+        return ResponseEntity.ok(productMaterialService.addMaterial(id, req));
+    }
+
+    @DeleteMapping("/{id}/materials/{materialId}")
+    public ResponseEntity<Void> removeMaterial(
+            @PathVariable Long id,
+            @PathVariable Long materialId
+    ) {
+        productMaterialService.removeMaterial(id, materialId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/cogs")
+    public ResponseEntity<Map<String, Object>> getCogs(@PathVariable Long id) {
+        BigDecimal calculated = productMaterialService.calculateCogs(id);
+        ProductResponse product = productService.getById(id);
+        BigDecimal manual = product.cogsAmount();
+        BigDecimal effective = (manual != null && manual.compareTo(BigDecimal.ZERO) > 0) ? manual : calculated;
+        return ResponseEntity.ok(Map.of(
+                "calculated", calculated,
+                "manual", manual != null ? manual : BigDecimal.ZERO,
+                "effective", effective
+        ));
     }
 
 }
