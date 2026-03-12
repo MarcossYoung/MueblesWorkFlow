@@ -207,7 +207,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}/cogs")
-    public ResponseEntity<Map<String, Object>> getCogs(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getCogs(@PathVariable Long id) throws ResourceNotFoundException {
         BigDecimal calculated = productMaterialService.calculateCogs(id);
         ProductResponse product = productService.getById(id);
         BigDecimal manual = product.cogsAmount();
