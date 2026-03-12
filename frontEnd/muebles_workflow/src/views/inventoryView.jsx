@@ -43,7 +43,7 @@ export default function InventoryView() {
         }
     };
 
-    useEffect(() => { load(); }, [page, search]);
+    useEffect(() => { load(); }, [page, search]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const openCreate = () => {
         setEditItem(null);
