@@ -126,7 +126,7 @@ const ProductDetail = () => {
 			}
 		};
 		loadData();
-	}, [productId]);
+	}, [productId, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// --- HANDLERS ---
 	const handleChange = (e) => {
