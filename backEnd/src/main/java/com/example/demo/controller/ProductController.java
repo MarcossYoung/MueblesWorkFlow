@@ -206,6 +206,12 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/cogs/sync")
+    public ResponseEntity<ProductResponse> syncCogs(@PathVariable Long id) throws ResourceNotFoundException {
+        productMaterialService.syncCogsToProduct(id);
+        return ResponseEntity.ok(productService.getById(id));
+    }
+
     @GetMapping("/{id}/cogs")
     public ResponseEntity<Map<String, Object>> getCogs(@PathVariable Long id) throws ResourceNotFoundException {
         BigDecimal calculated = productMaterialService.calculateCogs(id);

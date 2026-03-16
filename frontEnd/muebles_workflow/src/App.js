@@ -32,6 +32,7 @@ const OrdersPastDue = lazy(() => import('./views/ordersPastDue'));
 const Finances = lazy(() => import('./views/finances'));
 const CostsManager = lazy(() => import('./views/CostsManager'));
 const InventoryView = lazy(() => import('./views/inventoryView'));
+const PrivacyPolicy = lazy(() => import('./views/PrivacyPolicy'));
 
 // Simple Loading Spinner Component
 
@@ -47,6 +48,7 @@ function App() {
 				<Suspense fallback={<Loader />}>
 					<Routes>
 						{/* Public Routes */}
+						<Route path='/privacy-policy' element={<PrivacyPolicy />} />
 						<Route
 							path='/login'
 							element={<Login setUser={setUser} />}

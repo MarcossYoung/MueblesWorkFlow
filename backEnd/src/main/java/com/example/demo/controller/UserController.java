@@ -1,17 +1,15 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.UserSummaryDto;
 import com.example.demo.exceptions.UserAlreadyExistsException;
 import com.example.demo.model.AppUser;
-import com.example.demo.repository.UserRepo;
 import com.example.demo.service.AppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,18 +19,11 @@ public class UserController {
 
     @Autowired
     private AppUserService appUserService;
-    @Autowired
-    private UserRepo userRepo;
 
 
     @GetMapping
-    public ResponseEntity<Page<AppUser>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ){
-        Pageable pageable = PageRequest.of(page, size);
-        Page<AppUser> users = userRepo.findAll(pageable);
-        return ResponseEntity.ok(users);
+    public ResponseEntity<List<UserSummaryDto>> getAllUsers() {
+        return ResponseEntity.ok(appUserService.getAllUsers());
     }
 
     @PostMapping("/registro")

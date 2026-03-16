@@ -8,15 +8,18 @@ import com.example.demo.model.*;
 import com.example.demo.repository.PaymentRepo;
 import com.example.demo.repository.ProductRepo;
 import com.example.demo.repository.WorkOrderRepo;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,15 +29,27 @@ public class ProductService {
     private final WorkOrderRepo workOrderRepo;
     private final AppUserService userService;
     private final PaymentRepo orderPaymentsRepo;
+    private final InventoryService inventoryService;
+    private final ProductTypeTemplateService templateService;
+    private final RestTemplate restTemplate;
+
+    @Value("${n8n.webhook.product-created:}")
+    private String n8nWebhookUrl;
 
     public ProductService(ProductRepo productRepo,
                           WorkOrderRepo workOrderRepo,
                           AppUserService userService,
-                          PaymentRepo orderPaymentsRepo) {
+                          PaymentRepo orderPaymentsRepo,
+                          InventoryService inventoryService,
+                          ProductTypeTemplateService templateService,
+                          RestTemplate restTemplate) {
         this.productRepo = productRepo;
         this.workOrderRepo = workOrderRepo;
         this.userService = userService;
         this.orderPaymentsRepo = orderPaymentsRepo;
+        this.inventoryService = inventoryService;
+        this.templateService = templateService;
+        this.restTemplate = restTemplate;
     }
 
     // ---------------- CREATE ----------------
@@ -50,7 +65,6 @@ public class ProductService {
         p.setColor(req.color());
         p.setLaqueado(req.laqueado());
         p.setCantidad(req.cantidad() != null ? req.cantidad() : 0L);
-        // if you’re using precio in Product, set it here:
         p.setPrecio(req.precio());
         p.setStartDate(LocalDate.now());
         p.setFechaEntrega(req.fechaEntrega());
@@ -60,7 +74,7 @@ public class ProductService {
         AppUser owner = userService.getCurrentUser();
         if (owner == null) owner = userService.getFirstUser();
         p.setOwner(owner);
-        p.setClientEmail(req.clientEmail());
+        p.setClientPhone(req.clientPhone());
 
         Product saved = productRepo.save(p);
 
@@ -70,28 +84,48 @@ public class ProductService {
         wo.setStatus(Status.CREADO);
         wo.setUpdateAt(LocalDateTime.now());
 
-        workOrderRepo.save(wo); // Save the WorkOrder
+        workOrderRepo.save(wo);
 
         saved.setWorkOrder(wo);
+
+        // Apply material templates for the product type
+        templateService.applyTemplatesToProduct(saved);
 
         // ----- CREATE PAYMENT: DEPOSIT -----
         if (req.amount() != null) {
             OrderPayments deposit = new OrderPayments();
             deposit.setProduct(saved);
-            deposit.setPaymentType(PaymentType.DEPOSIT);
+            deposit.setPaymentType("DEPOSIT");
             deposit.setAmount(req.amount());
 
             LocalDate depositDate =
                     (req.startDate() != null) ? req.startDate() : LocalDate.now();
             deposit.setPaymentDate(depositDate);
 
-            // you can set pagoStatus if you want an initial value:
-            // deposit.setPagoStatus(PaymentStatus.PAID); or PENDING
-
             orderPaymentsRepo.save(deposit);
         }
 
+        // Fire N8N webhook (non-blocking, best-effort)
+        fireN8nWebhook(saved);
+
         return ProductResponse.from(saved);
+    }
+
+    private void fireN8nWebhook(Product p) {
+        if (n8nWebhookUrl == null || n8nWebhookUrl.isBlank()) return;
+        try {
+            Map<String, Object> payload = Map.of(
+                "productId", p.getId(),
+                "titulo", p.getTitulo() != null ? p.getTitulo() : "",
+                "clientPhone", p.getClientPhone() != null ? p.getClientPhone() : "",
+                "precio", p.getPrecio(),
+                "startDate", p.getStartDate().toString(),
+                "fechaEstimada", p.getFechaEstimada() != null ? p.getFechaEstimada().toString() : ""
+            );
+            restTemplate.postForObject(n8nWebhookUrl, payload, String.class);
+        } catch (Exception e) {
+            // log but don't fail product creation
+        }
     }
 
     // ---------------- READ (unchanged) ----------------
@@ -122,15 +156,12 @@ public class ProductService {
         Product saved = productRepo.save(product);
 
         // ----- CREATE PAYMENT: RESTO -----
-        // For updates, dto.deposit = remainder
         if (dto.getAmount() != null) {
             OrderPayments pago = new OrderPayments();
             pago.setProduct(saved);
             pago.setPaymentType(dto.getPaymentType());
             pago.setAmount(dto.getAmount());
-            pago.setPaymentDate(LocalDate.now()); // or saved.getFechaEntrega()
-
-            // resto.setPagoStatus(PaymentStatus.PAID);
+            pago.setPaymentDate(LocalDate.now());
 
             orderPaymentsRepo.save(pago);
         }
@@ -150,6 +181,8 @@ public class ProductService {
         if (dto.getFoto() != null) product.setFoto(dto.getFoto());
         if (dto.getCantidad() != null) product.setCantidad(dto.getCantidad());
         if (dto.getPrecio() != null) product.setPrecio(dto.getPrecio());
+        if (dto.getClientPhone() != null) product.setClientPhone(dto.getClientPhone());
+        if (dto.getCogsAmount() != null) product.setCogsAmount(dto.getCogsAmount());
 
         if (dto.getFechaEstimada() != null && !dto.getFechaEstimada().isBlank()) {
             product.setFechaEstimada(LocalDate.parse(dto.getFechaEstimada()));
@@ -158,10 +191,21 @@ public class ProductService {
             product.setFechaEntrega(LocalDate.parse(dto.getFechaEntrega()));
         }
 
+        if (dto.getAssignedUserId() != null) {
+            AppUser newOwner = userService.getUserById(dto.getAssignedUserId());
+            if (newOwner != null) product.setOwner(newOwner);
+        }
+
         WorkOrder wo = product.getWorkOrder();
         if (wo != null) {
+            Status prev = wo.getStatus();
             if (dto.getWorkOrderStatus() != null) wo.setStatus(dto.getWorkOrderStatus());
             wo.setUpdateAt(LocalDateTime.now());
+
+            if (Status.ENTREGADO.equals(dto.getWorkOrderStatus())
+                    && !Status.ENTREGADO.equals(prev)) {
+                inventoryService.deductMaterialsForProduct(product.getId());
+            }
         }
     }
 
@@ -190,12 +234,10 @@ public class ProductService {
         LocalDate today = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
         LocalDate endOfWeek = today.plusDays(7);
 
-        // 1. Get the List<Product> from the Repo
         List<Product> products = productRepo.findByFechaEstimadaBetween(today, endOfWeek);
 
-        // 2. Convert each Product -> ProductResponse one by one
         return products.stream()
-                .map(ProductResponse::from) // Use your static 'from' method
+                .map(ProductResponse::from)
                 .collect(Collectors.toList());
     }
 
@@ -218,9 +260,8 @@ public class ProductService {
 
         List<Product> products = productRepo.findByWorkOrderStatus(Status.ATRASADO);
 
-        // 2. Convert each Product -> ProductResponse one by one
         return products.stream()
-                .map(ProductResponse::from) // Use your static 'from' method
+                .map(ProductResponse::from)
                 .collect(Collectors.toList());
 
     }

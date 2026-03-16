@@ -68,7 +68,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/workorders", "/api/workorders/**").permitAll()
 
                         // Product sub-routes that require auth (must come before the products permitAll catch-all)
-                        .requestMatchers("/api/products/*/materials", "/api/products/*/materials/**", "/api/products/*/cogs").hasAnyAuthority("ADMIN", "SELLER")
+                        .requestMatchers("/api/products/*/materials", "/api/products/*/materials/**", "/api/products/*/cogs", "/api/products/*/cogs/sync").hasAnyAuthority("ADMIN", "SELLER")
 
                         // Public product routes
                         .requestMatchers("/api/products", "/api/products/**", "/api/products/filter").permitAll()
@@ -79,10 +79,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/costs/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/finance", "/api/finance/**").hasAnyAuthority("ADMIN", "SELLER")
                         .requestMatchers("/api/ai/**").hasAnyAuthority("ADMIN", "SELLER")
+                        .requestMatchers("/api/payment-options", "/api/payment-options/**").hasAnyAuthority("ADMIN", "SELLER")
                         .requestMatchers(HttpMethod.GET, "/api/inventory", "/api/inventory/**").hasAnyAuthority("ADMIN", "SELLER")
                         .requestMatchers(HttpMethod.POST, "/api/inventory", "/api/inventory/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/inventory/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/inventory/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ADMIN")
+                        .requestMatchers("/api/product-type-templates", "/api/product-type-templates/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
 
                         // Ensure all other paths are secured (Fixing the previous issue I pointed out)

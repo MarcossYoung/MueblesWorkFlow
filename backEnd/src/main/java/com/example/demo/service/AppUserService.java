@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.UserSummaryDto;
 import com.example.demo.exceptions.UserAlreadyExistsException;
 import com.example.demo.model.AppUser;
 import com.example.demo.model.AppUserRole;
@@ -136,5 +137,11 @@ public class AppUserService {
 
     public long countUsers() {
         return appUserRepository.count();
+    }
+
+    public List<UserSummaryDto> getAllUsers() {
+        return appUserRepository.findAll().stream()
+                .map(u -> new UserSummaryDto(u.getId(), u.getUsername(), u.getAppUserRole().name()))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

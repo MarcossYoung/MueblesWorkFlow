@@ -13,6 +13,10 @@ const ProductDetail = () => {
 	const [types, setTypes] = useState([]);
 	const [statuses, setStatuses] = useState([]);
 	const [payments, setPayments] = useState([]);
+	const [paymentTypes, setPaymentTypes] = useState([]);
+	const [paymentMethods, setPaymentMethods] = useState([]);
+	const [allUsers, setAllUsers] = useState([]);
+	const [cmvSyncing, setCmvSyncing] = useState(false);
 
 	// Feedback
 	const [successMsg, setSuccessMsg] = useState('');
@@ -36,6 +40,7 @@ const ProductDetail = () => {
 		workOrderStatus: '',
 		daysLate: 0,
 		foto: '',
+		clientPhone: '',
 	});
 
 	// New Payment State
@@ -48,6 +53,7 @@ const ProductDetail = () => {
 	const [uploadingReceipt, setUploadingReceipt] = useState(null); // paymentId being uploaded inline
 
 	// Permissions
+	const isAdmin = user?.role === 'ADMIN';
 	const canSeeFinancials = user?.role === 'ADMIN' || user?.role === 'SELLER';
 	const canRegisterPayments = user?.role === 'ADMIN' || user?.role === 'SELLER';
 
@@ -56,7 +62,9 @@ const ProductDetail = () => {
 		const loadData = async () => {
 			try {
 				// Load everything in parallel
-				const [prodRes, typesRes, statusRes, paymentsRes] =
+				const token = localStorage.getItem('token');
+				const authHeaders = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+				const [prodRes, typesRes, statusRes, paymentsRes, payTypesRes, payMethodsRes] =
 					await Promise.all([
 						axios.get(`${BASE_URL}/api/products/${productId}`),
 						axios.get(`${BASE_URL}/api/products/types`),
@@ -64,6 +72,12 @@ const ProductDetail = () => {
 						// Catch 404 on payments gracefully
 						axios
 							.get(`${BASE_URL}/api/payments/${productId}`)
+							.catch(() => ({data: []})),
+						axios
+							.get(`${BASE_URL}/api/payment-options?category=TYPE`, authHeaders)
+							.catch(() => ({data: []})),
+						axios
+							.get(`${BASE_URL}/api/payment-options?category=METHOD`, authHeaders)
 							.catch(() => ({data: []})),
 					]);
 
@@ -82,6 +96,18 @@ const ProductDetail = () => {
 
 				setTypes(typesRes.data);
 				setStatuses(statusRes.data);
+				setPaymentTypes(Array.isArray(payTypesRes.data) ? payTypesRes.data : []);
+				setPaymentMethods(Array.isArray(payMethodsRes.data) ? payMethodsRes.data : []);
+
+				// Load users if admin (for Responsable dropdown)
+				if (user?.role === 'ADMIN') {
+					try {
+						const usersRes = await axios.get(`${BASE_URL}/api/users`, authHeaders);
+						setAllUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
+					} catch {
+						// non-blocking
+					}
+				}
 
 				// Handle Payments (Array vs Object check)
 				const dataPagos = paymentsRes.data;
@@ -178,6 +204,25 @@ const ProductDetail = () => {
 			setTimeout(() => setSuccessMsg(''), 3000);
 		} catch {
 			setErrorMsg('Error al subir la foto');
+		}
+	};
+
+	const handleSyncCmv = async () => {
+		setCmvSyncing(true);
+		try {
+			const token = localStorage.getItem('token');
+			const res = await axios.post(
+				`${BASE_URL}/api/products/${productId}/cogs/sync`,
+				{},
+				{headers: {Authorization: `Bearer ${token}`}},
+			);
+			setProduct((prev) => ({...prev, cogsAmount: res.data.cogsAmount}));
+			setSuccessMsg('✅ CMV sincronizado');
+			setTimeout(() => setSuccessMsg(''), 3000);
+		} catch {
+			setErrorMsg('Error al sincronizar CMV');
+		} finally {
+			setCmvSyncing(false);
 		}
 	};
 
@@ -490,6 +535,82 @@ const ProductDetail = () => {
 								/>
 							</div>
 
+							{/* Phone */}
+							<div style={{gridColumn: "1 / -1"}}>
+								<label style={labelStyle}>Teléfono del Cliente</label>
+								<input
+									type="tel"
+									name="clientPhone"
+									value={product.clientPhone || ""}
+									onChange={handleChange}
+									placeholder="+54 11 1234-5678"
+									style={inputStyle}
+								/>
+							</div>
+
+							{/* Responsable (Admin only) */}
+							{isAdmin && allUsers.length > 0 && (
+								<div style={{gridColumn: "1 / -1"}}>
+									<label style={labelStyle}>Responsable</label>
+									<select
+										name="assignedUserId"
+										value={product.assignedUserId || product.ownerId || ""}
+										onChange={handleChange}
+										style={inputStyle}
+									>
+										{allUsers.map((u) => (
+											<option key={u.id} value={u.id}>
+												{u.username} ({u.appUserRole})
+											</option>
+										))}
+									</select>
+								</div>
+							)}
+
+							{/* CMV Section */}
+							{canSeeFinancials && (
+								<div style={{gridColumn: "1 / -1", background: "#f8f9fa", borderRadius: "8px", padding: "16px", border: "1px solid #dfe6e9"}}>
+									<h4 style={{margin: "0 0 12px", color: "#636e72", fontSize: "0.9rem", fontWeight: "600"}}>CMV (Costo de Mercancía Vendida)</h4>
+									<div style={{marginBottom: "8px", fontSize: "0.9rem", color: "#2d3436"}}>
+										CMV Calculado: <strong>${Number(product.calculatedCogs || 0).toLocaleString()}</strong>
+									</div>
+									<label style={labelStyle}>CMV Manual ($)</label>
+									<input
+										type="number"
+										name="cogsAmount"
+										value={product.cogsAmount || ""}
+										onChange={handleChange}
+										style={{...inputStyle, marginBottom: "10px"}}
+									/>
+									<button
+										type="button"
+										onClick={handleSyncCmv}
+										disabled={cmvSyncing}
+										style={{
+											padding: "8px 16px",
+											background: cmvSyncing ? "#b2bec3" : "#6c5ce7",
+											color: "white",
+											border: "none",
+											borderRadius: "5px",
+											cursor: cmvSyncing ? "not-allowed" : "pointer",
+											fontWeight: "600",
+											fontSize: "0.85rem",
+										}}
+									>
+										{cmvSyncing ? "Sincronizando..." : "Sincronizar"}
+									</button>
+									{Array.isArray(product.materials) && product.materials.length > 0 && (
+										<ul style={{listStyle: "none", padding: 0, margin: "12px 0 0", fontSize: "0.85rem"}}>
+											{product.materials.map((m, i) => (
+												<li key={i} style={{padding: "4px 0", color: "#636e72"}}>
+													{m.itemName}: {m.quantityUsed} x ${Number(m.unitCost || 0).toLocaleString()} = ${Number(m.subtotal || 0).toLocaleString()}
+												</li>
+											))}
+										</ul>
+									)}
+								</div>
+							)}
+
 							{/* Late Warning */}
 							{product.daysLate > 0 && (
 								<div
@@ -606,9 +727,16 @@ const ProductDetail = () => {
 									}
 									style={inputStyle}
 								>
-									<option value='DEPOSIT'>Seña</option>
-									<option value='RESTO'>Saldo</option>
-									<option value='EXTRA'>Extra</option>
+									{paymentTypes.length > 0
+										? paymentTypes.map((opt) => (
+											<option key={opt.code} value={opt.code}>{opt.label}</option>
+										))
+										: <>
+											<option value='DEPOSIT'>Seña</option>
+											<option value='RESTO'>Saldo</option>
+											<option value='EXTRA'>Extra</option>
+										</>
+									}
 								</select>
 							</div>
 
@@ -623,10 +751,17 @@ const ProductDetail = () => {
 									}
 									style={inputStyle}
 								>
-									<option value='CASH'>Efectivo</option>
-									<option value='BANK_TRANSFER'>Transferencia</option>
-									<option value='CREDIT_DEBIT_CARD'>Tarjeta</option>
-									<option value='OTHER'>Otro</option>
+									{paymentMethods.length > 0
+										? paymentMethods.map((opt) => (
+											<option key={opt.code} value={opt.code}>{opt.label}</option>
+										))
+										: <>
+											<option value='CASH'>Efectivo</option>
+											<option value='BANK_TRANSFER'>Transferencia</option>
+											<option value='CREDIT_DEBIT_CARD'>Tarjeta</option>
+											<option value='OTHER'>Otro</option>
+										</>
+									}
 								</select>
 							</div>
 
@@ -661,6 +796,7 @@ const ProductDetail = () => {
 						)}
 
 						{/* 2. Summary & History Card */}
+						{canSeeFinancials && (
 						<div
 							style={{
 								background: 'white',
@@ -830,6 +966,7 @@ const ProductDetail = () => {
 								</p>
 							)}
 						</div>
+						)}
 					</div>
 				)}
 			</div>

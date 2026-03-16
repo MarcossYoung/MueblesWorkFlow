@@ -1,6 +1,5 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.PaymentType;
 import com.example.demo.model.ProductType;
 import com.example.demo.model.Status;
 import lombok.Getter;
@@ -34,7 +33,10 @@ public class ProductUpdateDto {
 
     //Payment fields
     private BigDecimal amount;
-    private PaymentType paymentType;
+    private String paymentType;
 
-
+    // Feature additions
+    private String clientPhone;
+    private BigDecimal cogsAmount;
+    private Long assignedUserId;
 }

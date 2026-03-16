@@ -171,7 +171,7 @@ export default function Finance() {
 				{/* Row 1: Ingresos - COGS = Ganancia Bruta */}
 				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '16px' }}>
 					<StatCard title='Ingresos Totales' value={financeData.tInc} icon='💰' borderColor='#00b894' />
-					<StatCard title='COGS (Entregados)' value={financeData.tCogs} icon='🏭' borderColor='#fdcb6e' />
+					<StatCard title='CMV (Entregados)' value={financeData.tCogs} icon='🏭' borderColor='#fdcb6e' />
 					<StatCard title='Ganancia Bruta' value={financeData.grossProfit} icon='📈' borderColor='#0984e3' />
 				</div>
 				{/* Row 2: Ganancia Bruta - Gastos = Ganancia Neta */}

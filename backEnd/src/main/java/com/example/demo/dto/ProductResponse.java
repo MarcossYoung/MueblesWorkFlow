@@ -1,6 +1,11 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.*;
+import com.example.demo.model.Product;
+import com.example.demo.dto.ProductMaterialResponse;
+import com.example.demo.model.ProductType;
+import com.example.demo.model.Status;
+import com.example.demo.model.WorkOrder;
+import com.example.demo.model.OrderPayments;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,7 +35,7 @@ public record ProductResponse(
         BigDecimal totalPaid,
         BigDecimal depositPaid,
         BigDecimal daysLate,
-        String clientEmail,
+        String clientPhone,
         BigDecimal cogsAmount,
         BigDecimal calculatedCogs,
         List<ProductMaterialResponse> materials
@@ -47,7 +52,7 @@ public record ProductResponse(
                 BigDecimal amount = pay.getAmount();
                 if (amount != null) {
                     totalPaid = totalPaid.add(amount);
-                    if (pay.getPaymentType() == PaymentType.DEPOSIT) {
+                    if ("DEPOSIT".equals(pay.getPaymentType())) {
                         depositPaid = depositPaid.add(amount);
                     }
                 }
@@ -95,7 +100,7 @@ public record ProductResponse(
                 totalPaid,
                 depositPaid,
                 daysLate,
-                p.getClientEmail(),
+                p.getClientPhone(),
                 p.getCogsAmount(),
                 calculatedCogs,
                 materialResponses

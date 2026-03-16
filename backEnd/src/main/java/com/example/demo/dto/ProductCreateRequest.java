@@ -24,7 +24,7 @@ public record ProductCreateRequest(
         BigDecimal precio,
         PaymentStatus status,
         BigDecimal amount,
-        String clientEmail
+        String clientPhone
 
 ){
 
