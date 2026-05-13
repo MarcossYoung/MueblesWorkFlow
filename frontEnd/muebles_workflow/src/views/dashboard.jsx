@@ -15,6 +15,7 @@ export default function Dashboard() {
 
 	const isAdmin = user?.role === 'ADMIN';
 	const isSeller = user?.role === 'SELLER';
+	const isViewer = user?.role === 'VIEWER';
 
 	useEffect(() => {
 		const fetchOrders = async () => {
@@ -41,7 +42,7 @@ export default function Dashboard() {
 				<nav style={{display: 'flex', gap: '10px'}}>
 					{' '}
 					{/* Horizontal layout for links */}
-					{(isSeller || isAdmin) && (
+					{(isSeller || isAdmin || isViewer) && (
 						<NavLink to='/dashboard' end className={linkClass}>
 							Pedidos
 						</NavLink>

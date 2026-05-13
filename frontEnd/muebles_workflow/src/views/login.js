@@ -38,6 +38,25 @@ const Login = () => {
 		}
 	};
 
+	const handleViewerLogin = async () => {
+		setError(null);
+		try {
+			const response = await axios.post(`${BASE_URL}/api/users/login`, {
+				username: 'viewer',
+				password: 'viewer123',
+			});
+			if (response.status === 200) {
+				const userData = response.data;
+				localStorage.setItem('user', JSON.stringify(userData));
+				localStorage.setItem('token', userData.token);
+				setUser(userData);
+				navigate('/');
+			}
+		} catch {
+			setError('No se pudo iniciar sesión como invitado. Intenta de nuevo.');
+		}
+	};
+
 	return (
 		<div className='login-wrapper'>
 			<div className='login-card box-shadow'>
@@ -72,6 +91,14 @@ const Login = () => {
 						Entrar
 					</button>
 				</form>
+				<button
+					type='button'
+					onClick={handleViewerLogin}
+					className='button_3 w-100 margin-5'
+					style={{background: '#74b9ff', color: '#2d3436', border: 'none'}}
+				>
+					Ingresar como Invitado
+				</button>
 			</div>
 		</div>
 	);

@@ -68,24 +68,43 @@ public class SecurityConfig {
                         .requestMatchers("/api/workorders", "/api/workorders/**").permitAll()
 
                         // Product sub-routes that require auth (must come before the products permitAll catch-all)
-                        .requestMatchers("/api/products/*/materials", "/api/products/*/materials/**", "/api/products/*/cogs", "/api/products/*/cogs/sync").hasAnyAuthority("ADMIN", "SELLER")
+                        .requestMatchers("/api/products/*/materials", "/api/products/*/materials/**", "/api/products/*/cogs", "/api/products/*/cogs/sync").hasAnyAuthority("ADMIN", "SELLER", "VIEWER")
 
                         // Public product routes
                         .requestMatchers("/api/products", "/api/products/**", "/api/products/filter").permitAll()
 
                         // Existing restricted paths
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/costs/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/finance", "/api/finance/**").hasAnyAuthority("ADMIN", "SELLER")
+
+                        // Admin panel: VIEWER gets read-only (GET), mutations stay ADMIN-only
+                        .requestMatchers(HttpMethod.GET, "/api/admin/**").hasAnyAuthority("ADMIN", "VIEWER")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/admin/**").hasAuthority("ADMIN")
+
+                        // Costs: VIEWER gets read-only, mutations stay ADMIN-only
+                        .requestMatchers(HttpMethod.GET, "/api/costs/**").hasAnyAuthority("ADMIN", "VIEWER")
+                        .requestMatchers(HttpMethod.POST, "/api/costs/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/costs/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/costs/**").hasAuthority("ADMIN")
+
+                        .requestMatchers("/api/finance", "/api/finance/**").hasAnyAuthority("ADMIN", "SELLER", "VIEWER")
                         .requestMatchers("/api/ai/**").hasAnyAuthority("ADMIN", "SELLER")
-                        .requestMatchers("/api/payment-options", "/api/payment-options/**").hasAnyAuthority("ADMIN", "SELLER")
-                        .requestMatchers(HttpMethod.GET, "/api/inventory", "/api/inventory/**").hasAnyAuthority("ADMIN", "SELLER")
+                        .requestMatchers("/api/payment-options", "/api/payment-options/**").hasAnyAuthority("ADMIN", "SELLER", "VIEWER")
+
+                        .requestMatchers(HttpMethod.GET, "/api/inventory", "/api/inventory/**").hasAnyAuthority("ADMIN", "SELLER", "VIEWER")
                         .requestMatchers(HttpMethod.POST, "/api/inventory", "/api/inventory/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/inventory/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/inventory/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ADMIN")
-                        .requestMatchers("/api/product-type-templates", "/api/product-type-templates/**").hasAuthority("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasAnyAuthority("ADMIN", "VIEWER")
+
+                        // Product-type-templates: VIEWER gets read-only, mutations stay ADMIN-only
+                        .requestMatchers(HttpMethod.GET, "/api/product-type-templates", "/api/product-type-templates/**").hasAnyAuthority("ADMIN", "VIEWER")
+                        .requestMatchers(HttpMethod.POST, "/api/product-type-templates", "/api/product-type-templates/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/product-type-templates/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/product-type-templates/**").hasAuthority("ADMIN")
+
                         .requestMatchers("/api/users/profile/**", "/api/workOrders/**").authenticated()
 
                         // Ensure all other paths are secured (Fixing the previous issue I pointed out)
@@ -105,7 +124,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("**localhost:3000","https://mueblesworkflow.netlify.app", "https://*--mueblesworkflow.netlify.app"));
+        config.setAllowedOriginPatterns(List.of("http://localhost:*", "https://mueblesworkflow.netlify.app", "https://*--mueblesworkflow.netlify.app"));
 
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

@@ -1,0 +1,996 @@
+
+╭─── Claude Code v2.1.50 ──────────────────────────────────────────────────────╮
+│                                              │ Tips for getting started      │
+│             Welcome back Marcos!             │ Run /init to create a CLAUDE… │
+│                                              │ ───────────────────────────── │
+│                                              │ Recent activity               │
+│                       ✻                      │ No recent activity            │
+│                       |                      │                               │
+│                      ▟█▙                     │                               │
+│                    ▐▛███▜▌                   │                               │
+│                   ▝▜█████▛▘                  │                               │
+│                     ▘▘ ▝▝                    │                               │
+│                                              │                               │
+│           Sonnet 4.6 · Claude Pro            │                               │
+│   ~\Dev\Projects\MueblesWorkFlow\n8nTrials   │                               │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Plan to implement                                                            │
+│                                                                              │
+│ Plan: Add Search-by-Title Tool (buscarProducto)                              │
+│                                                                              │
+│ Context                                                                      │
+│                                                                              │
+│ Users interacting via WhatsApp rarely know a product's numeric ID — they     │
+│ refer to orders by name ("Mesa de roble", "Silla Sue"). The N8N agent        │
+│ currently requires an ID for obtenerProducto, actualizarProducto, and        │
+│ actualizarEstado. A dedicated search tool lets the agent resolve a name → ID │
+│  before acting.                                                              │
+│                                                                              │
+│ ProductRepo already has searchByTitulo() (JPQL LIKE, case-insensitive). It   │
+│ needs a controller endpoint exposed and a new N8N tool node.                 │
+│                                                                              │
+│ ---                                                                          │
+│ Changes                                                                      │
+│                                                                              │
+│ 1. Fix searchByTitulo query — ProductRepo.java:38                            │
+│                                                                              │
+│ Current query only matches suffixes (missing trailing %):                    │
+│ LIKE LOWER(CONCAT('%', :query))                                              │
+│ Fix to contains match:                                                       │
+│ LIKE LOWER(CONCAT('%', :query, '%'))                                         │
+│                                                                              │
+│ ---                                                                          │
+│ 2. Add searchByTitle to ProductService.java                                  │
+│                                                                              │
+│ Reuses existing productRepo.searchByTitulo():                                │
+│ public Page<ProductResponse> searchByTitle(String query, Pageable pageable)  │
+│ {                                                                            │
+│     return productRepo.searchByTitulo(query,                                 │
+│ pageable).map(ProductResponse::from);                                        │
+│ }                                                                            │
+│                                                                              │
+│ ---                                                                          │
+│ 3. Add GET /api/products/search endpoint — ProductController.java            │
+│                                                                              │
+│ Insert after getAllProducts:                                                 │
+│ @GetMapping("/search")                                                       │
+│ public ResponseEntity<Page<ProductResponse>> searchProducts(                 │
+│         @RequestParam String q,                                              │
+│         @RequestParam(defaultValue = "0") int page,                          │
+│         @RequestParam(defaultValue = "10") int size                          │
+│ ) {                                                                          │
+│     Pageable pageable = PageRequest.of(page, size,                           │
+│ Sort.by(Sort.Direction.DESC, "startDate"));                                  │
+│     return ResponseEntity.ok(productService.searchByTitle(q, pageable));     │
+│ }                                                                            │
+│                                                                              │
+│ Already covered by permitAll for /api/products/** — no SecurityConfig change │
+│  needed.                                                                     │
+│                                                                              │
+│ ---                                                                          │
+│ 4. Add buscarProducto tool — n8nTrials/muebles-whatsapp-agent.json           │
+│                                                                              │
+│ New toolHttpRequest node (GET + single query param — same pattern as         │
+│ obtenerProducto which works with Gemini):                                    │
+│ {                                                                            │
+│   "parameters": {                                                            │
+│     "name": "buscarProducto",                                                │
+│     "description": "Busca productos por nombre/título (búsqueda parcial).    │
+│ Usar cuando el usuario menciona el nombre del pedido en lugar del ID.        │
+│ Devuelve id, titulo, status y workOrderId de cada resultado.",               │
+│     "method": "GET",                                                         │
+│     "url":                                                                   │
+│ "https://mueblesworkflow-production.up.railway.app/api/products/search",     │
+│     "parametersToPassToRequest": {                                           │
+│       "values": [                                                            │
+│         { "name": "q", "where": "query", "description": "Texto a buscar en   │
+│ el título", "required": true }                                               │
+│       ]                                                                      │
+│     },                                                                       │
+│     "options": { "optimizeResponse": true }                                  │
+│   },                                                                         │
+│   "id": "t0-search-product",                                                 │
+│   "name": "buscarProducto",                                                  │
+│   "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                        │
+│   "typeVersion": 1.1,                                                        │
+│   "position": [40, 680]                                                      │
+│ }                                                                            │
+│                                                                              │
+│ Add to connections:                                                          │
+│ "buscarProducto": { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool",  │
+│ "index": 0 }]] }                                                             │
+│                                                                              │
+│ ---                                                                          │
+│ 5. Update system prompt — CRUD Agent node                                    │
+│                                                                              │
+│ Add to ## COMPORTAMIENTO:                                                    │
+│ - Si el usuario menciona el nombre del pedido (no el ID), usa buscarProducto │
+│  para encontrarlo y obtener su id y workOrderId.                             │
+│                                                                              │
+│ ---                                                                          │
+│ Critical Files                                                               │
+│                                                                              │
+│ File: backEnd/.../repository/ProductRepo.java:38                             │
+│ Change: Fix LIKE to CONCAT('%', :query, '%')                                 │
+│ ────────────────────────────────────────                                     │
+│ File: backEnd/.../service/ProductService.java                                │
+│ Change: Add searchByTitle()                                                  │
+│ ────────────────────────────────────────                                     │
+│ File: backEnd/.../controller/ProductController.java                          │
+│ Change: Add GET /api/products/search                                         │
+│ ────────────────────────────────────────                                     │
+│ File: n8nTrials/muebles-whatsapp-agent.json                                  │
+│ Change: Add buscarProducto node + connection + system prompt                 │
+│                                                                              │
+│ Verification                                                                 │
+│                                                                              │
+│ - GET /api/products/search?q=mesa → returns products with "mesa" in title,   │
+│ newest first                                                                 │
+│ - WhatsApp: "¿Cuánto falta pagar de la mesa de roble?" → agent calls         │
+│ buscarProducto with q=mesa, gets ID, then verPagos                           │
+│                                                                              │
+│ ---                                                                          │
+│ (old content below — ignore)                                                 │
+│                                                                              │
+│ File: n8nTrials/muebles-whatsapp-agent.json                                  │
+│ Action: Create — importable N8N workflow JSON                                │
+│ ────────────────────────────────────────                                     │
+│ File: backEnd/src/main/java/com/example/demo/config/SecurityConfig.java      │
+│ Action: Modify — make payments, costs, workorders public (3 lines)           │
+│                                                                              │
+│ ---                                                                          │
+│ Auth Fix Required (SecurityConfig.java)                                      │
+│                                                                              │
+│ Currently only /api/products/** is public (line 77). N8N cannot call         │
+│ payments/costs/workorders without a JWT. Add permit rules matching the       │
+│ existing products rule:                                                      │
+│                                                                              │
+│ Around line 77–78:                                                           │
+│ .requestMatchers("/api/products", "/api/products/**").permitAll()            │
+│ // ADD:                                                                      │
+│ .requestMatchers("/api/payments", "/api/payments/**").permitAll()            │
+│ .requestMatchers("/api/costs", "/api/costs/**").permitAll()                  │
+│ .requestMatchers("/api/workorders", "/api/workorders/**").permitAll()        │
+│                                                                              │
+│ ---                                                                          │
+│ Workflow Architecture                                                        │
+│                                                                              │
+│ [WhatsApp user sends message]                                                │
+│          ↓                                                                   │
+│ [WhatsApp Business Trigger]                                                  │
+│   - text:      $json.messages[0].text.body                                   │
+│   - sessionId: $json.contacts[0].wa_id  (phone number)                       │
+│          ↓                                                                   │
+│ [AI Agent — Tools Agent]                                                     │
+│   ├── [GPT-4o LLM]                                                           │
+│   ├── [Buffer Window Memory — keyed by phone number]                         │
+│   └── [9 HTTP Tools → Spring Boot API]                                       │
+│          ↓                                                                   │
+│ [WhatsApp Send Message]                                                      │
+│   - To: sender phone number                                                  │
+│   - Text: agent response                                                     │
+│                                                                              │
+│ ---                                                                          │
+│ N8N Setup (before importing)                                                 │
+│                                                                              │
+│ 1. WhatsApp Business credential — Configure in N8N with your Meta App        │
+│ credentials (App ID, App Secret, access token, phone number ID)              │
+│ 2. Meta webhook — Point your Meta App webhook to the N8N WhatsApp trigger    │
+│ URL; subscribe to messages events                                            │
+│ 3. N8N Variable — Settings → Variables → add BACKEND_URL = production        │
+│ backend URL                                                                  │
+│ 4. OpenAI Credential — Create credential named "OpenAI account" with API key │
+│ 5. Import muebles-whatsapp-agent.json into Railway N8N                       │
+│ 6. Activate the workflow                                                     │
+│                                                                              │
+│ ---                                                                          │
+│ Node Specifications                                                          │
+│                                                                              │
+│ WhatsApp Business Trigger                                                    │
+│                                                                              │
+│ - Type: n8n-nodes-base.whatsAppTrigger                                       │
+│ - Event: Incoming Messages                                                   │
+│ - Credential: WhatsApp Business account                                      │
+│ - Extracts from payload:                                                     │
+│   - Message text: $json.messages[0].text.body                                │
+│   - Sender phone: $json.contacts[0].wa_id                                    │
+│                                                                              │
+│ AI Agent                                                                     │
+│                                                                              │
+│ - Type: @n8n/n8n-nodes-langchain.agent (typeVersion 1.7)                     │
+│ - Agent type: toolsAgent                                                     │
+│ - Input: ={{ $json.messages[0].text.body }}                                  │
+│ - System message: see section below                                          │
+│                                                                              │
+│ LLM                                                                          │
+│                                                                              │
+│ - Type: @n8n/n8n-nodes-langchain.lmChatOpenAi                                │
+│ - Model: gpt-4o, temperature: 0.3                                            │
+│ - Connects via ai_languageModel port                                         │
+│                                                                              │
+│ Memory                                                                       │
+│                                                                              │
+│ - Type: @n8n/n8n-nodes-langchain.memoryBufferWindow                          │
+│ - Session key: ={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}      │
+│ - Window: 10 messages                                                        │
+│ - Connects via ai_memory port                                                │
+│                                                                              │
+│ 9 HTTP Tools (all @n8n/n8n-nodes-langchain.toolHttpRequest)                  │
+│                                                                              │
+│ Tool name: listar_productos                                                  │
+│ Method: GET                                                                  │
+│ URL: {{ $vars.BACKEND_URL }}/api/products                                    │
+│ Key params: query: page, size (opt)                                          │
+│ ────────────────────────────────────────                                     │
+│ Tool name: obtener_producto                                                  │
+│ Method: GET                                                                  │
+│ URL: {{ $vars.BACKEND_URL }}/api/products/{id}                               │
+│ Key params: path: id*                                                        │
+│ ────────────────────────────────────────                                     │
+│ Tool name: crear_producto                                                    │
+│ Method: POST                                                                 │
+│ URL: {{ $vars.BACKEND_URL }}/api/products/create                             │
+│ Key params: body: titulo*, precio*, productType?, medidas?, material?,       │
+│ color?,                                                                      │
+│   cantidad?, fechaEstimada?, notas?, clientEmail?                            │
+│ ────────────────────────────────────────                                     │
+│ Tool name: actualizar_producto                                               │
+│ Method: PUT                                                                  │
+│ URL: {{ $vars.BACKEND_URL }}/api/products/{id}                               │
+│ Key params: path: id*; body: titulo?, precio?, productType?, status?,        │
+│   workOrderNotes?, fechaEstimada?, fechaEntregada?                           │
+│ ────────────────────────────────────────                                     │
+│ Tool name: ver_pagos_producto                                                │
+│ Method: GET                                                                  │
+│ URL: {{ $vars.BACKEND_URL }}/api/payments/{productId}                        │
+│ Key params: path: productId*                                                 │
+│ ────────────────────────────────────────                                     │
+│ Tool name: crear_pago                                                        │
+│ Method: POST                                                                 │
+│ URL: {{ $vars.BACKEND_URL }}/api/payments                                    │
+│ Key params: body: valor*, type*, product_id*, fecha*, paymentMethod*         │
+│ ────────────────────────────────────────                                     │
+│ Tool name: listar_costos                                                     │
+│ Method: GET                                                                  │
+│ URL: {{ $vars.BACKEND_URL }}/api/costs                                       │
+│ Key params: query: page, size (opt)                                          │
+│ ────────────────────────────────────────                                     │
+│ Tool name: crear_costo                                                       │
+│ Method: POST                                                                 │
+│ URL: {{ $vars.BACKEND_URL }}/api/costs                                       │
+│ Key params: body: costType*, amount*, date*, reason?                         │
+│ ────────────────────────────────────────                                     │
+│ Tool name: actualizar_estado                                                 │
+│ Method: PUT                                                                  │
+│ URL: {{ $vars.BACKEND_URL }}/api/workorders/{id}/status                      │
+│ Key params: path: id* (workOrderId); query: status*                          │
+│                                                                              │
+│ actualizar_estado: {id} is the workOrderId from ProductResponse.workOrderId  │
+│ — agent must call obtener_producto first to get it.                          │
+│                                                                              │
+│ WhatsApp Send Message                                                        │
+│                                                                              │
+│ - Type: n8n-nodes-base.whatsApp                                              │
+│ - Operation: Send Message → Text                                             │
+│ - To: ={{ $('WhatsApp Trigger').item.json.messages[0].from }}                │
+│ - Message: ={{ $json.output }}                                               │
+│ - Credential: WhatsApp Business account                                      │
+│                                                                              │
+│ ---                                                                          │
+│ AI System Prompt (Spanish)                                                   │
+│                                                                              │
+│ Eres el asistente de gestión de MueblesWorkFlow para WhatsApp, un sistema    │
+│ para talleres de mueblería.                                                  │
+│ Puedes consultar y modificar productos, pagos y costos usando las            │
+│ herramientas disponibles.                                                    │
+│                                                                              │
+│ ## FECHAS — REGLA CRÍTICA                                                    │
+│ El formato de fecha de la API es dd-MM-yy (ej: 23-02-26 para 23 de febrero   │
+│ de 2026).                                                                    │
+│ NUNCA uses formato ISO (2026-02-23) — la API lo rechazará.                   │
+│                                                                              │
+│ ## ACTUALIZAR ESTADO DE PRODUCCIÓN                                           │
+│ Para cambiar el estado de un pedido:                                         │
+│ 1. Primero llama a obtener_producto con el ID del producto para obtener el   │
+│ workOrderId.                                                                 │
+│ 2. Luego llama a actualizar_estado con ese workOrderId (campo workOrderId de │
+│  la respuesta).                                                              │
+│ Estados válidos: CREADO, PRODUCCION, TERMINADO, ENTREGADO, ATRASADO.         │
+│                                                                              │
+│ ## ENUMS VÁLIDOS                                                             │
+│ Tipos de producto: MESA, SILLA, COMODA, BANCOS, RATONA, CRISTALERO,          │
+│ SILLONES, RACKTV, OTROS                                                      │
+│ Tipos de pago: DEPOSIT (seña), RESTO (saldo final), EXTRA (adicional)        │
+│ Métodos de pago: CASH, BANK_TRANSFER, CREDIT_DEBIT_CARD, OTHER               │
+│ Tipos de costo: RENT, SALARY, TAX, ADS, MATERIAL, SERVICES, OTHERS           │
+│                                                                              │
+│ ## COMPORTAMIENTO                                                            │
+│ - Si el usuario quiere actualizar y no da el ID, usa listar_productos para   │
+│ buscarlo.                                                                    │
+│ - Confirma antes de crear/modificar si el mensaje es ambiguo.                │
+│ - Responde en español, de forma concisa (WhatsApp no soporta markdown        │
+│ complejo).                                                                   │
+│ - Para montos: muestra siempre $ con dos decimales.                          │
+│ - Si la API devuelve error, infórmalo sin exponer detalles técnicos.         │
+│ - Mantén las respuestas breves y directas — los usuarios leen en el celular. │
+│                                                                              │
+│ ---                                                                          │
+│ Workflow JSON (n8nTrials/muebles-whatsapp-agent.json)                        │
+│                                                                              │
+│ {                                                                            │
+│   "name": "Muebles WhatsApp CRUD Agent",                                     │
+│   "nodes": [                                                                 │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "updates": ["messages"],                                             │
+│         "options": {}                                                        │
+│       },                                                                     │
+│       "id": "n1-whatsapp-trigger",                                           │
+│       "name": "WhatsApp Trigger",                                            │
+│       "type": "n8n-nodes-base.whatsAppTrigger",                              │
+│       "typeVersion": 1,                                                      │
+│       "position": [240, 300],                                                │
+│       "credentials": {                                                       │
+│         "whatsAppTriggerApi": {                                              │
+│           "id": "REPLACE_WITH_CREDENTIAL_ID",                                │
+│           "name": "WhatsApp account"                                         │
+│         }                                                                    │
+│       },                                                                     │
+│       "webhookId": "muebles-whatsapp"                                        │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "agent": "toolsAgent",                                               │
+│         "promptType": "define",                                              │
+│         "text": "={{ $json.messages[0].text.body }}",                        │
+│         "options": {                                                         │
+│           "systemMessage": "Eres el asistente de gestión de MueblesWorkFlow  │
+│ para WhatsApp, un sistema para talleres de mueblería.\nPuedes consultar y    │
+│ modificar productos, pagos y costos usando las herramientas                  │
+│ disponibles.\n\n## FECHAS — REGLA CRÍTICA\nEl formato de fecha de la API es  │
+│ dd-MM-yy (ej: 23-02-26 para 23 de febrero de 2026).\nNUNCA uses formato ISO  │
+│ (2026-02-23) — la API lo rechazará.\n\n## ACTUALIZAR ESTADO DE               │
+│ PRODUCCIÓN\nPara cambiar el estado de un pedido:\n1. Primero llama a         │
+│ obtener_producto con el ID del producto para obtener el workOrderId.\n2.     │
+│ Luego llama a actualizar_estado con ese workOrderId (campo workOrderId de la │
+│  respuesta).\nEstados válidos: CREADO, PRODUCCION, TERMINADO, ENTREGADO,     │
+│ ATRASADO.\n\n## ENUMS VÁLIDOS\nTipos de producto: MESA, SILLA, COMODA,       │
+│ BANCOS, RATONA, CRISTALERO, SILLONES, RACKTV, OTROS\nTipos de pago: DEPOSIT  │
+│ (seña), RESTO (saldo final), EXTRA (adicional)\nMétodos de pago: CASH,       │
+│ BANK_TRANSFER, CREDIT_DEBIT_CARD, OTHER\nTipos de costo: RENT, SALARY, TAX,  │
+│ ADS, MATERIAL, SERVICES, OTHERS\n\n## COMPORTAMIENTO\n- Si el usuario quiere │
+│  actualizar y no da el ID, usa listar_productos para buscarlo.\n- Confirma   │
+│ antes de crear/modificar si el mensaje es ambiguo.\n- Responde en español,   │
+│ de forma concisa (WhatsApp no soporta markdown complejo).\n- Para montos:    │
+│ muestra siempre $ con dos decimales.\n- Si la API devuelve error, infórmalo  │
+│ sin exponer detalles técnicos.\n- Mantén las respuestas breves y directas —  │
+│ los usuarios leen en el celular."                                            │
+│         }                                                                    │
+│       },                                                                     │
+│       "id": "n2-agent",                                                      │
+│       "name": "CRUD Agent",                                                  │
+│       "type": "@n8n/n8n-nodes-langchain.agent",                              │
+│       "typeVersion": 1.7,                                                    │
+│       "position": [500, 300]                                                 │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "model": "gpt-4o",                                                   │
+│         "options": {                                                         │
+│           "temperature": 0.3,                                                │
+│           "maxTokens": 1024                                                  │
+│         }                                                                    │
+│       },                                                                     │
+│       "id": "n3-llm",                                                        │
+│       "name": "GPT-4o",                                                      │
+│       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",                       │
+│       "typeVersion": 1,                                                      │
+│       "position": [400, 520],                                                │
+│       "credentials": {                                                       │
+│         "openAiApi": {                                                       │
+│           "id": "REPLACE_WITH_CREDENTIAL_ID",                                │
+│           "name": "OpenAI account"                                           │
+│         }                                                                    │
+│       }                                                                      │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "sessionIdType": "customKey",                                        │
+│         "sessionKey": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id │
+│  }}",                                                                        │
+│         "contextWindowLength": 10                                            │
+│       },                                                                     │
+│       "id": "n4-memory",                                                     │
+│       "name": "Session Memory",                                              │
+│       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",                 │
+│       "typeVersion": 1.2,                                                    │
+│       "position": [600, 520]                                                 │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "listar_productos",                                          │
+│         "description": "Obtiene lista paginada de productos/pedidos.         │
+│ Parámetros opcionales: page (default 0), size (default 20).",                │
+│         "method": "GET",                                                     │
+│         "url": "={{ $vars.BACKEND_URL }}/api/products",                      │
+│         "sendQuery": true,                                                   │
+│         "queryParameters": {                                                 │
+│           "parameters": [                                                    │
+│             { "name": "page", "value": "0" },                                │
+│             { "name": "size", "value": "20" }                                │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t1-list-products",                                              │
+│       "name": "Tool: Listar Productos",                                      │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [200, 680]                                                 │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "obtener_producto",                                          │
+│         "description": "Obtiene detalles de un producto por ID. Devuelve     │
+│ workOrderId necesario para actualizar_estado.",                              │
+│         "method": "GET",                                                     │
+│         "url": "={{ $vars.BACKEND_URL }}/api/products/{id}",                 │
+│         "parametersToPassToRequest": {                                       │
+│           "values": [                                                        │
+│             { "name": "id", "where": "path", "description": "ID numérico del │
+│  producto", "required": true }                                               │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t2-get-product",                                                │
+│       "name": "Tool: Obtener Producto",                                      │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [360, 680]                                                 │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "crear_producto",                                            │
+│         "description": "Crea un nuevo producto. Requeridos: titulo, precio   │
+│ (decimal). Opcionales: productType                                           │
+│ (MESA/SILLA/COMODA/BANCOS/RATONA/CRISTALERO/SILLONES/RACKTV/OTROS), medidas, │
+│  material, pintura, color, laqueado, cantidad, notas, clientEmail,           │
+│ fechaEstimada (dd-MM-yy), amount (seña inicial).",                           │
+│         "method": "POST",                                                    │
+│         "url": "={{ $vars.BACKEND_URL }}/api/products/create",               │
+│         "sendBody": true,                                                    │
+│         "contentType": "json",                                               │
+│         "parametersToPassToRequest": {                                       │
+│           "values": [                                                        │
+│             { "name": "titulo", "where": "body", "description": "Nombre del  │
+│ mueble", "required": true },                                                 │
+│             { "name": "precio", "where": "body", "description": "Precio      │
+│ total en pesos (decimal)", "required": true },                               │
+│             { "name": "productType", "where": "body", "description": "Tipo:  │
+│ MESA, SILLA, COMODA, BANCOS, RATONA, CRISTALERO, SILLONES, RACKTV, OTROS",   │
+│ "required": false },                                                         │
+│             { "name": "medidas", "where": "body", "description":             │
+│ "Dimensiones", "required": false },                                          │
+│             { "name": "material", "where": "body", "description": "Material  │
+│ principal", "required": false },                                             │
+│             { "name": "pintura", "where": "body", "description": "Tipo de    │
+│ pintura", "required": false },                                               │
+│             { "name": "color", "where": "body", "description": "Color",      │
+│ "required": false },                                                         │
+│             { "name": "laqueado", "where": "body", "description": "Tipo de   │
+│ laqueado", "required": false },                                              │
+│             { "name": "cantidad", "where": "body", "description": "Cantidad  │
+│ de unidades", "required": false },                                           │
+│             { "name": "notas", "where": "body", "description": "Notas        │
+│ adicionales", "required": false },                                           │
+│             { "name": "clientEmail", "where": "body", "description": "Email  │
+│ del cliente", "required": false },                                           │
+│             { "name": "fechaEstimada", "where": "body", "description":       │
+│ "Fecha estimada entrega (dd-MM-yy)", "required": false },                    │
+│             { "name": "amount", "where": "body", "description": "Monto de    │
+│ seña inicial (decimal)", "required": false }                                 │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t3-create-product",                                             │
+│       "name": "Tool: Crear Producto",                                        │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [520, 680]                                                 │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "actualizar_producto",                                       │
+│         "description": "Actualiza un producto. Requerido: id (path).         │
+│ Opcionales en body: titulo, precio, productType, medidas, material, notas,   │
+│ fechaEstimada (dd-MM-yy), fechaEntregada (dd-MM-yy), status                  │
+│ (CREADO/PRODUCCION/TERMINADO/ENTREGADO/ATRASADO), workOrderNotes, amount,    │
+│ paymentType (DEPOSIT/RESTO/EXTRA).",                                         │
+│         "method": "PUT",                                                     │
+│         "url": "={{ $vars.BACKEND_URL }}/api/products/{id}",                 │
+│         "sendBody": true,                                                    │
+│         "contentType": "json",                                               │
+│         "parametersToPassToRequest": {                                       │
+│           "values": [                                                        │
+│             { "name": "id", "where": "path", "description": "ID del          │
+│ producto", "required": true },                                               │
+│             { "name": "titulo", "where": "body", "description": "Nuevo       │
+│ título", "required": false },                                                │
+│             { "name": "precio", "where": "body", "description": "Nuevo       │
+│ precio", "required": false },                                                │
+│             { "name": "productType", "where": "body", "description": "Tipo   │
+│ de producto", "required": false },                                           │
+│             { "name": "medidas", "where": "body", "description":             │
+│ "Dimensiones", "required": false },                                          │
+│             { "name": "material", "where": "body", "description":            │
+│ "Material", "required": false },                                             │
+│             { "name": "notas", "where": "body", "description": "Notas",      │
+│ "required": false },                                                         │
+│             { "name": "fechaEstimada", "where": "body", "description":       │
+│ "Fecha estimada (dd-MM-yy)", "required": false },                            │
+│             { "name": "fechaEntregada", "where": "body", "description":      │
+│ "Fecha entregada (dd-MM-yy)", "required": false },                           │
+│             { "name": "status", "where": "body", "description": "Estado      │
+│ WorkOrder: CREADO, PRODUCCION, TERMINADO, ENTREGADO, ATRASADO", "required":  │
+│ false },                                                                     │
+│             { "name": "workOrderNotes", "where": "body", "description":      │
+│ "Notas de producción", "required": false },                                  │
+│             { "name": "amount", "where": "body", "description": "Monto de    │
+│ pago", "required": false },                                                  │
+│             { "name": "paymentType", "where": "body", "description": "Tipo   │
+│ de pago: DEPOSIT, RESTO, EXTRA", "required": false }                         │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t4-update-product",                                             │
+│       "name": "Tool: Actualizar Producto",                                   │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [680, 680]                                                 │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "ver_pagos_producto",                                        │
+│         "description": "Lista los pagos de un producto. Requerido: productId │
+│  (ID del producto).",                                                        │
+│         "method": "GET",                                                     │
+│         "url": "={{ $vars.BACKEND_URL }}/api/payments/{productId}",          │
+│         "parametersToPassToRequest": {                                       │
+│           "values": [                                                        │
+│             { "name": "productId", "where": "path", "description": "ID del   │
+│ producto", "required": true }                                                │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t5-list-payments",                                              │
+│       "name": "Tool: Ver Pagos",                                             │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [840, 680]                                                 │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "crear_pago",                                                │
+│         "description": "Registra un pago. Requeridos: valor (decimal), type  │
+│ (DEPOSIT/RESTO/EXTRA), product_id, fecha (dd-MM-yy), paymentMethod           │
+│ (CASH/BANK_TRANSFER/CREDIT_DEBIT_CARD/OTHER). Opcional: pagostatus.",        │
+│         "method": "POST",                                                    │
+│         "url": "={{ $vars.BACKEND_URL }}/api/payments",                      │
+│         "sendBody": true,                                                    │
+│         "contentType": "json",                                               │
+│         "parametersToPassToRequest": {                                       │
+│           "values": [                                                        │
+│             { "name": "valor", "where": "body", "description": "Monto del    │
+│ pago (decimal)", "required": true },                                         │
+│             { "name": "type", "where": "body", "description": "DEPOSIT,      │
+│ RESTO o EXTRA", "required": true },                                          │
+│             { "name": "product_id", "where": "body", "description": "ID del  │
+│ producto", "required": true },                                               │
+│             { "name": "fecha", "where": "body", "description": "Fecha del    │
+│ pago (dd-MM-yy)", "required": true },                                        │
+│             { "name": "paymentMethod", "where": "body", "description":       │
+│ "CASH, BANK_TRANSFER, CREDIT_DEBIT_CARD, OTHER", "required": true },         │
+│             { "name": "pagostatus", "where": "body", "description":          │
+│ "PAGO_SEÑA, CANCELADO, ABONADO, REEMBOLSO", "required": false }              │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t6-create-payment",                                             │
+│       "name": "Tool: Crear Pago",                                            │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [1000, 680]                                                │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "listar_costos",                                             │
+│         "description": "Lista costos operativos (alquiler, salarios, etc.).  │
+│ Opcionales: page (default 0), size (default 20).",                           │
+│         "method": "GET",                                                     │
+│         "url": "={{ $vars.BACKEND_URL }}/api/costs",                         │
+│         "sendQuery": true,                                                   │
+│         "queryParameters": {                                                 │
+│           "parameters": [                                                    │
+│             { "name": "page", "value": "0" },                                │
+│             { "name": "size", "value": "20" }                                │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t7-list-costs",                                                 │
+│       "name": "Tool: Listar Costos",                                         │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [1160, 680]                                                │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "crear_costo",                                               │
+│         "description": "Registra un costo. Requeridos: costType              │
+│ (RENT/SALARY/TAX/ADS/MATERIAL/SERVICES/OTHERS), amount (decimal), date       │
+│ (dd-MM-yy). Opcionales: reason (descripción), frequency                      │
+│ (ONE_TIME/WEEKLY/MONTHLY/YEARLY).",                                          │
+│         "method": "POST",                                                    │
+│         "url": "={{ $vars.BACKEND_URL }}/api/costs",                         │
+│         "sendBody": true,                                                    │
+│         "contentType": "json",                                               │
+│         "parametersToPassToRequest": {                                       │
+│           "values": [                                                        │
+│             { "name": "costType", "where": "body", "description": "RENT,     │
+│ SALARY, TAX, ADS, MATERIAL, SERVICES, OTHERS", "required": true },           │
+│             { "name": "amount", "where": "body", "description": "Monto en    │
+│ pesos (decimal)", "required": true },                                        │
+│             { "name": "date", "where": "body", "description": "Fecha del     │
+│ costo (dd-MM-yy)", "required": true },                                       │
+│             { "name": "reason", "where": "body", "description": "Motivo o    │
+│ descripción", "required": false },                                           │
+│             { "name": "frequency", "where": "body", "description":           │
+│ "ONE_TIME, WEEKLY, MONTHLY, YEARLY", "required": false }                     │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t8-create-cost",                                                │
+│       "name": "Tool: Crear Costo",                                           │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [1320, 680]                                                │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "name": "actualizar_estado",                                         │
+│         "description": "Actualiza estado de producción. IMPORTANTE: id es el │
+│  workOrderId (NO productId). Obtenerlo con obtener_producto → campo          │
+│ workOrderId. Requeridos: id (workOrderId), status                            │
+│ (CREADO/PRODUCCION/TERMINADO/ENTREGADO/ATRASADO).",                          │
+│         "method": "PUT",                                                     │
+│         "url": "={{ $vars.BACKEND_URL }}/api/workorders/{id}/status",        │
+│         "sendQuery": true,                                                   │
+│         "parametersToPassToRequest": {                                       │
+│           "values": [                                                        │
+│             { "name": "id", "where": "path", "description": "workOrderId del │
+│  producto", "required": true },                                              │
+│             { "name": "status", "where": "query", "description": "CREADO,    │
+│ PRODUCCION, TERMINADO, ENTREGADO, ATRASADO", "required": true }              │
+│           ]                                                                  │
+│         },                                                                   │
+│         "options": { "optimizeResponse": true }                              │
+│       },                                                                     │
+│       "id": "t9-update-workorder",                                           │
+│       "name": "Tool: Actualizar Estado",                                     │
+│       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",                    │
+│       "typeVersion": 1.1,                                                    │
+│       "position": [1480, 680]                                                │
+│     },                                                                       │
+│     {                                                                        │
+│       "parameters": {                                                        │
+│         "resource": "message",                                               │
+│         "operation": "send",                                                 │
+│         "recipientPhoneNumber": "={{ $('WhatsApp                             │
+│ Trigger').item.json.messages[0].from }}",                                    │
+│         "textBody": "={{ $json.output }}",                                   │
+│         "additionalFields": {}                                               │
+│       },                                                                     │
+│       "id": "n5-whatsapp-send",                                              │
+│       "name": "Send WhatsApp Reply",                                         │
+│       "type": "n8n-nodes-base.whatsApp",                                     │
+│       "typeVersion": 1,                                                      │
+│       "position": [760, 300],                                                │
+│       "credentials": {                                                       │
+│         "whatsAppApi": {                                                     │
+│           "id": "REPLACE_WITH_CREDENTIAL_ID",                                │
+│           "name": "WhatsApp account"                                         │
+│         }                                                                    │
+│       }                                                                      │
+│     }                                                                        │
+│   ],                                                                         │
+│   "connections": {                                                           │
+│     "WhatsApp Trigger": {                                                    │
+│       "main": [[{ "node": "CRUD Agent", "type": "main", "index": 0 }]]       │
+│     },                                                                       │
+│     "CRUD Agent": {                                                          │
+│       "main": [[{ "node": "Send WhatsApp Reply", "type": "main", "index": 0  │
+│ }]]                                                                          │
+│     },                                                                       │
+│     "GPT-4o": {                                                              │
+│       "ai_languageModel": [[{ "node": "CRUD Agent", "type":                  │
+│ "ai_languageModel", "index": 0 }]]                                           │
+│     },                                                                       │
+│     "Session Memory": {                                                      │
+│       "ai_memory": [[{ "node": "CRUD Agent", "type": "ai_memory", "index": 0 │
+│  }]]                                                                         │
+│     },                                                                       │
+│     "Tool: Listar Productos":    { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Obtener Producto":    { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Crear Producto":      { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Actualizar Producto": { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Ver Pagos":           { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Crear Pago":          { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Listar Costos":       { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Crear Costo":         { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] },                                         │
+│     "Tool: Actualizar Estado":   { "ai_tool": [[{ "node": "CRUD Agent",      │
+│ "type": "ai_tool", "index": 0 }]] }                                          │
+│   },                                                                         │
+│   "active": false,                                                           │
+│   "settings": { "executionOrder": "v1" },                                    │
+│   "pinData": {}                                                              │
+│ }                                                                            │
+│                                                                              │
+│ ---                                                                          │
+│ Critical Files                                                               │
+│                                                                              │
+│ File: backEnd/src/main/java/com/example/demo/config/SecurityConfig.java:77   │
+│ Purpose: Add permitAll for payments, costs, workorders                       │
+│ ────────────────────────────────────────                                     │
+│ File: backEnd/src/main/resources/application.properties:41                   │
+│ Purpose: Date format dd-MM-yy — enforced in AI system prompt                 │
+│ ────────────────────────────────────────                                     │
+│ File: n8nTrials/muebles-whatsapp-agent.json                                  │
+│ Purpose: New file — WhatsApp workflow to import into N8N                     │
+│                                                                              │
+│ ---                                                                          │
+│ Verification                                                                 │
+│                                                                              │
+│ 1. Backend auth fix (after SecurityConfig change):                           │
+│                                                                              │
+│ curl https://your-backend.railway.app/api/payments/1                         │
+│ # Must return 200, not 403                                                   │
+│                                                                              │
+│ 2. WhatsApp flow test:                                                       │
+│                                                                              │
+│ - Send to your WhatsApp Business number: "Lista los últimos productos"       │
+│ - Expected reply: formatted product list                                     │
+│ - Send: "Crea un producto: Mesa de roble, precio 8500"                       │
+│ - Expected reply: confirmation with new product ID                           │
+│ - Send: "Registra una seña de $3000 en efectivo para el producto 1, fecha de │
+│  hoy"                                                                        │
+│ - Expected reply: payment confirmation                                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+● Read 3 files (ctrl+o to expand)
+
+● Now let me read the N8N workflow JSON file:
+
+● Read 1 file (ctrl+o to expand)
+
+● Now I have all the context. Let me make all 4 changes:
+
+● Update(~\Dev\Projects\MueblesWorkFlow\backEnd\src\main\java\com\example\demo\r
+        epository\ProductRepo.java)
+  ⎿  Added 1 line, removed 1 line
+      35                                           @Param("to") LocalDate
+           to);
+      36  
+      37  
+      38 -    @Query("SELECT p FROM Product p WHERE LOWER(p.titulo) LIKE 
+         -LOWER(CONCAT('%', :query)) ")                                  
+      38 +    @Query("SELECT p FROM Product p WHERE LOWER(p.titulo) LIKE 
+         +LOWER(CONCAT('%', :query, '%')) ")                             
+      39      Page<Product> searchByTitulo(@Param("query") String query, 
+          Pageable pageable);
+      40  
+      41      @Query("SELECT p FROM Product p WHERE LOWER(p.titulo) LIKE 
+          LOWER(:titulo)")
+
+● Update(~\Dev\Projects\MueblesWorkFlow\backEnd\src\main\java\com\example\demo\s
+        ervice\ProductService.java)
+  ⎿  Added 4 lines
+      206      }
+      207      public Product findByTitle(String title) { return productR
+           epo.findByTitulo(title) .orElseThrow(() -> new RuntimeExceptio
+           n("Product not found")); }
+      208  
+      209 +    public Page<ProductResponse> searchByTitle(String query, P
+          +ageable pageable) {                                           
+      210 +        return productRepo.searchByTitulo(query, pageable).map
+          +(ProductResponse::from);                                      
+      211 +    }                                                         
+      212 +                                                              
+      213      public List<ProductResponse> getProductsPastDue() {
+      214  
+      215          List<Product> products = productRepo.findByWorkOrderSt
+           atus(Status.ATRASADO);
+
+● Update(~\Dev\Projects\MueblesWorkFlow\backEnd\src\main\java\com\example\demo\c
+        ontroller\ProductController.java)
+  ⎿  Added 10 lines
+      52      }
+      53  
+      54  
+      55 +    @GetMapping("/search")                                     
+      56 +    public ResponseEntity<Page<ProductResponse>> searchProducts
+         +(                                                              
+      57 +            @RequestParam String q,                            
+      58 +            @RequestParam(defaultValue = "0") int page,        
+      59 +            @RequestParam(defaultValue = "10") int size        
+      60 +    ) {                                                        
+      61 +        Pageable pageable = PageRequest.of(page, size, Sort.by(
+         +Sort.Direction.DESC, "startDate"));                            
+      62 +        return ResponseEntity.ok(productService.searchByTitle(q
+         +, pageable));                                                  
+      63 +    }                                                          
+      64 +                                                               
+      65      @PostMapping("/create")
+      66      public ResponseEntity<ProductResponse> createProduct(
+      67              @RequestBody ProductCreateRequest req
+
+● Now update the N8N workflow — add the buscarProducto node, its connection, and
+   update the system prompt:
+
+● Update(muebles-whatsapp-agent.json)
+  ⎿  Added 1 line, removed 1 line
+      25          "promptType": "define",
+      26          "text": "={{ $json.messages[0].text.body }}",
+      27          "options": {
+      28 -          "systemMessage": "Eres el asistente de gestión de Mue
+         -blesWorkFlow para WhatsApp, un sistema para talleres de muebler
+         -ía.\nPuedes consultar y modificar productos, pagos y costos usa
+         -ndo las herramientas disponibles.\n\n## REGLA CRÍTICA — NOMBRES
+         - DE CAMPOS\nLos campos de la API están en español. NUNCA los tr
+         -aduzcas al inglés.\nUsa EXACTAMENTE los nombres de campo defini
+         -dos en cada herramienta.\nEjemplos incorrectos → correctos: tit
+         -le→titulo, price→precio, measures→medidas, paintType→pintura, l
+         -acquerType→laqueado, quantity→cantidad, notes→notas, date→fecha
+         -.\n\n## FECHAS — REGLA CRÍTICA\nEl formato de fecha de la API e
+         -s dd-MM-yy (ej: 23-02-26 para 23 de febrero de 2026).\nNUNCA us
+         -es formato ISO (2026-02-23) — la API lo rechazará.\n\n## ACTUAL
+         -IZAR ESTADO DE PRODUCCIÓN\nPara cambiar el estado de un pedido 
+         -existente:\n1. Primero llama a obtener_producto con el ID del p
+         -roducto para obtener el workOrderId.\n2. Luego llama a actualiz
+         -arEstado con ese workOrderId (campo workOrderId de la respuesta
+         -).\nEstados válidos: CREADO, PRODUCCION, TERMINADO, ENTREGADO, 
+         -ATRASADO.\nIMPORTANTE: NUNCA llames a actualizarEstado después 
+         -de crear un producto — el backend crea el estado CREADO automát
+         -icamente al crear el pedido.\n\n## ENUMS VÁLIDOS\nTipos de prod
+         -ucto: MESA, SILLA, COMODA, BANCOS, RATONA, CRISTALERO, SILLONES
+         -, RACKTV, OTROS\nTipos de pago: DEPOSIT (seña), RESTO (saldo fi
+         -nal), EXTRA (adicional)\nMétodos de pago: CASH, BANK_TRANSFER, 
+         -CREDIT_DEBIT_CARD, OTHER\nTipos de costo: RENT, SALARY, TAX, AD
+         -S, MATERIAL, SERVICES, OTHERS\n\n## COMPORTAMIENTO\n- Si el usu
+         -ario quiere actualizar y no da el ID, usa listar_productos para
+         - buscarlo.\n- Confirma antes de crear/modificar si el mensaje e
+         -s ambiguo.\n- Responde en español, de forma concisa (WhatsApp n
+         -o soporta markdown complejo).\n- Para montos: muestra siempre $
+         - con dos decimales.\n- Si la API devuelve error, infórmalo sin 
+         -exponer detalles técnicos.\n- Mantén las respuestas breves y di
+         -rectas — los usuarios leen en el celular."                     
+      28 +          "systemMessage": "Eres el asistente de gestión de Mue
+         +blesWorkFlow para WhatsApp, un sistema para talleres de muebler
+         +ía.\nPuedes consultar y modificar productos, pagos y costos usa
+         +ndo las herramientas disponibles.\n\n## REGLA CRÍTICA — NOMBRES
+         + DE CAMPOS\nLos campos de la API están en español. NUNCA los tr
+         +aduzcas al inglés.\nUsa EXACTAMENTE los nombres de campo defini
+         +dos en cada herramienta.\nEjemplos incorrectos → correctos: tit
+         +le→titulo, price→precio, measures→medidas, paintType→pintura, l
+         +acquerType→laqueado, quantity→cantidad, notes→notas, date→fecha
+         +.\n\n## FECHAS — REGLA CRÍTICA\nEl formato de fecha de la API e
+         +s dd-MM-yy (ej: 23-02-26 para 23 de febrero de 2026).\nNUNCA us
+         +es formato ISO (2026-02-23) — la API lo rechazará.\n\n## ACTUAL
+         +IZAR ESTADO DE PRODUCCIÓN\nPara cambiar el estado de un pedido 
+         +existente:\n1. Primero llama a obtener_producto con el ID del p
+         +roducto para obtener el workOrderId.\n2. Luego llama a actualiz
+         +arEstado con ese workOrderId (campo workOrderId de la respuesta
+         +).\nEstados válidos: CREADO, PRODUCCION, TERMINADO, ENTREGADO, 
+         +ATRASADO.\nIMPORTANTE: NUNCA llames a actualizarEstado después 
+         +de crear un producto — el backend crea el estado CREADO automát
+         +icamente al crear el pedido.\n\n## ENUMS VÁLIDOS\nTipos de prod
+         +ucto: MESA, SILLA, COMODA, BANCOS, RATONA, CRISTALERO, SILLONES
+         +, RACKTV, OTROS\nTipos de pago: DEPOSIT (seña), RESTO (saldo fi
+         +nal), EXTRA (adicional)\nMétodos de pago: CASH, BANK_TRANSFER, 
+         +CREDIT_DEBIT_CARD, OTHER\nTipos de costo: RENT, SALARY, TAX, AD
+         +S, MATERIAL, SERVICES, OTHERS\n\n## COMPORTAMIENTO\n- Si el usu
+         +ario menciona el nombre del pedido (no el ID), usa buscarProduc
+         +to para encontrarlo y obtener su id y workOrderId.\n- Si el usu
+         +ario quiere actualizar y no da el ID, usa listar_productos para
+         + buscarlo.\n- Confirma antes de crear/modificar si el mensaje e
+         +s ambiguo.\n- Responde en español, de forma concisa (WhatsApp n
+         +o soporta markdown complejo).\n- Para montos: muestra siempre $
+         + con dos decimales.\n- Si la API devuelve error, infórmalo sin 
+         +exponer detalles técnicos.\n- Mantén las respuestas breves y di
+         +rectas — los usuarios leen en el celular."                     
+      29          }
+      30        },
+      31        "id": "n2-agent",
+
+● Now add the buscarProducto node and connection:
+
+● Update(muebles-whatsapp-agent.json)
+  ⎿  Added 19 lines
+      206      },
+      207      {
+      208        "parameters": {
+      209 +        "name": "buscarProducto",                             
+      210 +        "description": "Busca productos por nombre/título (bús
+          +queda parcial). Usar cuando el usuario menciona el nombre del 
+          +pedido en lugar del ID. Devuelve id, titulo, status y workOrde
+          +rId de cada resultado.",                                      
+      211 +        "method": "GET",                                      
+      212 +        "url": "https://mueblesworkflow-production.up.railway.
+          +app/api/products/search",                                     
+      213 +        "parametersToPassToRequest": {                        
+      214 +          "values": [                                         
+      215 +            { "name": "q", "where": "query", "description": "T
+          +exto a buscar en el título", "required": true }               
+      216 +          ]                                                   
+      217 +        },                                                    
+      218 +        "options": { "optimizeResponse": true }               
+      219 +      },                                                      
+      220 +      "id": "t0-search-product",                              
+      221 +      "name": "buscarProducto",                               
+      222 +      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",     
+      223 +      "typeVersion": 1.1,                                     
+      224 +      "position": [40, 680]                                   
+      225 +    },                                                        
+      226 +    {                                                         
+      227 +      "parameters": {                                         
+      228          "resource": "message",
+      229          "operation": "send",
+      230          "recipientPhoneNumber": "={{ $('WhatsApp Trigger').ite
+           m.json.messages[0].from }}",
+
+● Update(muebles-whatsapp-agent.json)
+  ⎿  Added 1 line
+      257      "Session Memory": {
+      258        "ai_memory": [[{ "node": "CRUD Agent", "type": "ai_memor
+           y", "index": 0 }]]
+      259      },
+      260 +    "buscarProducto":    { "ai_tool": [[{ "node": "CRUD Agent"
+          +, "type": "ai_tool", "index": 0 }]] },                        
+      261      "listarProductos":   { "ai_tool": [[{ "node": "CRUD Agent"
+           , "type": "ai_tool", "index": 0 }]] },
+      262      "obtenerProducto":   { "ai_tool": [[{ "node": "CRUD Agent"
+           , "type": "ai_tool", "index": 0 }]] },
+      263      "crearProducto":     { "ai_tool": [[{ "node": "CRUD Agent"
+           , "type": "ai_tool", "index": 0 }]] },
+
+● All 4 changes done. Summary:
+
+  Backend (3 files):
+  - ProductRepo.java:38 — fixed LIKE to CONCAT('%', :query, '%') (was only
+  suffix-matching)
+  - ProductService.java — added searchByTitle(String query, Pageable pageable)
+  - ProductController.java — added GET /api/products/search?q=... endpoint
+  (sorted by startDate DESC, pageable)
+
+  N8N workflow (1 file):
+  - Added buscarProducto tool node (GET with q query param)
+  - Added "buscarProducto" to connections → CRUD Agent
+  - Updated system prompt to instruct the agent to use buscarProducto when the
+  user mentions a product by name instead of ID
+
+✻ Churned for 44s

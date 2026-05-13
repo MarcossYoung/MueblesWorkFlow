@@ -13,6 +13,7 @@ import ProductFormModal from './productCreationModular';
 
 export default function OrdersTable({endpoint}) {
 	const {user} = useContext(UserContext);
+	const canEdit = user?.role === 'ADMIN' || user?.role === 'SELLER';
 
 	// States
 	const [orders, setOrders] = useState([]);
@@ -128,18 +129,20 @@ export default function OrdersTable({endpoint}) {
 					{showMySales ? 'Todos los Pedidos' : 'Ver Mis Ventas'}
 				</button>
 
-				<button
-					className='btn-pill'
-					onClick={() => setIsModalOpen(true)}
-					style={{
-						backgroundColor: '#00b894',
-						color: 'white',
-						border: 'none',
-					}}
-				>
-					<FaPlus size={12} />
-					Agregar Pedido
-				</button>
+				{canEdit && (
+					<button
+						className='btn-pill'
+						onClick={() => setIsModalOpen(true)}
+						style={{
+							backgroundColor: '#00b894',
+							color: 'white',
+							border: 'none',
+						}}
+					>
+						<FaPlus size={12} />
+						Agregar Pedido
+					</button>
+				)}
 			</div>
 
 			{/* --- TABLE (Fills remaining space) --- */}

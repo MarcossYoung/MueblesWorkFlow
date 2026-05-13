@@ -54,7 +54,9 @@ const ProductDetail = () => {
 
 	// Permissions
 	const isAdmin = user?.role === 'ADMIN';
-	const canSeeFinancials = user?.role === 'ADMIN' || user?.role === 'SELLER';
+	const isViewer = user?.role === 'VIEWER';
+	const canEdit = user?.role === 'ADMIN' || user?.role === 'SELLER';
+	const canSeeFinancials = user?.role === 'ADMIN' || user?.role === 'SELLER' || isViewer;
 	const canRegisterPayments = user?.role === 'ADMIN' || user?.role === 'SELLER';
 
 	// --- LOAD DATA ---
@@ -357,6 +359,7 @@ const ProductDetail = () => {
 									value={product.titulo}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -368,6 +371,7 @@ const ProductDetail = () => {
 									value={product.productType}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								>
 									{types.map((t) => (
 										<option key={t} value={t}>
@@ -384,6 +388,7 @@ const ProductDetail = () => {
 									value={product.workOrderStatus}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								>
 									{statuses.map((s) => (
 										<option key={s} value={s}>
@@ -401,6 +406,7 @@ const ProductDetail = () => {
 									value={product.material}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -411,6 +417,7 @@ const ProductDetail = () => {
 									value={product.color}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -421,6 +428,7 @@ const ProductDetail = () => {
 									value={product.medidas}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -431,6 +439,7 @@ const ProductDetail = () => {
 									value={product.pintura}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -441,6 +450,7 @@ const ProductDetail = () => {
 									value={product.laqueado}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -452,6 +462,7 @@ const ProductDetail = () => {
 									value={product.cantidad}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -464,6 +475,7 @@ const ProductDetail = () => {
 									value={product.startDate}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -477,6 +489,7 @@ const ProductDetail = () => {
 									value={product.fechaEstimada}
 									onChange={handleChange}
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -491,10 +504,11 @@ const ProductDetail = () => {
 									value={product.fechaEntrega}
 									onChange={handleChange}
 									style={{...inputStyle, width: '50%'}}
+									disabled={!canEdit}
 								/>
 							</div>
 
-							{/* PRICE FIELD (Only for Admin/Seller) - RESTORED */}
+							{/* PRICE FIELD (Only for Admin/Seller/Viewer) - RESTORED */}
 							{canSeeFinancials && (
 								<div style={{gridColumn: '1 / -1'}}>
 									<label
@@ -510,6 +524,7 @@ const ProductDetail = () => {
 										name='precio'
 										value={product.precio}
 										onChange={handleChange}
+										disabled={!canEdit}
 										style={{
 											...inputStyle,
 											fontWeight: 'bold',
@@ -528,6 +543,7 @@ const ProductDetail = () => {
 									value={product.notas}
 									onChange={handleChange}
 									rows='3'
+									disabled={!canEdit}
 									style={{
 										...inputStyle,
 										fontFamily: 'inherit',
@@ -545,6 +561,7 @@ const ProductDetail = () => {
 									onChange={handleChange}
 									placeholder="+54 11 1234-5678"
 									style={inputStyle}
+									disabled={!canEdit}
 								/>
 							</div>
 
@@ -580,9 +597,10 @@ const ProductDetail = () => {
 										name="cogsAmount"
 										value={product.cogsAmount || ""}
 										onChange={handleChange}
+										disabled={!canEdit}
 										style={{...inputStyle, marginBottom: "10px"}}
 									/>
-									<button
+									{canEdit && <button
 										type="button"
 										onClick={handleSyncCmv}
 										disabled={cmvSyncing}
@@ -598,7 +616,7 @@ const ProductDetail = () => {
 										}}
 									>
 										{cmvSyncing ? "Sincronizando..." : "Sincronizar"}
-									</button>
+									</button>}
 									{Array.isArray(product.materials) && product.materials.length > 0 && (
 										<ul style={{listStyle: "none", padding: 0, margin: "12px 0 0", fontSize: "0.85rem"}}>
 											{product.materials.map((m, i) => (
@@ -648,15 +666,17 @@ const ProductDetail = () => {
 										}}
 									/>
 									: <p style={{color: '#b2bec3', fontSize: '0.85rem'}}>Sin foto cargada.</p>}
-								<input
-									type='file'
-									accept='.jpg,.jpeg,.png,.webp'
-									style={{marginTop: 8}}
-									onChange={handleProductImageUpload}
-								/>
+								{canEdit && (
+									<input
+										type='file'
+										accept='.jpg,.jpeg,.png,.webp'
+										style={{marginTop: 8}}
+										onChange={handleProductImageUpload}
+									/>
+								)}
 							</div>
 
-						<button
+						{canEdit && <button
 							type='submit'
 							style={{
 								marginTop: '25px',
@@ -672,7 +692,7 @@ const ProductDetail = () => {
 							}}
 						>
 							Guardar Cambios
-						</button>
+						</button>}
 					</form>
 				</div>
 

@@ -14,6 +14,7 @@ export default function Finance() {
 	const [aiLoading, setAiLoading] = useState(false);
 
 	const isSeller = user?.role === 'SELLER';
+	const isViewer = user?.role === 'VIEWER';
 
 	const handleAnalyze = async () => {
 		setAiLoading(true);
@@ -195,29 +196,31 @@ export default function Finance() {
 		>
 			<div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
 				<h3 style={{margin: 0, color: '#2d3436', fontSize: '1rem'}}>Análisis IA</h3>
-				<button
-					onClick={handleAnalyze}
-					disabled={aiLoading}
-					style={{
-						padding: '8px 18px',
-						background: '#6c5ce7',
-						color: 'white',
-						border: 'none',
-						borderRadius: '8px',
-						cursor: aiLoading ? 'not-allowed' : 'pointer',
-						opacity: aiLoading ? 0.7 : 1,
-						fontSize: '0.875rem',
-						fontWeight: '600',
-					}}
-				>
-					{aiLoading ? 'Analizando...' : 'Analizar'}
-				</button>
+				{!isViewer && (
+					<button
+						onClick={handleAnalyze}
+						disabled={aiLoading}
+						style={{
+							padding: '8px 18px',
+							background: '#6c5ce7',
+							color: 'white',
+							border: 'none',
+							borderRadius: '8px',
+							cursor: aiLoading ? 'not-allowed' : 'pointer',
+							opacity: aiLoading ? 0.7 : 1,
+							fontSize: '0.875rem',
+							fontWeight: '600',
+						}}
+					>
+						{aiLoading ? 'Analizando...' : 'Analizar'}
+					</button>
+				)}
 			</div>
 			{aiInsight ? (
 				<p style={{margin: 0, color: '#636e72', lineHeight: '1.6', fontSize: '0.95rem'}}>{aiInsight}</p>
 			) : (
 				<p style={{margin: 0, color: '#b2bec3', fontSize: '0.875rem'}}>
-					Haz clic en "Analizar" para obtener un resumen inteligente del mes.
+					{isViewer ? 'Análisis IA disponible para administradores.' : 'Haz clic en "Analizar" para obtener un resumen inteligente del mes.'}
 				</p>
 			)}
 		</div>

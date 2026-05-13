@@ -10,6 +10,7 @@ export default function Sidebar() {
 	const {user} = useContext(UserContext);
 	const isAdmin = user?.role === 'ADMIN';
 	const isSeller = user?.role === 'SELLER';
+	const isViewer = user?.role === 'VIEWER';
 
 	return (
 		<aside className='sidebar bg-gray-100 p-4 justifyContent'>
@@ -19,21 +20,21 @@ export default function Sidebar() {
 						Pedidos
 					</NavLink>
 				</div>
-				{(isAdmin || isSeller) && (
+				{(isAdmin || isSeller || isViewer) && (
 					<div>
 						<NavLink to='/finance' className={linkClass}>
 							Finanzas
 						</NavLink>
 					</div>
 				)}
-				{isAdmin && (
+				{(isAdmin || isViewer) && (
 					<div>
 						<NavLink to='/costs' className={linkClass}>
 							Costos
 						</NavLink>
 					</div>
 				)}
-				{(isAdmin || isSeller) && (
+				{(isAdmin || isSeller || isViewer) && (
 					<div>
 						<NavLink to='/inventory' className={linkClass}>
 							Inventario
@@ -42,7 +43,7 @@ export default function Sidebar() {
 				)}
 			</div>
 
-			{isAdmin && (
+			{(isAdmin || isViewer) && (
 				<NavLink className={linkClass} to='/admin'>
 					Panel Admin
 				</NavLink>

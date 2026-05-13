@@ -76,6 +76,7 @@ function App() {
 											'USER',
 											'SELLER',
 											'ADMIN',
+											'VIEWER',
 										]}
 									>
 										<OrdersDueThisWeek user={user} />
@@ -92,7 +93,7 @@ function App() {
 									) : (
 										<RoleRoute
 											user={user}
-											allowedRoles={['SELLER', 'ADMIN']}
+											allowedRoles={['SELLER', 'ADMIN', 'VIEWER']}
 										>
 											<Products />
 										</RoleRoute>
@@ -104,7 +105,7 @@ function App() {
 								element={
 									<RoleRoute
 										user={user}
-										allowedRoles={['USER', 'SELLER', 'ADMIN']}
+										allowedRoles={['USER', 'SELLER', 'ADMIN', 'VIEWER']}
 									>
 										<OrdersNotPickedUp />
 									</RoleRoute>
@@ -115,7 +116,7 @@ function App() {
 								element={
 									<RoleRoute
 										user={user}
-										allowedRoles={['USER', 'SELLER', 'ADMIN']}
+										allowedRoles={['USER', 'SELLER', 'ADMIN', 'VIEWER']}
 									>
 										<OrdersPastDue />
 									</RoleRoute>
@@ -129,7 +130,7 @@ function App() {
 							element={
 								<RoleRoute
 									user={user}
-									allowedRoles={['ADMIN', 'SELLER']}
+									allowedRoles={['ADMIN', 'SELLER', 'VIEWER']}
 								>
 									<Sidebar />
 									<div className='main-content'>
@@ -143,7 +144,7 @@ function App() {
 							element={
 								<RoleRoute
 									user={user}
-									allowedRoles={['ADMIN']}
+									allowedRoles={['ADMIN', 'VIEWER']}
 								>
 									<Sidebar />
 									<div className='main-content'>
@@ -157,7 +158,7 @@ function App() {
 							element={
 								<RoleRoute
 									user={user}
-									allowedRoles={['ADMIN', 'SELLER']}
+									allowedRoles={['ADMIN', 'SELLER', 'VIEWER']}
 								>
 									<Sidebar />
 									<div className='main-content'>
@@ -188,22 +189,26 @@ function App() {
 						<Route
 							path='/edit/:productId'
 							element={
-								<ProtectedRoute user={user}>
+								<RoleRoute
+									user={user}
+									allowedRoles={['ADMIN', 'SELLER']}
+								>
 									<Sidebar />
 									<ProductEdit product={product} />
-								</ProtectedRoute>
+								</RoleRoute>
 							}
 						/>
 
 						<Route
 							path='/admin'
 							element={
-								<ProtectedRoute user={user}>
-									<AdminRoute user={user}>
-										<Sidebar />
-										<AdminPage />
-									</AdminRoute>
-								</ProtectedRoute>
+								<RoleRoute
+									user={user}
+									allowedRoles={['ADMIN', 'VIEWER']}
+								>
+									<Sidebar />
+									<AdminPage />
+								</RoleRoute>
 							}
 						/>
 

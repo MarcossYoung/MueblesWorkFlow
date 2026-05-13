@@ -1,0 +1,340 @@
+{
+  "name": "Muebles WhatsApp CRUD Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["messages"],
+        "options": {}
+      },
+      "id": "n1-whatsapp-trigger",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "WhatsApp account"
+        }
+      },
+      "webhookId": "muebles-whatsapp"
+    },
+    {
+      "parameters": {
+        "agent": "toolsAgent",
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "Eres el asistente de gestión de MueblesWorkFlow para WhatsApp, un sistema para talleres de mueblería.\nPuedes consultar y modificar productos, pagos y costos usando las herramientas disponibles.\n\n## REGLA CRÍTICA — NOMBRES DE CAMPOS\nLos campos de la API están en español. NUNCA los traduzcas al inglés.\nUsa EXACTAMENTE los nombres de campo definidos en cada herramienta.\nEjemplos incorrectos → correctos: title→titulo, price→precio, measures→medidas, paintType→pintura, lacquerType→laqueado, quantity→cantidad, notes→notas, date→fecha.\n\n## FECHAS — REGLA CRÍTICA\nEl formato de fecha es yyyy-MM-dd con GUIONES (ej: 2026-02-25). NUNCA uses barras (2026/02/25). Si el usuario escribe la fecha con barras, conviértela a guiones antes de enviarla.\n\n## ACTUALIZAR ESTADO DE PRODUCCIÓN\nPara cambiar el estado de un pedido existente:\n1. Primero llama a obtener_producto con el ID del producto para obtener el workOrderId.\n2. Luego llama a actualizarEstado con ese workOrderId (campo workOrderId de la respuesta).\nEstados válidos: CREADO, PRODUCCION, TERMINADO, ENTREGADO, ATRASADO.\nIMPORTANTE: NUNCA llames a actualizarEstado después de crear un producto — el backend crea el estado CREADO automáticamente al crear el pedido.\n\n## ENUMS VÁLIDOS\nTipos de producto: MESA, SILLA, COMODA, BANCOS, RATONA, CRISTALERO, SILLONES, RACKTV, OTROS\nTipos de pago: DEPOSIT (seña), RESTO (saldo final), EXTRA (adicional)\nMétodos de pago: CASH, BANK_TRANSFER, CREDIT_DEBIT_CARD, OTHER\nTipos de costo: RENT, SALARY, TAX, ADS, MATERIAL, SERVICES, OTHERS\n\n## COMPORTAMIENTO\n- Si el usuario menciona el nombre del pedido (no el ID), usa buscarProducto para encontrarlo y obtener su id y workOrderId.\n- Si el usuario quiere actualizar y no da el ID, usa listar_productos para buscarlo.\n- Confirma antes de crear/modificar si el mensaje es ambiguo.\n- Responde en español, de forma concisa (WhatsApp no soporta markdown complejo).\n- Para montos: muestra siempre $ con dos decimales.\n- Si la API devuelve error, infórmalo sin exponer detalles técnicos.\n- Mantén las respuestas breves y directas — los usuarios leen en el celular.\n\n## CREACIÓN DE PEDIDOS — REGLA OBLIGATORIA\nCuando crees un pedido exitosamente con crearProducto, SIEMPRE añade al final de tu respuesta (después del mensaje para el usuario) el bloque de datos exactamente así, sin espacios extra:\n##PEDIDO_CREADO##\n[el JSON completo devuelto por crearProducto]\n##FIN_PEDIDO##\nEsto es obligatorio aunque el usuario no lo pida. No lo menciones en el mensaje al usuario."
+        }
+      },
+      "id": "n2-agent",
+      "name": "CRUD Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 1024
+        }
+      },
+      "id": "n3-llm",
+      "name": "GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [400, 520],
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "contextWindowLength": 10
+      },
+      "id": "n4-memory",
+      "name": "Session Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [600, 520]
+    },
+    {
+      "parameters": {
+        "name": "listar_productos",
+        "description": "Obtiene lista paginada de productos/pedidos.",
+        "method": "GET",
+        "url": "https://mueblesworkflow-production.up.railway.app/api/products?page=0&size=20",
+        "options": { "optimizeResponse": true }
+      },
+      "id": "t1-list-products",
+      "name": "listarProductos",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [200, 680]
+    },
+    {
+      "parameters": {
+        "name": "obtener_producto",
+        "description": "Obtiene detalles de un producto por su ID numérico. Devuelve el campo workOrderId necesario para actualizarEstado.",
+        "method": "GET",
+        "url": "https://mueblesworkflow-production.up.railway.app/api/products/{id}",
+        "parametersToPassToRequest": {
+          "values": [
+            { "name": "id", "where": "path", "description": "ID numérico del producto", "required": true }
+          ]
+        },
+        "options": { "optimizeResponse": true }
+      },
+      "id": "t2-get-product",
+      "name": "obtenerProducto",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [360, 680]
+    },
+    {
+      "parameters": {
+        "name": "crearProducto",
+        "description": "Crea un nuevo producto/pedido. Pasa un JSON con los campos exactos (NO traducir al inglés):\n- titulo (string, REQUERIDO)\n- precio (decimal, REQUERIDO)\n- productType: MESA, SILLA, COMODA, BANCOS, RATONA, CRISTALERO, SILLONES, RACKTV, OTROS\n- medidas, material, pintura, color, laqueado, notas, clientEmail\n- cantidad (number)\n- fechaEstimada (yyyy-MM-dd)\n- amount (decimal): seña inicial",
+        "language": "javaScript",
+        "jsCode": "const data = typeof query === 'string' ? JSON.parse(query) : query;\nconst result = await this.helpers.httpRequest({ method: 'POST', url: 'https://mueblesworkflow-production.up.railway.app/api/products/create', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });\nreturn JSON.stringify(result);"
+      },
+      "id": "t3-create-product",
+      "name": "crearProducto",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [520, 680]
+    },
+    {
+      "parameters": {
+        "name": "actualizarProducto",
+        "description": "Actualiza campos de un producto existente. Pasa un JSON con id (REQUERIDO) y los campos a modificar (NO traducir al inglés):\n- id (number, REQUERIDO): ID del producto\n- titulo, precio, productType, medidas, material, pintura, color, laqueado, cantidad, notas\n- fechaEstimada (yyyy-MM-dd), fechaEntregada (yyyy-MM-dd)\n- status: CREADO, PRODUCCION, TERMINADO, ENTREGADO, ATRASADO\n- workOrderNotes, amount, paymentType: DEPOSIT, RESTO, EXTRA",
+        "language": "javaScript",
+        "jsCode": "const data = typeof query === 'string' ? JSON.parse(query) : query;\nconst { id, ...body } = data;\nconst result = await this.helpers.httpRequest({ method: 'PUT', url: 'https://mueblesworkflow-production.up.railway.app/api/products/' + id, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });\nreturn JSON.stringify(result);"
+      },
+      "id": "t4-update-product",
+      "name": "actualizarProducto",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [680, 680]
+    },
+    {
+      "parameters": {
+        "name": "ver_pagos_producto",
+        "description": "Lista los pagos registrados de un producto. Requiere productId (ID del producto).",
+        "method": "GET",
+        "url": "https://mueblesworkflow-production.up.railway.app/api/payments/{productId}",
+        "parametersToPassToRequest": {
+          "values": [
+            { "name": "productId", "where": "path", "description": "ID numérico del producto", "required": true }
+          ]
+        },
+        "options": { "optimizeResponse": true }
+      },
+      "id": "t5-list-payments",
+      "name": "verPagos",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [840, 680]
+    },
+    {
+      "parameters": {
+        "name": "crearPago",
+        "description": "Registra un pago. Pasa un JSON con los campos exactos (NO traducir al inglés):\n- valor (decimal, REQUERIDO): monto — NO usar amount ni value\n- type (string, REQUERIDO): DEPOSIT, RESTO o EXTRA\n- product_id (number, REQUERIDO): ID del producto — NO usar productId\n- fecha (string yyyy-MM-dd, REQUERIDO): fecha del pago — NO usar date\n- paymentMethod (string, REQUERIDO): CASH, BANK_TRANSFER, CREDIT_DEBIT_CARD, OTHER\n- pagostatus (string, opcional): PAGO_SEÑA, CANCELADO, ABONADO, REEMBOLSO",
+        "language": "javaScript",
+        "jsCode": "const data = typeof query === 'string' ? JSON.parse(query) : query;\nconst result = await this.helpers.httpRequest({ method: 'POST', url: 'https://mueblesworkflow-production.up.railway.app/api/payments', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });\nreturn JSON.stringify(result);"
+      },
+      "id": "t6-create-payment",
+      "name": "crearPago",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [1000, 680]
+    },
+    {
+      "parameters": {
+        "name": "listar_costos",
+        "description": "Lista costos operativos registrados (alquiler, salarios, materiales, etc.).",
+        "method": "GET",
+        "url": "https://mueblesworkflow-production.up.railway.app/api/costs?page=0&size=20",
+        "options": { "optimizeResponse": true }
+      },
+      "id": "t7-list-costs",
+      "name": "listarCostos",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1160, 680]
+    },
+    {
+      "parameters": {
+        "name": "crearCosto",
+        "description": "Registra un costo operativo. Pasa un JSON con los campos exactos (NO traducir al inglés):\n- costType (string, REQUERIDO): RENT, SALARY, TAX, ADS, MATERIAL, SERVICES, OTHERS\n- amount (decimal, REQUERIDO): monto en pesos\n- date (string yyyy-MM-dd, REQUERIDO): fecha del costo\n- reason (string, opcional): motivo o descripción\n- frequency (string, opcional): ONE_TIME, WEEKLY, MONTHLY, YEARLY",
+        "language": "javaScript",
+        "jsCode": "const data = typeof query === 'string' ? JSON.parse(query) : query;\nconst result = await this.helpers.httpRequest({ method: 'POST', url: 'https://mueblesworkflow-production.up.railway.app/api/costs', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });\nreturn JSON.stringify(result);"
+      },
+      "id": "t8-create-cost",
+      "name": "crearCosto",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [1320, 680]
+    },
+    {
+      "parameters": {
+        "name": "actualizarEstado",
+        "description": "Actualiza el estado de producción de un pedido. IMPORTANTE: id es el workOrderId (NO el productId) — obtenerlo llamando a obtener_producto primero. Campos: id (workOrderId, path, REQUERIDO), status (query, REQUERIDO): CREADO, PRODUCCION, TERMINADO, ENTREGADO, ATRASADO. NO llamar tras crear un producto — el backend asigna CREADO automáticamente.",
+        "method": "PUT",
+        "url": "https://mueblesworkflow-production.up.railway.app/api/workorders/{id}/status",
+        "parametersToPassToRequest": {
+          "values": [
+            { "name": "id", "where": "path", "description": "workOrderId del producto (campo workOrderId de obtener_producto)", "required": true },
+            { "name": "status", "where": "query", "description": "Estado: CREADO, PRODUCCION, TERMINADO, ENTREGADO, ATRASADO", "required": true }
+          ]
+        },
+        "options": { "optimizeResponse": true }
+      },
+      "id": "t9-update-workorder",
+      "name": "actualizarEstado",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1480, 680]
+    },
+    {
+      "parameters": {
+        "name": "buscarProducto",
+        "description": "Busca productos por nombre/título (búsqueda parcial). Pasa un JSON con: q (string, REQUERIDO): texto a buscar en el título del pedido. Usar cuando el usuario menciona el nombre del pedido en lugar del ID. Devuelve id, titulo, status y workOrderId de cada resultado.",
+        "language": "javaScript",
+        "jsCode": "const data = typeof query === 'string' ? JSON.parse(query) : query;\nconst q = encodeURIComponent(data.q || data.titulo || data.query || data.term || '');\nconst result = await this.helpers.httpRequest({ method: 'GET', url: 'https://mueblesworkflow-production.up.railway.app/api/products/search?q=' + q });\nreturn JSON.stringify(result);"
+      },
+      "id": "t0-search-product",
+      "name": "buscarProducto",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [40, 680]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output.replace(/##PEDIDO_CREADO##[\\s\\S]*?##FIN_PEDIDO##/g, '').trim() }}",
+        "additionalFields": {}
+      },
+      "id": "n5-whatsapp-send",
+      "name": "Send WhatsApp Reply",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [760, 180],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output || '';\n\nconst start = output.indexOf('##PEDIDO_CREADO##');\nconst end = output.indexOf('##FIN_PEDIDO##');\n\nif (start === -1 || end === -1) {\n  return [{ json: { wasCreated: false } }];\n}\n\nconst jsonStr = output.substring(start + '##PEDIDO_CREADO##'.length, end).trim();\n\ntry {\n  const product = JSON.parse(jsonStr);\n  return [{ json: { ...product, wasCreated: true } }];\n} catch (e) {\n  return [{ json: { wasCreated: false, _error: e.message, _raw: jsonStr } }];\n}"
+      },
+      "id": "n6-extract-created",
+      "name": "Extraer Pedido Creado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 420]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-has-email",
+              "leftValue": "={{ $json.wasCreated === true && !!$json.clientEmail }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n7-if-email",
+      "name": "¿Tiene Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [980, 420]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $vars.GMAIL_FROM }}",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "=Confirmación de Pedido - {{ $json.titulo }}",
+        "emailType": "html",
+        "message": "=<!DOCTYPE html><html lang=\"es\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><title>Confirmación de Pedido</title></head><body style=\"margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,Helvetica,sans-serif;\"><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#f4f6f9;padding:32px 16px;\"><tr><td align=\"center\"><table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:600px;width:100%;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);\"><tr><td style=\"background-color:#0984e3;padding:32px 36px;\"><p style=\"margin:0;font-size:12px;color:#a8d4f5;letter-spacing:2px;text-transform:uppercase;\">MueblesWorkFlow</p><h1 style=\"margin:8px 0 0;font-size:26px;font-weight:700;color:#ffffff;\">Confirmación de Pedido</h1><p style=\"margin:8px 0 0;font-size:14px;color:#cce5ff;\">Tu pedido fue registrado exitosamente.</p></td></tr><tr><td style=\"background-color:#f0f7ff;padding:20px 36px;border-bottom:3px solid #0984e3;\"><p style=\"margin:0;font-size:11px;color:#74b9ff;text-transform:uppercase;letter-spacing:1px;\">Pedido</p><h2 style=\"margin:4px 0 0;font-size:22px;font-weight:700;color:#2d3436;\">{{ $json.titulo }}</h2></td></tr><tr><td style=\"padding:32px 36px;\"><p style=\"margin:0 0 10px;font-size:11px;font-weight:700;color:#636e72;text-transform:uppercase;letter-spacing:1px;\">Especificaciones del Mueble</p><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-bottom:28px;\"><tr><td width=\"50%\" style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Tipo</td><td width=\"50%\" style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.productType }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Medidas</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.medidas }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Material</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.material }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Color</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.color }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Pintura</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.pintura }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Laqueado</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.laqueado }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Cantidad</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.cantidad }}</td></tr></table><p style=\"margin:0 0 10px;font-size:11px;font-weight:700;color:#636e72;text-transform:uppercase;letter-spacing:1px;\">Notas Adicionales</p><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:28px;\"><tr><td style=\"padding:14px 16px;border:1px solid #dfe6e9;border-left:4px solid #0984e3;background:#f8fbff;font-size:13px;color:#2d3436;line-height:1.6;\">{{ $json.notas || 'Sin notas adicionales.' }}</td></tr></table><p style=\"margin:0 0 10px;font-size:11px;font-weight:700;color:#636e72;text-transform:uppercase;letter-spacing:1px;\">Fechas y Estado</p><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-bottom:28px;\"><tr><td width=\"50%\" style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Fecha de Registro</td><td width=\"50%\" style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.startDate }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Entrega Estimada</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;color:#2d3436;\">{{ $json.fechaEstimada || 'A confirmar' }}</td></tr><tr><td style=\"padding:10px 12px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Estado de Producción</td><td style=\"padding:10px 12px;border:1px solid #dfe6e9;font-size:13px;\"><span style=\"display:inline-block;padding:3px 10px;background:#e8f5e9;color:#2e7d32;border-radius:20px;font-size:12px;font-weight:700;\">{{ $json.workOrderStatus }}</span></td></tr></table><p style=\"margin:0 0 10px;font-size:11px;font-weight:700;color:#636e72;text-transform:uppercase;letter-spacing:1px;\">Resumen de Pago</p><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;margin-bottom:28px;\"><tr><td width=\"50%\" style=\"padding:12px 16px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Precio Total</td><td width=\"50%\" style=\"padding:12px 16px;border:1px solid #dfe6e9;font-size:16px;font-weight:700;color:#0984e3;\">${{ $json.precio }}</td></tr><tr><td style=\"padding:12px 16px;border:1px solid #dfe6e9;background:#fafafa;font-size:13px;color:#636e72;font-weight:600;\">Seña Abonada</td><td style=\"padding:12px 16px;border:1px solid #dfe6e9;font-size:14px;font-weight:700;color:#00b894;\">${{ $json.depositPaid || '0' }}</td></tr><tr style=\"background:#fff8f8;\"><td style=\"padding:12px 16px;border:1px solid #dfe6e9;font-size:13px;color:#636e72;font-weight:600;\">Saldo Restante</td><td style=\"padding:12px 16px;border:1px solid #dfe6e9;font-size:16px;font-weight:700;color:#d63031;\">${{ ($json.precio || 0) - ($json.depositPaid || 0) }}</td></tr></table>{{ $json.foto ? '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:28px;\"><tr><td style=\"text-align:center;padding:8px;border:1px solid #dfe6e9;border-radius:8px;background:#fafafa;\"><p style=\"margin:0 0 10px;font-size:11px;font-weight:700;color:#636e72;text-transform:uppercase;letter-spacing:1px;\">Foto del Mueble</p><img src=\\'' + $json.foto + '\\' alt=\"Foto del mueble\" style=\"max-width:100%;max-height:280px;object-fit:contain;border-radius:6px;\" /></td></tr></table>' : '' }}</td></tr><tr><td style=\"background-color:#f4f6f9;padding:24px 36px;border-top:1px solid #dfe6e9;text-align:center;\"><p style=\"margin:0 0 6px;font-size:13px;color:#636e72;\">Ante cualquier consulta, respondé a este correo.</p><p style=\"margin:0;font-size:12px;color:#b2bec3;\">MueblesWorkFlow &mdash; Sistema de Gestión de Pedidos</p></td></tr></table></td></tr></table></body></html>",
+        "options": {}
+      },
+      "id": "n8-send-email",
+      "name": "Enviar Email Confirmación",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1200, 340],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_SMTP_CREDENTIAL_ID",
+          "name": "Gmail SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [[{ "node": "CRUD Agent", "type": "main", "index": 0 }]]
+    },
+    "CRUD Agent": {
+      "main": [[
+        { "node": "Send WhatsApp Reply", "type": "main", "index": 0 },
+        { "node": "Extraer Pedido Creado", "type": "main", "index": 0 }
+      ]]
+    },
+    "Extraer Pedido Creado": {
+      "main": [[{ "node": "¿Tiene Email?", "type": "main", "index": 0 }]]
+    },
+    "¿Tiene Email?": {
+      "main": [
+        [{ "node": "Enviar Email Confirmación", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "GPT-4o": {
+      "ai_languageModel": [[{ "node": "CRUD Agent", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Session Memory": {
+      "ai_memory": [[{ "node": "CRUD Agent", "type": "ai_memory", "index": 0 }]]
+    },
+    "buscarProducto":    { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "listarProductos":   { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "obtenerProducto":   { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "crearProducto":     { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "actualizarProducto":{ "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "verPagos":          { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "crearPago":         { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "listarCostos":      { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "crearCosto":        { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] },
+    "actualizarEstado":  { "ai_tool": [[{ "node": "CRUD Agent", "type": "ai_tool", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

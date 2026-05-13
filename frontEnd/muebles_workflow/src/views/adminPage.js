@@ -1,4 +1,5 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, useContext} from 'react';
+import {UserContext} from '../UserProvider';
 import axios from 'axios';
 import {
 	FaUser,
@@ -23,6 +24,9 @@ import {
 import {BASE_URL} from '../api/config';
 
 function AdminPage() {
+	const {user} = useContext(UserContext);
+	const isViewer = user?.role === 'VIEWER';
+
 	// --- STATES ---
 	const [summary, setSummary] = useState({
 		totalUsers: 0,
@@ -270,17 +274,19 @@ function AdminPage() {
 						}}
 					>
 						<h2>Gestión de Usuarios</h2>
-						<button
-							className='button_3'
-							onClick={() => setShowUserModal(true)}
-							style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: '8px',
-							}}
-						>
-							<FaUserPlus /> Nuevo Usuario
-						</button>
+						{!isViewer && (
+							<button
+								className='button_3'
+								onClick={() => setShowUserModal(true)}
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									gap: '8px',
+								}}
+							>
+								<FaUserPlus /> Nuevo Usuario
+							</button>
+						)}
 					</div>
 
 					{/* Feedback Messages */}
@@ -304,7 +310,7 @@ function AdminPage() {
 									<th>ID</th>
 									<th>Usuario</th>
 									<th>Rol</th>
-									<th className='text-center'>Acciones</th>
+									{!isViewer && <th className='text-center'>Acciones</th>}
 								</tr>
 							</thead>
 							<tbody>
@@ -330,6 +336,7 @@ function AdminPage() {
 														<option value='USER'>USER</option>
 														<option value='SELLER'>SELLER</option>
 														<option value='ADMIN'>ADMIN</option>
+														<option value='VIEWER'>VIEWER</option>
 													</select>
 												) : (
 													<span
@@ -340,12 +347,16 @@ function AdminPage() {
 																	? '#e1bee7'
 																	: u.appUserRole === 'SELLER'
 																	? '#fff3e0'
+																	: u.appUserRole === 'VIEWER'
+																	? '#dbeafe'
 																	: '#e0f2f1',
 															color:
 																u.appUserRole === 'ADMIN'
 																	? '#7b1fa2'
 																	: u.appUserRole === 'SELLER'
 																	? '#e65100'
+																	: u.appUserRole === 'VIEWER'
+																	? '#1e40af'
 																	: '#00695c',
 															padding: '4px 12px',
 															borderRadius: '20px',
@@ -356,7 +367,7 @@ function AdminPage() {
 													</span>
 												)}
 											</td>
-											<td className='text-center' style={{display: 'flex', gap: '6px', justifyContent: 'center'}}>
+											{!isViewer && <td className='text-center' style={{display: 'flex', gap: '6px', justifyContent: 'center'}}>
 												{editingUserId === u.id ? (
 													<>
 														<button
@@ -397,13 +408,13 @@ function AdminPage() {
 														</button>
 													</>
 												)}
-											</td>
+											</td>}
 										</tr>
 									))
 								) : (
 									<tr>
 										<td
-											colSpan='4'
+											colSpan={isViewer ? '3' : '4'}
 											className='text-center'
 											style={{padding: '2rem'}}
 										>
@@ -490,6 +501,9 @@ function AdminPage() {
 									</option>
 									<option value='ADMIN'>
 										Administrador (Todo)
+									</option>
+									<option value='VIEWER'>
+										Invitado (Solo lectura)
 									</option>
 								</select>
 							</div>
